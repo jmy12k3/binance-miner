@@ -1,0 +1,40 @@
+version: "3"
+
+services:
+  backend:
+    image: jmy12k3/crypto-miner
+    container_name: crypto_trading
+    working_dir: /app
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./config:/app/config
+      - ./data:/app/data
+      - ./logs:/app/logs
+    command: python -m project
+
+  api:
+    image: jmy12k3/crypto-miner
+    container_name: crypto_trading_api
+    working_dir: /app
+    volumes:
+      - ./config:/app/config
+      - ./data:/app/data
+      - ./logs:/app/logs
+    ports:
+      - 5000:5000
+    command: gunicorn project.api_server:app -k eventlet -w 1 --threads 1 -b 0.0.0.0:5000
+    depends_on:
+      - backend
+
+  sqlitebrowser:
+    extends:
+      file: common-services.yml
+      service: sqlitebrowser
+    profiles: [ "debug", "webapp" ]
+
+  grafana:
+    extends:
+      file: common-services.yml
+      service: grafana
+    profiles: [ "webapp" ]

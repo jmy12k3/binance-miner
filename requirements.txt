@@ -1,0 +1,16 @@
+apprise==1.4.5
+cachetools==5.3.1
+eventlet==0.33.3
+Flask==2.3.2
+Flask-Cors==4.0.0
+Flask-SocketIO==5.3.4
+gunicorn==21.2.0
+python-binance==1.0.17
+python-socketio[client]==5.8.0
+schedule==1.2.0
+sortedcontainers==2.4.0
+SQLAlchemy==2.0.19
+sqlitedict==2.1.0
+unicorn-binance-websocket-api==1.46.1
+unicorn-fy==0.12.2
+websockets==10.4
