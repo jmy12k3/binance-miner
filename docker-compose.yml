@@ -11,9 +11,7 @@ services:
       - ./config:/app/config
       - ./data:/app/data
       - ./logs:/app/logs
-    command: python -m project
-    depends_on:
-      - tailscale
+    command: /bin/sh -c "sleep 10 && python -m project"
 
   api:
     image: jmy12k3/crypto-miner
@@ -29,7 +27,6 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
-      - tailscale
 
   tailscale:
     image: tailscale/tailscale:latest
