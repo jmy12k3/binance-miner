@@ -45,7 +45,7 @@ services:
     volumes:
       - /var/lib:/var/lib
       - /dev/net/tun:/dev/net/tun
-    command: /bin/sh -c "tailscaled && tailscale up --authkey=$TS_AUTH_KEY --advertise-routes=192.168.1.0/24"
+    command: /bin/sh -c "tailscaled && tailscale up --authkey=$$TS_AUTH_KEY --advertise-routes=192.168.1.0/24"
     restart: unless-stopped
 
   sqlitebrowser:
