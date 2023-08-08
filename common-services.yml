@@ -1,23 +1,6 @@
 version: "3"
 
 services:
-  tailscale:
-    image: tailscale/tailscale:latest
-    container_name: tailscale
-    privileged: true
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-      - SYS_MODULE
-    network_mode: host
-    environment:
-      - TS_AUTHKEY=tskey-auth-kgN6Rf7CNTRL-tR48sLp9PhW2FZ2G1Ju1hWxyqtXc96tCT
-      - TS_STATE_DIR=/var/lib/tailscale
-    volumes:
-      - /var/lib:/var/lib
-      - /dev/net/tun:/dev/net/tun
-    restart: unless-stopped
-
   grafana:
     image: grafana/grafana:latest
     container_name: grafana

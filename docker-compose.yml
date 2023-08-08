@@ -12,6 +12,8 @@ services:
       - ./data:/app/data
       - ./logs:/app/logs
     command: python -m project
+    depends_on:
+      - tailscale
 
   api:
     image: jmy12k3/crypto-miner
@@ -24,14 +26,27 @@ services:
     ports:
       - 5000:5000
     command: gunicorn project.api_server:app -k eventlet -w 1 --threads 1 -b 0.0.0.0:5000
+    restart: unless-stopped
     depends_on:
       - backend
+      - tailscale
 
   tailscale:
-    extends:
-      file: common-services.yml
-      service: tailscale
-    command: tailscaled
+    image: tailscale/tailscale:latest
+    container_name: tailscale
+    hostname: tailscale
+    privileged: true
+    cap_add:
+      - net_admin
+      - sys_module
+    environment:
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_AUTHKEY=tskey-auth-kgN6Rf7CNTRL-tR48sLp9PhW2FZ2G1Ju1hWxyqtXc96tCT
+    volumes:
+      - /var/lib:/var/lib
+      - /dev/net/tun:/dev/net/tun
+    command: /bin/sh -c "tailscaled && tailscale up --authkey=$TS_AUTH_KEY --advertise-routes=192.168.1.0/24"
+    restart: unless-stopped
 
   sqlitebrowser:
     extends:
