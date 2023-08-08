@@ -1,11 +1,12 @@
 version: "3"
 
+network_mode: services:tailscale
+
 services:
   backend:
     image: jmy12k3/crypto-miner
     container_name: crypto_trading
     working_dir: /app
-    network_mode: services:tailscale
     environment:
       - PYTHONUNBUFFERED=1
     volumes:
