@@ -5,6 +5,7 @@ services:
     image: jmy12k3/crypto-miner
     container_name: crypto_trading
     working_dir: /app
+    network_mode: services:tailscale
     environment:
       - PYTHONUNBUFFERED=1
     volumes:
@@ -32,19 +33,16 @@ services:
     image: tailscale/tailscale:latest
     container_name: tailscale
     hostname: tailscale
-    privileged: true
     network_mode: host
     cap_add:
       - net_admin
       - net_raw
-      - sys_module
     environment:
       - TS_AUTH_KEY=tskey-auth-kgN6Rf7CNTRL-tR48sLp9PhW2FZ2G1Ju1hWxyqtXc96tCT
       - TS_STATE_DIR=/var/lib/tailscale
     volumes:
       - /var/lib:/var/lib
       - /dev/net/tun:/dev/net/tun
-    command: /bin/sh -c "tailscaled && tailscale up --authkey=$$TS_AUTH_KEY --advertise-routes=192.168.1.0/24"
     restart: unless-stopped
 
   sqlitebrowser:
