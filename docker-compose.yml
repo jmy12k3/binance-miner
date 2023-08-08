@@ -27,6 +27,11 @@ services:
     depends_on:
       - backend
 
+  tailscale:
+    extends:
+      file: common-services.yml
+      service: tailscale
+
   sqlitebrowser:
     extends:
       file: common-services.yml
