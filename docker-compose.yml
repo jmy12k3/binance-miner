@@ -40,8 +40,8 @@ services:
       - net_admin
       - sys_module
     environment:
+      - TS_AUTH_KEY=tskey-auth-kgN6Rf7CNTRL-tR48sLp9PhW2FZ2G1Ju1hWxyqtXc96tCT
       - TS_STATE_DIR=/var/lib/tailscale
-      - TS_AUTHKEY=tskey-auth-kgN6Rf7CNTRL-tR48sLp9PhW2FZ2G1Ju1hWxyqtXc96tCT
     volumes:
       - /var/lib:/var/lib
       - /dev/net/tun:/dev/net/tun
