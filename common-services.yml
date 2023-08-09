@@ -37,10 +37,10 @@ services:
       - /dev/kmsg:/dev/kmsg
     volumes:
       - /:/rootfs:ro
-      - /var/run:/var/run:ro
       - /sys:/sys:ro
-      - /var/lib/docker:/var/lib/docker:ro
       - /cgroup:/cgroup:ro
+      - /var/run:/var/run:ro
+      - /var/lib/docker:/var/lib/docker:ro
     expose:
       - 8080
 
@@ -70,9 +70,9 @@ services:
       - "--path.rootfs=/rootfs"
       - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
     volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
       - /:/rootfs:ro
+      - /sys:/host/sys:ro
+      - /proc:/host/proc:ro
     expose:
       - 9100
 
@@ -88,7 +88,7 @@ services:
       - "--storage.tsdb.retention.time=200h"
       - "--web.enable-lifecycle"
     volumes:
-      - ./services/prometheus:/etc/prometheus
       - prometheus_data:/prometheus
+      - ./services/prometheus:/etc/prometheus
     expose:
       - 9090
