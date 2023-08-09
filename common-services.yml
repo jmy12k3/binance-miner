@@ -1,15 +1,21 @@
 version: "3"
 
-networks:
-  monitor-net:
-    driver: bridge
-
 volumes:
   grafana_data: {}
   prometheus_data: {}
 
+networks:
+  monitor:
+    driver: bridge
+
+x-monitor: &monitor
+  networks:
+    - monitor
+  restart: unless-stopped
+
 services:
   caddy:
+    <<: *monitor
     image: caddy:latest
     container_name: caddy
     environment:
@@ -22,14 +28,11 @@ services:
       - 3000:3000
       - 8080:8080
       - 9090:9090
-    restart: unless-stopped
-    networks:
-      - monitor-net
 
   cadvisor:
+    <<: *monitor
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
-    privileged: true
     devices:
       - /dev/kmsg:/dev/kmsg
     volumes:
@@ -40,11 +43,9 @@ services:
       - /cgroup:/cgroup:ro
     expose:
       - 8080
-    restart: unless-stopped
-    networks:
-      - monitor-net
 
   grafana:
+    <<: *monitor
     image: grafana/grafana:latest
     container_name: grafana
     environment:
@@ -59,11 +60,9 @@ services:
       - ./services/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
     expose:
       - 3000
-    restart: unless-stopped
-    networks:
-      - monitor-net
 
   node-exporter:
+    <<: *monitor
     image: prom/node-exporter:latest
     container_name: node-exporter
     command:
@@ -77,11 +76,9 @@ services:
       - /:/rootfs:ro
     expose:
       - 9100
-    restart: unless-stopped
-    networks:
-      - monitor-net
 
   prometheus:
+    <<: *monitor
     image: prom/prometheus:latest
     container_name: prometheus
     command:
@@ -96,6 +93,3 @@ services:
       - prometheus_data:/prometheus
     expose:
       - 9090
-    restart: unless-stopped
-    networks:
-      - monitor-net
