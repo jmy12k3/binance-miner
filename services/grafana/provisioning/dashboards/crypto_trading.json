@@ -4,8 +4,7 @@
             {
                 "builtIn": 1,
                 "datasource": {
-                    "type": "datasource",
-                    "uid": "grafana"
+                    "type": "datasource"
                 },
                 "enable": true,
                 "hide": true,
@@ -31,8 +30,7 @@
         {
             "collapsed": false,
             "datasource": {
-                "type": "datasource",
-                "uid": "grafana"
+                "type": "datasource"
             },
             "gridPos": {
                 "h": 1,
@@ -47,8 +45,7 @@
         },
         {
             "datasource": {
-                "type": "frser-sqlite-datasource",
-                "uid": "${database}"
+                "type": "frser-sqlite-datasource"
             },
             "fieldConfig": {
                 "defaults": {
@@ -124,8 +121,7 @@
             "targets": [
                 {
                     "datasource": {
-                        "type": "frser-sqlite-datasource",
-                        "uid": "${database}"
+                        "type": "frser-sqlite-datasource"
                     },
                     "queryText": "SELECT \n((SELECT max(balance * usd_price) FROM  coin_value GROUP BY id / 600 ORDER BY datetime DESC LIMIT 1) / (SELECT max(balance * usd_price) FROM coin_value WHERE balance IS NOT NULL GROUP BY id / 600 ORDER BY datetime ASC LIMIT 1)) - 1 as change\nFROM coin_value LIMIT 1",
                     "queryType": "table",
@@ -143,8 +139,7 @@
         },
         {
             "datasource": {
-                "type": "frser-sqlite-datasource",
-                "uid": "${database}"
+                "type": "frser-sqlite-datasource"
             },
             "description": "",
             "fieldConfig": {
@@ -200,8 +195,7 @@
             "targets": [
                 {
                     "datasource": {
-                        "type": "frser-sqlite-datasource",
-                        "uid": "${database}"
+                        "type": "frser-sqlite-datasource"
                     },
                     "queryText": "SELECT p.to_coin_id as other_coin, ((1-0.001*0.001-0.002) * current_coin_price / (sh.target_ratio *(1+(${scout_margin})/100)) / sh.other_coin_price) * 100 as 'percentage' FROM scout_history sh JOIN pairs p ON p.id = sh.pair_id WHERE p.from_coin_id = (SELECT alt_coin_id FROM trade_history ORDER BY datetime DESC LIMIT 1) ORDER BY sh.datetime DESC, percentage DESC LIMIT (SELECT count(DISTINCT pairs.to_coin_id) FROM pairs JOIN coins ON coins.symbol = pairs.to_coin_id WHERE coins.enabled = 1 AND pairs.from_coin_id=(SELECT alt_coin_id FROM trade_history ORDER BY datetime DESC LIMIT 1))",
                     "queryType": "table",
@@ -218,8 +212,7 @@
         },
         {
             "datasource": {
-                "type": "datasource",
-                "uid": "-- Mixed --"
+                "type": "datasource"
             },
             "fieldConfig": {
                 "defaults": {
@@ -481,8 +474,7 @@
             "targets": [
                 {
                     "datasource": {
-                        "type": "frser-sqlite-datasource",
-                        "uid": "ad236b85-c7e6-4ffb-810b-548713098633"
+                        "type": "frser-sqlite-datasource"
                     },
                     "queryText": "SELECT \n    REPLACE (datetime, ' ', 'T') || 'Z' AS datetime, \n    (crypto_trade_amount / (SELECT crypto_trade_amount FROM trade_history ORDER BY datetime ASC LIMIT 1) - 1) AS ksh_eth\nFROM \n    trade_history \nWHERE \n    state='COMPLETE' AND selling=0",
                     "queryType": "time series",
@@ -496,8 +488,7 @@
                 },
                 {
                     "datasource": {
-                        "type": "frser-sqlite-datasource",
-                        "uid": "fb208bb6-6254-4e08-826c-e34d64ee660e"
+                        "type": "frser-sqlite-datasource"
                     },
                     "hide": true,
                     "queryText": "SELECT \n    REPLACE (datetime, ' ', 'T') || 'Z' AS datetime, \n    (crypto_trade_amount / (SELECT crypto_trade_amount FROM trade_history ORDER BY datetime ASC LIMIT 1) - 1) AS abril_usdt\nFROM \n    trade_history \nWHERE \n    state='COMPLETE' AND selling=0",
@@ -512,8 +503,7 @@
                 },
                 {
                     "datasource": {
-                        "type": "frser-sqlite-datasource",
-                        "uid": "ee4dffcd-c5ce-4ee8-ad8a-74eb4a61a653"
+                        "type": "frser-sqlite-datasource"
                     },
                     "hide": false,
                     "queryText": "SELECT \n    REPLACE (datetime, ' ', 'T') || 'Z' AS datetime, \n    (crypto_trade_amount / (SELECT crypto_trade_amount FROM trade_history ORDER BY datetime ASC LIMIT 1) - 1) AS regina_busd\nFROM \n    trade_history \nWHERE \n    state='COMPLETE' AND selling=0",
@@ -528,8 +518,7 @@
                 },
                 {
                     "datasource": {
-                        "type": "frser-sqlite-datasource",
-                        "uid": "df413646-b5cd-45cf-9220-f670461f56e0"
+                        "type": "frser-sqlite-datasource"
                     },
                     "hide": false,
                     "queryText": "SELECT \n    REPLACE (datetime, ' ', 'T') || 'Z' AS datetime, \n    (crypto_trade_amount / (SELECT crypto_trade_amount FROM trade_history ORDER BY datetime ASC LIMIT 1) - 1) AS ren_usdt\nFROM \n    trade_history \nWHERE \n    state='COMPLETE' AND selling=0",
@@ -544,8 +533,7 @@
                 },
                 {
                     "datasource": {
-                        "type": "frser-sqlite-datasource",
-                        "uid": "45e0a5fd-8e5e-4ec7-ae69-947c2f99b58e"
+                        "type": "frser-sqlite-datasource"
                     },
                     "hide": false,
                     "queryText": "SELECT \n    REPLACE (datetime, ' ', 'T') || 'Z' AS datetime, \n    (crypto_trade_amount / (SELECT crypto_trade_amount FROM trade_history ORDER BY datetime ASC LIMIT 1) - 1) AS ren_busd\nFROM \n    trade_history \nWHERE \n    state='COMPLETE' AND selling=0",
@@ -560,8 +548,7 @@
                 },
                 {
                     "datasource": {
-                        "type": "frser-sqlite-datasource",
-                        "uid": "cc0baf10-bfe6-4610-b572-3f2364565896"
+                        "type": "frser-sqlite-datasource"
                     },
                     "hide": false,
                     "queryText": "SELECT \n    REPLACE (datetime, ' ', 'T') || 'Z' AS datetime, \n    (crypto_trade_amount / (SELECT crypto_trade_amount FROM trade_history ORDER BY datetime ASC LIMIT 1) - 1) AS ren_btc\nFROM \n    trade_history \nWHERE \n    state='COMPLETE' AND selling=0",
@@ -576,8 +563,7 @@
                 },
                 {
                     "datasource": {
-                        "type": "frser-sqlite-datasource",
-                        "uid": "4e67ad1a-d428-4a2c-9419-e6b0e7339136"
+                        "type": "frser-sqlite-datasource"
                     },
                     "hide": false,
                     "queryText": "SELECT \n    REPLACE (datetime, ' ', 'T') || 'Z' AS datetime, \n    (crypto_trade_amount / (SELECT crypto_trade_amount FROM trade_history ORDER BY datetime ASC LIMIT 1) - 1) AS ren_eth\nFROM \n    trade_history \nWHERE \n    state='COMPLETE' AND selling=0",
@@ -591,9 +577,6 @@
                     ]
                 },
                 {
-                    "datasource": {
-                        "uid": "71c49c63-287e-4703-9b52-2f20a8ea7d66"
-                    },
                     "hide": false,
                     "queryText": "SELECT \n    REPLACE (datetime, ' ', 'T') || 'Z' AS datetime, \n    (crypto_trade_amount / (SELECT crypto_trade_amount FROM trade_history ORDER BY datetime ASC LIMIT 1) - 1) AS ksh_btc\nFROM \n    trade_history \nWHERE \n    state='COMPLETE' AND selling=0",
                     "queryType": "time series",
@@ -613,8 +596,7 @@
         {
             "collapsed": false,
             "datasource": {
-                "type": "datasource",
-                "uid": "${database}"
+                "type": "datasource"
             },
             "gridPos": {
                 "h": 1,
@@ -630,8 +612,7 @@
         },
         {
             "datasource": {
-                "type": "frser-sqlite-datasource",
-                "uid": "${database}"
+                "type": "frser-sqlite-datasource"
             },
             "description": "",
             "fieldConfig": {
@@ -872,8 +853,7 @@
             "targets": [
                 {
                     "datasource": {
-                        "type": "frser-sqlite-datasource",
-                        "uid": "${database}"
+                        "type": "frser-sqlite-datasource"
                     },
                     "hide": false,
                     "queryText": "SELECT\n  REPLACE (datetime, ' ', 'T') || 'Z' AS datetime,\n  max(balance * usd_price) AS \"USD value\"\nFROM\n  coin_value\nGROUP BY strftime('%s', datetime) / ${granularity}",
@@ -888,8 +868,7 @@
                 },
                 {
                     "datasource": {
-                        "type": "frser-sqlite-datasource",
-                        "uid": "${database}"
+                        "type": "frser-sqlite-datasource"
                     },
                     "hide": false,
                     "queryText": "SELECT\n  REPLACE (datetime, ' ', 'T') || 'Z' AS datetime,\n  crypto_trade_amount as \"Crypto Trade Value\"\nFROM\n  trade_history\nWHERE\n  state = 'COMPLETE'\n  AND selling = 0",
@@ -904,8 +883,7 @@
                 },
                 {
                     "datasource": {
-                        "type": "frser-sqlite-datasource",
-                        "uid": "${database}"
+                        "type": "frser-sqlite-datasource"
                     },
                     "hide": false,
                     "queryText": "SELECT\n  REPLACE (datetime, ' ', 'T') || 'Z' AS datetime,\n  max(balance * btc_price) AS \"BTC value\"\nFROM\n  coin_value\nGROUP BY strftime('%s', datetime) / ${granularity}",
@@ -923,9 +901,6 @@
             "type": "timeseries"
         },
         {
-            "datasource": {
-                "uid": "${database}"
-            },
             "description": "",
             "fieldConfig": {
                 "defaults": {
@@ -994,8 +969,7 @@
         },
         {
             "datasource": {
-                "type": "frser-sqlite-datasource",
-                "uid": "${database}"
+                "type": "frser-sqlite-datasource"
             },
             "fieldConfig": {
                 "defaults": {
@@ -1065,8 +1039,7 @@
             "targets": [
                 {
                     "datasource": {
-                        "type": "frser-sqlite-datasource",
-                        "uid": "${database}"
+                        "type": "frser-sqlite-datasource"
                     },
                     "hide": false,
                     "queryText": "SELECT  \nalt_coin_id as \"Current coin\", alt_trade_amount as current_coin_amount, \n(SELECT alt_trade_amount FROM trade_history WHERE alt_coin_id=(SELECT alt_coin_id  FROM trade_history WHERE selling=0 ORDER BY datetime DESC LIMIT 1) ORDER BY datetime DESC LIMIT 1,2) AS last_coin_amount, \n(alt_trade_amount / (SELECT alt_trade_amount FROM trade_history WHERE alt_coin_id=(SELECT alt_coin_id  FROM trade_history WHERE selling=0 ORDER BY datetime DESC LIMIT 1) ORDER BY datetime DESC LIMIT 1,2) -1 ) AS change \nFROM \ntrade_history \nWHERE\nselling=0 AND alt_coin_id=(SELECT alt_coin_id  FROM trade_history WHERE selling=0 ORDER BY datetime DESC LIMIT 1) \nORDER BY \ndatetime DESC LIMIT 1;",
@@ -1084,9 +1057,6 @@
             "type": "stat"
         },
         {
-            "datasource": {
-                "uid": "${database}"
-            },
             "fieldConfig": {
                 "defaults": {
                     "color": {
@@ -1149,8 +1119,7 @@
         },
         {
             "datasource": {
-                "type": "frser-sqlite-datasource",
-                "uid": "aef3d392-7a41-450c-bf41-4ac00dc43d05"
+                "type": "frser-sqlite-datasource"
             },
             "fieldConfig": {
                 "defaults": {
@@ -1197,8 +1166,7 @@
             "targets": [
                 {
                     "datasource": {
-                        "type": "frser-sqlite-datasource",
-                        "uid": "dd432829-32d6-4ec3-a7e4-306aa7086aa6"
+                        "type": "frser-sqlite-datasource"
                     },
                     "queryText": "SELECT\nCOUNT(*) as \"Total jumps\",\nalt_coin_id as \"Coin\"\nFROM trade_history \nWHERE selling=0\nGROUP BY alt_coin_id\nORDER BY \"Total jumps\" DESC\n",
                     "queryType": "table",
@@ -1214,9 +1182,6 @@
             "type": "bargauge"
         },
         {
-            "datasource": {
-                "uid": "${database}"
-            },
             "description": "",
             "fieldConfig": {
                 "defaults": {
@@ -1321,9 +1286,6 @@
             "type": "timeseries"
         },
         {
-            "datasource": {
-                "uid": "${database}"
-            },
             "fieldConfig": {
                 "defaults": {
                     "color": {
@@ -1493,13 +1455,12 @@
         ]
     },
     "time": {
-        "from": "now-6M",
+        "from": "now-3M",
         "to": "now"
     },
     "timepicker": {},
-    "timezone": "utc",
-    "title": "Crypto mining",
-    "uid": "d862cb0e-bed8-4f29-8e85-4f2ef6c1c528",
+    "timezone": "browser",
+    "title": "Crypto trading",
     "version": 1,
     "weekStart": "monday"
 }

@@ -29,8 +29,37 @@ services:
       - backend
     restart: unless-stopped
 
+  caddy:
+    extends:
+      file: common-services.yml
+      service: caddy
+    profiles:
+      - monitor
+
+  cadvisor:
+    extends:
+      file: common-services.yml
+      service: cadvisor
+    profiles:
+      - monitor
+
   grafana:
     extends:
       file: common-services.yml
       service: grafana
-    profiles: [ "disabled" ]
+    profiles:
+      - monitor
+
+  node-exporter:
+    extends:
+      file: common-services.yml
+      service: node-exporter
+    profiles:
+      - monitor
+
+  prometheus:
+    extends:
+      file: common-services.yml
+      service: prometheus
+    profiles:
+      - monitor

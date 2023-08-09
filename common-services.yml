@@ -1,35 +1,101 @@
 version: "3"
 
+networks:
+  monitor-net:
+    driver: bridge
+
+volumes:
+  grafana_data: {}
+  prometheus_data: {}
+
 services:
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    environment:
+      - ADMIN_USER: ${ADMIN_USER:-admin}
+      - ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      - ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-$2a$14$1l.IozJx7xQRVmlkEQ32OeEEfP5mRxTpbDTCTcXRqn19gXD8YK1pO}
+    volumes:
+      - ./services/caddy:/etc/caddy
+    ports:
+      - 3000:3000
+      - 8080:8080
+      - 9090:9090
+    restart: unless-stopped
+    networks:
+      - monitor-net
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    privileged: true
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      # - /cgroup:/cgroup:ro
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+    networks:
+      - monitor-net
+
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
     environment:
+      - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
       - GF_INSTALL_PLUGINS=frser-sqlite-datasource
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
+      - grafana_data:/var/lib/grafana
       - ./data/crypto_trading.db:/app/crypto_trading.db
-      - ./static/dashboard.json:/app/dashboard.json
-      - ./static/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
-      - ./static/dashboard.yml:/etc/grafana/provisioning/dashboards/dashboard.yml
+      - ./services/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./services/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
     ports:
       - 3000:3000
     restart: unless-stopped
+    networks:
+      - monitor-net
 
-  sqlitebrowser:
-    image: ghcr.io/linuxserver/sqlitebrowser:latest
-    container_name: sqlitebrowser
-    security_opt:
-      - seccomp:unconfined
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - CUSTOM_PORT=8080
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/rootfs"
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     volumes:
-      - ./data:/data
-      - ./data/config:/config
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
     ports:
-      - 8080:8080
+      - 9100:9100
     restart: unless-stopped
+    networks:
+      - monitor-net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/containers/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./services/prometheus:/etc/prometheus
+      - prometheus_data:/containers/prometheus
+    ports:
+      - 9090:9090
+    restart: unless-stopped
+    networks:
+      - monitor-net

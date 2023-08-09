@@ -1,0 +1,17 @@
+apiVersion: 1
+
+datasources:
+  - name: Crypto trading
+    type: frser-sqlite-datasource
+    access: proxy
+    isDefault: false
+    editable: true
+    jsonData:
+      path: /app/crypto_trading.db
+  
+  - name: System
+    type: prometheus
+    access: proxy
+    isDefault: false
+    editable: true
+    url: http://prometheus:9090

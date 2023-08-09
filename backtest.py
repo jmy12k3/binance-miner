@@ -2,9 +2,9 @@ from datetime import datetime
 
 from project import backtest
 
+# XXX: Improve the backtesting UI
 if __name__ == "__main__":
     history = []
-    # XXX: Improve the backtesting UI
     for manager in backtest(datetime(2023, 1, 1)):
         btc_value = manager.collate_coins("BTC")
         bridge_value = manager.collate_coins(manager.config.BRIDGE.symbol)
