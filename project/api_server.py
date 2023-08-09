@@ -25,6 +25,8 @@ db = Database(logger, config)
 
 def filter_period(query, model):
     period = request.args.get("period")
+    if not period:
+        return query
     if "s" in period:
         return query.filter(model.datetime >= datetime.now() - relativedelta(seconds=1))
     if "h" in period:
@@ -35,7 +37,6 @@ def filter_period(query, model):
         return query.filter(model.datetime >= datetime.now() - relativedelta(weeks=1))
     if "m" in period:
         return query.filter(model.datetime >= datetime.now() - relativedelta(months=1))
-    return query
 
 
 @app.route("/api/value_history/<coin>")
