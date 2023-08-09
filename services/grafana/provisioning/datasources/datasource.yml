@@ -9,7 +9,7 @@ datasources:
     jsonData:
       path: /app/crypto_trading.db
   
-  - name: System
+  - name: Monitor
     type: prometheus
     access: proxy
     isDefault: false
