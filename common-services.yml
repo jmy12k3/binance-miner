@@ -1,9 +1,5 @@
 version: "3"
 
-networks:
-  monitor-net:
-    driver: bridge
-
 volumes:
   grafana_data: {}
   prometheus_data: {}
@@ -23,8 +19,6 @@ services:
       - 8080:8080
       - 9090:9090
     restart: unless-stopped
-    networks:
-      - monitor-net
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
@@ -41,8 +35,6 @@ services:
     ports:
       - 8080:8080
     restart: unless-stopped
-    networks:
-      - monitor-net
 
   grafana:
     image: grafana/grafana:latest
@@ -60,8 +52,6 @@ services:
     ports:
       - 3000:3000
     restart: unless-stopped
-    networks:
-      - monitor-net
 
   node-exporter:
     image: prom/node-exporter:latest
@@ -78,8 +68,6 @@ services:
     ports:
       - 9100:9100
     restart: unless-stopped
-    networks:
-      - monitor-net
 
   prometheus:
     image: prom/prometheus:latest
@@ -97,5 +85,3 @@ services:
     ports:
       - 9090:9090
     restart: unless-stopped
-    networks:
-      - monitor-net
