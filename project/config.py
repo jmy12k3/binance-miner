@@ -14,7 +14,7 @@ class Config:
     def __init__(self):
         config = configparser.ConfigParser()
         config["DEFAULT"] = {
-            "bridge": "USDT",
+            "bridge": "BUSD",
             "use_margin": "true",
             "scout_multiplier": "5",
             "scout_margin": "0.8",
@@ -76,10 +76,6 @@ class Config:
                         continue
                     watchlist.append(line)
         self.WATCHLIST = watchlist
-
-        self.CURRENT_COIN_SYMBOL = os.environ.get("CURRENT_COIN_SYMBOL") or config.get(
-            CFG_SECTION, "current_coin"
-        )
 
         self.STRATEGY = os.environ.get("STRATEGY") or config.get(CFG_SECTION, "strategy")
 
