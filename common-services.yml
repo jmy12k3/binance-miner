@@ -1,5 +1,9 @@
 version: "3"
 
+networks:
+  monitor-net:
+    driver: bridge
+
 volumes:
   grafana_data: {}
   prometheus_data: {}
@@ -9,9 +13,9 @@ services:
     image: caddy:latest
     container_name: caddy
     environment:
-      - ADMIN_USER: ${ADMIN_USER:-admin}
-      - ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
-      - ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-$2a$14$1l.IozJx7xQRVmlkEQ32OeEEfP5mRxTpbDTCTcXRqn19gXD8YK1pO}
+      - ADMIN_USER=${ADMIN_USER:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH:-$2a$14$1l.IozJx7xQRVmlkEQ32OeEEfP5mRxTpbDTCTcXRqn19gXD8YK1pO}
     volumes:
       - ./services/caddy:/etc/caddy
     ports:
@@ -19,6 +23,8 @@ services:
       - 8080:8080
       - 9090:9090
     restart: unless-stopped
+    networks:
+      - monitor-net
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
@@ -35,6 +41,8 @@ services:
     ports:
       - 8080:8080
     restart: unless-stopped
+    networks:
+      - monitor-net
 
   grafana:
     image: grafana/grafana:latest
@@ -52,6 +60,8 @@ services:
     ports:
       - 3000:3000
     restart: unless-stopped
+    networks:
+      - monitor-net
 
   node-exporter:
     image: prom/node-exporter:latest
@@ -68,6 +78,8 @@ services:
     ports:
       - 9100:9100
     restart: unless-stopped
+    networks:
+      - monitor-net
 
   prometheus:
     image: prom/prometheus:latest
@@ -85,3 +97,5 @@ services:
     ports:
       - 9090:9090
     restart: unless-stopped
+    networks:
+      - monitor-net
