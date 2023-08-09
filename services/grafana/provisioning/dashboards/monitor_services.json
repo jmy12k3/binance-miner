@@ -3406,7 +3406,7 @@
     },
     "refresh": "10s",
     "schemaVersion": 12,
-    "version": 22,
+    "version": 1,
     "links": [],
     "gnetId": null
 }
