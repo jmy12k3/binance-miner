@@ -131,7 +131,7 @@ class BinanceOrderBalanceManager(AbstractOrderBalanceManager):
     def create_order(self, **params):
         return self.binance_client.create_order(**params)
 
-    # XXX: Simplify the transformation of the config values
+    # XXX: Improve logging semantics
     def get_currency_balance(self, currency_symbol: str, force=False):
         with self.cache.open_balances() as cache_balances:
             balance = cache_balances.get(currency_symbol, None)
@@ -236,7 +236,7 @@ class BinanceAPIManager:
     def _setup_websockets(self):
         self.stream_manager = StreamManagerWorker.create(self.cache, self.config, self.logger)
 
-    # XXX: Simplify the transformation of the config values
+    # XXX: Improve logging semantics
     def _retry(self, func, *args, **kwargs):
         for attempt in range(20):
             try:
@@ -247,7 +247,7 @@ class BinanceAPIManager:
             time.sleep(1)
         return None
 
-    # XXX: Simplify the transformation of the config values
+    # XXX: Improve logging semantics
     def _buy_alt(self, origin_coin: str, target_coin: str, buy_price: float):
         origin_symbol = origin_coin
         target_symbol = target_coin
@@ -280,7 +280,7 @@ class BinanceAPIManager:
         write_trade_log()
         return order
 
-    # XXX: Simplify the transformation of the config values
+    # XXX: Improve logging semantics
     def _sell_alt(self, origin_coin: str, target_coin: str, sell_price: float):
         origin_symbol = origin_coin
         target_symbol = target_coin
@@ -354,7 +354,7 @@ class BinanceAPIManager:
     def get_market_sell_price_fill_quote(self, symbol: str, quote_amount: float) -> (float, float):
         return self.stream_manager.get_market_sell_price_fill_quote(symbol, quote_amount)
 
-    # XXX: Simplify the transformation of the config values
+    # XXX: Improve logging semantics
     def get_ticker_price(self, ticker_symbol: str):
         price = self.cache.ticker_values.get(ticker_symbol, None)
         if price is None and ticker_symbol not in self.cache.non_existent_tickers:
