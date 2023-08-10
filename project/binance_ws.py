@@ -154,7 +154,7 @@ class DepthCacheManager:
         self.apply_orders(data)
         self.last_update_id = data["final_update_id_in_event"]
 
-    def buffer_incoming_data(self) -> bool:
+    def buffer_incoming_data(self):
         return self.pending_signals_counter > 0 or self.pending_reinit
 
     async def process_data(self, data):
@@ -570,7 +570,7 @@ class StreamManagerWorker(threading.Thread):
         bwam = AsyncListenedBWAM(
             async_context, output_default="UnicornFy", enable_stream_signal_buffer=True
         )
-        quotes = set(map(str.lower, [self.config.BRIDGE.symbol, "usdt", "btc", "bnb"]))
+        quotes = set(map(str.lower, [self.config.BRIDGE.symbol, "btc", "bnb"]))
         markets = [coin.lower() + quote for quote in quotes for coin in self.config.WATCHLIST]
         restart_every = 3600 * 4
         streams: List[LoopExecutor] = [
