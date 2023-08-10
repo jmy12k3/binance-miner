@@ -169,7 +169,7 @@ class BinanceAPIManager:
         self.stream_manager: Optional[BinanceStreamManager] = None
         self._setup_websockets()
 
-    # region Staticmethod
+    # region Staticmethods
     @staticmethod
     def _common_factory(
         config: Config,
@@ -294,7 +294,7 @@ class BinanceAPIManager:
 
     # endregion
 
-    # region Public methods - Helper functions that call from the parent classes
+    # region Public methods - Helper functions from .binance_ws
     def get_currency_balance(self, currency_symbol: str, force: bool = False) -> float:
         return self.order_balance_manager.get_currency_balance(currency_symbol, force)
 
@@ -421,10 +421,10 @@ class BinanceAPIManager:
     def sell_alt(self, origin_coin: str, target_coin: str, sell_price: float) -> BinanceOrder:
         return self._retry(self._sell_alt, origin_coin, target_coin, sell_price)
 
-    # endregion
-
     @cached(cache=TTLCache(maxsize=2000, ttl=43200))
     def get_min_notional(self, origin_symbol: str, target_symbol: str):
         return float(
             self.get_symbol_filter(origin_symbol, target_symbol, "NOTIONAL")["minNotional"]
         )
+
+    # endregion
