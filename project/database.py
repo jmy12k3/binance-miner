@@ -2,7 +2,7 @@ import time
 from collections import namedtuple
 from contextlib import contextmanager
 from datetime import datetime
-from typing import List, Optional, Union
+from typing import Generator, List, Optional, Union
 
 from dateutil.relativedelta import relativedelta
 from socketio import Client
@@ -16,43 +16,47 @@ from .models import *
 from .postpone import heavy_call
 from .ratios import CoinStub, RatiosManager
 
+# Define types
 LogScout = namedtuple(
     "LogScout", ["pair_id", "ratio_diff", "target_ratio", "coin_price", "optional_coin_price"]
 )
 
+# Define constants that could not be overridden by child
+API_GATEWAY = "http://api:5000"
+
 
 class Database:
-    URI = "sqlite:///data/crypto_trading.db"  # SQLAlchemy URI
-    URL = "http://api:5000"  # REST API URL, as defined in docker-compose.yml
+    # Define constants that could be overridden by child
+    URI = "sqlite:///data/crypto_trading.db"
 
-    def __init__(self, logger: Logger, config: Config):
+    def __init__(self, logger: Logger, config: Config) -> None:
         self.logger = logger
         self.config = config
         self.engine = create_engine(self.URI, future=True)
         self.session_factory = scoped_session(sessionmaker(bind=self.engine))
         self.ratios_manager: Optional[RatiosManager] = None
-        self.socketio = Client()
+        self.socketio_client = Client()
 
     @contextmanager
-    def db_session(self):
+    def db_session(self) -> Generator:
         session: Session = self.session_factory()
         yield session
         session.commit()
         session.close()
 
-    def _rest_api(self):
-        if self.socketio.connected and self.socketio.namespaces:
+    def _api_session(self) -> bool:
+        if self.socketio_client.connected and self.socketio_client.namespaces:
             return True
         try:
-            if not self.socketio.connected:
-                self.socketio.connect(self.URL, namespaces=["/backend"])
-            while not self.socketio.connected or not self.socketio.namespaces:
+            if not self.socketio_client.connected:
+                self.socketio_client.connect(API_GATEWAY, namespaces=["/backend"])
+            while not self.socketio_client.connected or not self.socketio_client.namespaces:
                 time.sleep(0.1)
             return True
         except SocketIOConnectionError:
             return False
 
-    def create_database(self):
+    def create_database(self) -> None:
         Base.metadata.create_all(self.engine)
         try:
             with self.db_session() as session:
@@ -60,17 +64,18 @@ class Database:
         except:  # pylint: disable=bare-except
             pass
 
-    def send_update(self, model):
-        if not self._rest_api():
+    def send_update(self, model) -> None:
+        if not self._api_session():
             self.logger.warning(
-                f"Heartbeat to {self.URL} failed. This might be an issue if you are running in Docker."
+                f"Heartbeat to API {API_GATEWAY} failed. "
+                "This might be an issue if you are running in Docker."
             )
             return
-        self.socketio.emit(
+        self.socketio_client.emit(
             "update", {"table": model.__tablename__, "data": model.info()}, "/backend"
         )
 
-    def set_coins(self, symbols: List[str]):
+    def set_coins(self, symbols: List[str]) -> None:
         session: Session
         with self.db_session() as session:
             coins: List[Coin] = session.query(Coin).all()
@@ -121,7 +126,7 @@ class Database:
             session.expunge(coin)
             return coin
 
-    def set_current_coin(self, coin: Union[Coin, str]):
+    def set_current_coin(self, coin: Union[Coin, str]) -> None:
         coin = self.get_coin(coin)
         session: Session
         with self.db_session() as session:
@@ -141,7 +146,7 @@ class Database:
             session.expunge(coin)
             return coin
 
-    def get_pair(self, from_coin: Union[Coin, str], to_coin: Union[Coin, str]):
+    def get_pair(self, from_coin: Union[Coin, str], to_coin: Union[Coin, str]) -> Pair:
         from_coin = self.get_coin(from_coin)
         to_coin = self.get_coin(to_coin)
         session: Session
@@ -154,13 +159,13 @@ class Database:
             session.expunge(pair)
             return pair
 
-    def prune_scout_history(self):
+    def prune_scout_history(self) -> None:
         time_diff = datetime.now() - relativedelta(hours=self.config.SCOUT_HISTORY_PRUNE_TIME)
         session: Session
         with self.db_session() as session:
             session.query(ScoutHistory).filter(ScoutHistory.datetime < time_diff).delete()
 
-    def prune_value_history(self):
+    def prune_value_history(self) -> None:
         def _datetime_id_query(dt_format):
             dt_column = func.strftime(dt_format, CoinValue.datetime)
             # pylint: disable=not-callable
@@ -205,7 +210,7 @@ class Database:
                 CoinValue.interval == Interval.DAILY, CoinValue.datetime < time_diff
             ).delete()
 
-    def batch_update_coin_values(self, cv_batch: List[CoinValue]):
+    def batch_update_coin_values(self, cv_batch: List[CoinValue]) -> None:
         session: Session
         with self.db_session() as session:
             session.execute(
@@ -224,7 +229,7 @@ class Database:
             )
 
     @heavy_call
-    def batch_log_scout(self, logs: List[LogScout]):
+    def batch_log_scout(self, logs: List[LogScout]) -> None:
         session: Session
         with self.db_session() as session:
             dt = datetime.now()
@@ -244,7 +249,7 @@ class Database:
             )
 
     @heavy_call
-    def commit_ratios(self):
+    def commit_ratios(self) -> None:
         dirty_cells = self.ratios_manager.get_dirty()
         if len(dirty_cells) == 0:
             return
@@ -267,12 +272,12 @@ class Database:
             )
         self.ratios_manager.commit()
 
-    def start_trade_log(self, from_coin: str, to_coin: str, selling: bool):
+    def start_trade_log(self, from_coin: str, to_coin: str, selling: bool) -> "TradeLog":
         return TradeLog(self, from_coin, to_coin, selling)
 
 
 class TradeLog:
-    def __init__(self, db: Database, from_coin: str, to_coin: str, selling: bool):
+    def __init__(self, db: Database, from_coin: str, to_coin: str, selling: bool) -> None:
         self.db = db
         session: Session
         with self.db.db_session() as session:
@@ -281,7 +286,9 @@ class TradeLog:
             session.flush()
             self.db.send_update(self.trade)
 
-    def set_ordered(self, alt_starting_balance, crypto_starting_balance, alt_trade_amount):
+    def set_ordered(
+        self, alt_starting_balance: float, crypto_starting_balance: float, alt_trade_amount: float
+    ) -> None:
         session: Session
         with self.db.db_session() as session:
             trade: Trade = session.merge(self.trade)
@@ -291,7 +298,7 @@ class TradeLog:
             trade.state = TradeState.ORDERED
             self.db.send_update(trade)
 
-    def set_complete(self, crypto_trade_amount):
+    def set_complete(self, crypto_trade_amount: float) -> None:
         session: Session
         with self.db.db_session() as session:
             trade: Trade = session.merge(self.trade)
