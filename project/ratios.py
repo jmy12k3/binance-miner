@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from array import array
 from math import nan
 from typing import Dict, Iterable, KeysView, List, Optional, Tuple, Type
@@ -6,8 +8,8 @@ from .models import Pair
 
 
 class CoinStub:
-    _instances: List["CoinStub"] = []
-    _instances_by_symbol: Dict[str, "CoinStub"] = {}
+    _instances: List[CoinStub] = []
+    _instances_by_symbol: Dict[str, CoinStub] = {}
 
     def __init__(self, ratio_idx: int, symbol: str):
         self.idx = ratio_idx
@@ -17,7 +19,7 @@ class CoinStub:
         return f"CoinStub({self.idx}, {self.symbol})"
 
     @classmethod
-    def create(cls: Type["CoinStub"], symbol: str) -> "CoinStub":
+    def create(cls: Type[CoinStub], symbol: str) -> CoinStub:
         idx = len(cls._instances)
         new_instance = cls(idx, symbol)
         cls._instances.append(new_instance)
@@ -25,24 +27,24 @@ class CoinStub:
         return new_instance
 
     @classmethod
-    def get_by_idx(cls: Type["CoinStub"], idx: int) -> "CoinStub":
+    def get_by_idx(cls: Type[CoinStub], idx: int) -> CoinStub:
         return cls._instances[idx]
 
     @classmethod
-    def get_by_symbol(cls: Type["CoinStub"], symbol: str) -> "CoinStub":
-        return cls._instances_by_symbol.get(symbol, None)
+    def get_by_symbol(cls: Type[CoinStub], symbol: str) -> CoinStub:
+        return cls._instances_by_symbol.get(symbol, None)  # type: ignore
 
     @classmethod
-    def reset(cls: Type["CoinStub"]):
+    def reset(cls: Type[CoinStub]):
         cls._instances.clear()
         cls._instances_by_symbol.clear()
 
     @classmethod
-    def len_coins(cls: Type["CoinStub"]) -> int:
+    def len_coins(cls: Type[CoinStub]) -> int:
         return len(cls._instances)
 
     @classmethod
-    def get_all(cls: Type["CoinStub"]) -> List["CoinStub"]:
+    def get_all(cls: Type[CoinStub]) -> List[CoinStub]:
         return cls._instances
 
 
@@ -62,8 +64,8 @@ class RatiosManager:
                 val = pair.ratio if pair.ratio is not None else nan
                 pair_id = pair.id if pair.id is not None else 0
                 idx = self.n * i + j
-                self._data[idx] = val
-                self._ids[idx] = pair_id
+                self._data[idx] = val  # type: ignore
+                self._ids[idx] = pair_id  # type: ignore
 
     def set(self, from_coin_idx: int, to_coin_idx: int, val: float):
         cell = (from_coin_idx, to_coin_idx)
@@ -84,7 +86,7 @@ class RatiosManager:
         return self._dirty.keys()
 
     def get_pair_id(self, from_coin_idx: int, to_coin_idx: int) -> int:
-        return self._ids[from_coin_idx * self.n + to_coin_idx]
+        return self._ids[from_coin_idx * self.n + to_coin_idx]  # type: ignore
 
     def rollback(self):
         for cell, old_value in self._dirty.items():

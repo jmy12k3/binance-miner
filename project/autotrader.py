@@ -88,7 +88,7 @@ class AutoTrader(ABC):
                     f"orders in order book "
                 )
                 return False
-            self.db.ratios_manager.set(coin.idx, to_coin.idx, coin_price / to_coin_buy_price)
+            self.db.ratios_manager.set(coin.idx, to_coin.idx, coin_price / to_coin_buy_price)  # type: ignore
         if from_coin is not None:
             from_coin_buy_price, _ = self.manager.get_market_buy_price(
                 from_coin.symbol + self.config.BRIDGE.symbol, quote_amount
@@ -101,11 +101,11 @@ class AutoTrader(ABC):
                     f"Can't update reverse pair {to_coin.symbol}->{from_coin.symbol}, not enough orders in order book"
                 )
                 return False
-            self.db.ratios_manager.set(
+            self.db.ratios_manager.set(  # type: ignore
                 to_coin.idx,
                 from_coin.idx,
                 max(
-                    self.db.ratios_manager.get(to_coin.idx, from_coin.idx),
+                    self.db.ratios_manager.get(to_coin.idx, from_coin.idx),  # type: ignore
                     to_coin_sell_price / from_coin_buy_price,
                 ),
             )
@@ -187,10 +187,10 @@ class AutoTrader(ABC):
     def _get_ratios(
         self, coin: CoinStub, coin_sell_price, quote_amount, enable_scout_log=True
     ) -> Tuple[Dict[Tuple[int, int], float], Dict[str, Tuple[float, float]]]:
-        ratio_dict: Dict[(int, int), float] = {}
-        price_amounts: Dict[str, (float, float)] = {}
+        ratio_dict: Dict[Tuple[int, int], float] = {}
+        price_amounts: Dict[str, Tuple[float, float]] = {}
         scout_logs = []
-        for to_idx, target_ratio in enumerate(self.db.ratios_manager.get_from_coin(coin.idx)):
+        for to_idx, target_ratio in enumerate(self.db.ratios_manager.get_from_coin(coin.idx)):  # type: ignore
             if coin.idx == to_idx:
                 continue
             to_coin = CoinStub.get_by_idx(to_idx)
@@ -222,7 +222,7 @@ class AutoTrader(ABC):
             if enable_scout_log:
                 scout_logs.append(
                     LogScout(
-                        self.db.ratios_manager.get_pair_id(coin.idx, to_idx),
+                        self.db.ratios_manager.get_pair_id(coin.idx, to_idx),  # type: ignore
                         ratio_dict[(coin.idx, to_coin.idx)],
                         target_ratio,
                         coin_sell_price,
@@ -260,7 +260,7 @@ class AutoTrader(ABC):
             )
             ratio_dict = {k: v for k, v in ratio_dict.items() if v > 0}
             if ratio_dict:
-                new_best_pair = max(ratio_dict, key=ratio_dict.get)
+                new_best_pair = max(ratio_dict, key=ratio_dict.get)  # type: ignore
                 new_best_coin = CoinStub.get_by_idx(new_best_pair[1])
                 if not is_initial_coin:
                     if not self.update_trade_threshold(
@@ -270,7 +270,7 @@ class AutoTrader(ABC):
                         last_coin_amount,
                         last_coin_quote,
                     ):
-                        self.db.ratios_manager.rollback()
+                        self.db.ratios_manager.rollback()  # type: ignore
                         return
                 last_coin = new_best_coin
                 last_coin_buy_price, last_coin_amount = prices[last_coin.symbol]

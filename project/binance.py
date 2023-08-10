@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import math
 import os
@@ -176,13 +178,13 @@ class BinanceAPIManager:
         db: Database,
         logger: Logger,
         ob_factory: Callable[[Client, BinanceCache], AbstractOrderBalanceManager],
-    ) -> "BinanceAPIManager":
+    ) -> BinanceAPIManager:
         cache = BinanceCache()
         client = Client(config.BINANCE_API_KEY, config.BINANCE_API_SECRET_KEY)
         return BinanceAPIManager(client, cache, config, db, logger, ob_factory(client, cache))
 
     @staticmethod
-    def create_manager(config: Config, db: Database, logger: Logger) -> "BinanceAPIManager":
+    def create_manager(config: Config, db: Database, logger: Logger) -> BinanceAPIManager:
         return BinanceAPIManager._common_factory(
             config,
             db,
@@ -192,11 +194,8 @@ class BinanceAPIManager:
 
     @staticmethod
     def create_manager_paper_trading(
-        config: Config,
-        db: Database,
-        logger: Logger,
-        initial_balances: Dict[str, float],
-    ) -> "BinanceAPIManager":
+        config: Config, db: Database, logger: Logger, initial_balances: Dict[str, float]
+    ) -> BinanceAPIManager:
         return BinanceAPIManager._common_factory(
             config,
             db,
@@ -359,7 +358,7 @@ class BinanceAPIManager:
         return self.binance_client.get_account()
 
     # XXX: Improve logging semantics
-    def get_ticker_price(self, ticker_symbol: str) -> float:
+    def get_ticker_price(self, ticker_symbol: str):
         price = self.cache.ticker_values.get(ticker_symbol, None)
         if price is None and ticker_symbol not in self.cache.non_existent_tickers:
             self.cache.ticker_values = {

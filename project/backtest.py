@@ -1,10 +1,10 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
 from traceback import format_exc
-from typing import Dict, List
+from typing import Dict, List, Optional, Set, Tuple, Union
 
-import binance.client
 from binance import Client
+from binance.exceptions import BinanceAPIException
 from sqlitedict import SqliteDict
 
 from .binance import BinanceAPIManager, BinanceOrderBalanceManager
@@ -40,7 +40,7 @@ class MockBinanceManager(BinanceAPIManager):
         self.config = config
         self.datetime = start_date
         self.balances = start_balances
-        self.non_existing_pairs = set()
+        self.non_existing_pairs: Set = set()
         self.reinit_trader_callback = None
 
     def set_reinit_trader_callback(self, reinit_trader_callback):
@@ -69,9 +69,6 @@ class MockBinanceManager(BinanceAPIManager):
             if end_date > datetime.now():
                 end_date = datetime.now()
             end_date_str = end_date.strftime("%d %b %Y %H:%M:%S")
-            self.logger.info(
-                f"Fetching prices for {ticker_symbol} between {self.datetime} and {end_date}"
-            )
             historical_klines = self.binance_client.get_historical_klines(
                 ticker_symbol, "1m", target_date, end_date_str, limit=1000
             )
@@ -99,15 +96,21 @@ class MockBinanceManager(BinanceAPIManager):
     def get_currency_balance(self, currency_symbol: str, force=False):
         return self.balances.get(currency_symbol, 0)
 
-    def get_market_sell_price(self, symbol: str, amount: float) -> (float, float):
+    def get_market_sell_price(
+        self, symbol: str, amount: float
+    ) -> Union[Tuple[float, float], Tuple[None, None]]:
         price = self.get_ticker_price(symbol)
         return (price, amount * price) if price is not None else (None, None)
 
-    def get_market_buy_price(self, symbol: str, quote_amount: float) -> (float, float):
+    def get_market_buy_price(
+        self, symbol: str, quote_amount: float
+    ) -> Union[Tuple[float, float], Tuple[None, None]]:
         price = self.get_ticker_price(symbol)
         return (price, quote_amount / price) if price is not None else (None, None)
 
-    def get_market_sell_price_fill_quote(self, symbol: str, quote_amount: float) -> (float, float):
+    def get_market_sell_price_fill_quote(
+        self, symbol: str, quote_amount: float
+    ) -> Union[Tuple[float, float], Tuple[None, None]]:
         price = self.get_ticker_price(symbol)
         return (price, quote_amount / price) if price is not None else (None, None)
 
@@ -124,10 +127,6 @@ class MockBinanceManager(BinanceAPIManager):
         self.balances[target_symbol] -= target_quantity
         order_filled_quantity = order_quantity * (1 - self.get_fee(origin_coin, target_coin, False))
         self.balances[origin_symbol] = self.balances.get(origin_symbol, 0) + order_filled_quantity
-        self.logger.info(
-            f"Bought {origin_symbol}, balance now: {self.balances[origin_symbol]} - bridge: "
-            f"{self.balances[target_symbol]}"
-        )
         return BinanceOrder(
             defaultdict(
                 lambda: None,
@@ -150,10 +149,6 @@ class MockBinanceManager(BinanceAPIManager):
         )
         self.balances[target_symbol] = self.balances.get(target_symbol, 0) + target_filled_quantity
         self.balances[origin_symbol] -= order_quantity
-        self.logger.info(
-            f"Sold {origin_symbol}, balance now: {self.balances[origin_symbol]} - bridge: "
-            f"{self.balances[target_symbol]}"
-        )
         return BinanceOrder(
             defaultdict(
                 lambda: None,
@@ -167,7 +162,7 @@ class MockBinanceManager(BinanceAPIManager):
         total = 0
         for coin, balance in self.balances.items():
             if coin == target_symbol:
-                total += balance
+                total += balance  # type: ignore
                 continue
             if coin == self.config.BRIDGE.symbol:
                 price = self.get_ticker_price(target_symbol + coin)
@@ -180,7 +175,7 @@ class MockBinanceManager(BinanceAPIManager):
                 price = None
                 try:
                     price = self.get_ticker_price(coin + target_symbol)
-                except binance.client.BinanceAPIException:
+                except BinanceAPIException:
                     self.non_existing_pairs.add(coin + target_symbol)
                 if price is None:
                     continue
@@ -198,24 +193,28 @@ class MockDatabase(Database):
         pass
 
 
-# XXX: Improve logging semantics
 def backtest(
     start_date: datetime,
-    end_date: datetime = None,
-    interval: int = 1,
-    yield_interval: int = 100,
-    start_balances: Dict[str, float] = None,
-    starting_coin: str = None,
-    config: Config = None,
+    end_date: Optional[datetime] = None,
+    interval: Optional[int] = 1,
+    yield_interval: Optional[int] = 100,
+    start_balances: Optional[Dict[str, float]] = None,
+    starting_coin: Optional[str] = None,
+    config: Optional[Config] = None,
 ):
+    # Initialize variables
     sqlite_cache = SqliteDict("data/backtest_cache.db")
     config = config or Config()
     logger = Logger("backtesting", enable_notifications=False)
     end_date = end_date or datetime.today()
     start_balances = start_balances or {config.BRIDGE.symbol: config.PAPER_BALANCE}
+
+    # Initialize database
     db = MockDatabase(logger, config)
     db.create_database()
     db.set_coins(config.WATCHLIST)
+
+    # Initialize manager (and database)
     manager = MockBinanceManager(
         Client(config.BINANCE_API_KEY, config.BINANCE_API_SECRET_KEY),
         sqlite_cache,
@@ -227,29 +226,37 @@ def backtest(
         start_balances,
     )
     starting_coin = db.get_coin(starting_coin or config.WATCHLIST[0])
-    if manager.get_currency_balance(starting_coin.symbol) == 0:
-        manager.buy_alt(starting_coin.symbol, config.BRIDGE.symbol, 0.0)
-    db.set_current_coin(starting_coin)
+    if manager.get_currency_balance(starting_coin.symbol) == 0:  # type: ignore
+        manager.buy_alt(starting_coin.symbol, config.BRIDGE.symbol, 0.0)  # type: ignore
+    db.set_current_coin(starting_coin)  # type: ignore
+
+    # Initialize autotrader
     strategy = get_strategy(config.STRATEGY)
     if strategy is None:
-        logger.error("Invalid strategy name")
+        logger.error(f"Invalid strategy: {strategy}")
         return manager
     trader = strategy(manager, db, logger, config)
     trader.initialize()
+
+    # Initiate yields
     manager.set_reinit_trader_callback(trader.initialize)
     yield manager
+
+    # Initiate backtesting
     n = 1
     try:
         while manager.datetime < end_date:
             try:
                 trader.scout()
             except Exception:  # pylint: disable=broad-except
-                logger.warning(format_exc())
+                logger.warning(f"An error occured: {format_exc()}")
             manager.increment(interval)
-            if n % yield_interval == 0:
+            if n % yield_interval == 0:  # type: ignore
                 yield manager
             n += 1
     except KeyboardInterrupt:
         pass
+
+    # Initiate clean-up
     sqlite_cache.close()
     return manager

@@ -1,11 +1,11 @@
 import abc
 import asyncio
-import concurrent.futures
 import threading
 import uuid
 from collections import deque
+from concurrent.futures import Future
 from contextlib import asynccontextmanager, contextmanager, suppress
-from typing import Callable, Dict, List, Optional, Set, Union
+from typing import Callable, Deque, Dict, List, Optional, Set, Union
 
 import binance.client
 from binance.exceptions import BinanceAPIException
@@ -95,7 +95,7 @@ class BinanceCache:
 
 
 class DepthCache:
-    def __init__(self, keep_limit=200, max_size=400):
+    def __init__(self, keep_limit: int = 200, max_size: int = 400):
         self.bids = SortedDict()
         self.asks = SortedDict()
         self.keep_limit = keep_limit
@@ -120,7 +120,7 @@ class DepthCache:
     def get_bids(self):
         return reversed(self.bids.items())
 
-    def get_asks(self):
+    def get_asks(self) -> List:
         return self.asks.items()
 
     def clear(self):
@@ -129,11 +129,11 @@ class DepthCache:
 
 
 class DepthCacheManager:
-    def __init__(self, symbol, client: binance.AsyncClient, logger: Logger, limit=100):
+    def __init__(self, symbol, client: binance.AsyncClient, logger: Logger, limit: int = 100):
         self.id = uuid.uuid4()
         self.pending_signals_counter = 0
         self.pending_reinit = False
-        self.data_queue = deque()
+        self.data_queue: Deque = deque()
         self.symbol = symbol
         self.depth_cache = DepthCache()
         self.client = client
@@ -221,23 +221,23 @@ class AsyncListenerContext:
         self.stopped = False
         self.client = client
         self.depth_cache_managers = depth_cache_managers
-        self.replace_signals = {"CONNECT": set(), "DISCONNECT": set()}
+        self.replace_signals: Dict = {"CONNECT": set(), "DISCONNECT": set()}
 
     def attach_stream_uuid_resolver(self, resolver: Callable[[uuid.UUID], str]):
-        self.resolver = resolver
+        self.resolver = resolver  # type: ignore
 
     def notify_stream_replace(self, old_stream_id: uuid.UUID, new_stream_id: uuid.UUID):
         self.replace_signals["CONNECT"].add(new_stream_id)
         self.replace_signals["DISCONNECT"].add(old_stream_id)
 
     def resolve_stream_id(self, stream_id: uuid.UUID) -> str:
-        return self.resolver(stream_id)
+        return self.resolver(stream_id)  # type: ignore
 
     def add_stream_data(self, stream_data, stream_buffer_name: Union[str, bool] = False):
         if self.stopped:
             return
         asyncio.run_coroutine_threadsafe(
-            self.queues[stream_buffer_name].put(stream_data), self.loop
+            self.queues[stream_buffer_name].put(stream_data), self.loop  # type: ignore
         )
 
     async def get_market_sell_price_fill_quote(self, symbol: str, quote: float):
@@ -300,7 +300,7 @@ class AsyncListenerContext:
         if self.stopped:
             return
         stream_id = signal_data["stream_id"]
-        buffer_name = self.resolver(stream_id)
+        buffer_name = self.resolver(stream_id)  # type: ignore
         asyncio.run_coroutine_threadsafe(self.queues[buffer_name].put(signal_data), self.loop)
 
     # XXX: Improve logging semantics
@@ -336,7 +336,7 @@ class AsyncListenedBWAM(BinanceWebSocketApiManager):
         self.stream_signal_buffer = AppendProxy(self.async_listener_context.add_signal_data)
         self.async_listener_context.attach_stream_uuid_resolver(self.stream_uuid_resolver)
 
-    def stream_uuid_resolver(self, stream_id: uuid.UUID):
+    def stream_uuid_resolver(self, stream_id: uuid.UUID) -> str:
         return self.stream_list[stream_id]["stream_buffer_name"]
 
     def stop_manager_with_all_streams(self):
@@ -541,13 +541,7 @@ class AutoReplacingStream(LoopExecutor):  # pylint:disable=too-few-public-method
 
 
 class StreamManagerWorker(threading.Thread):
-    def __init__(
-        self,
-        cache: BinanceCache,
-        config: Config,
-        logger: Logger,
-        fut: concurrent.futures.Future,
-    ):
+    def __init__(self, cache: BinanceCache, config: Config, logger: Logger, fut: Future):
         super().__init__()
         self.cache = cache
         self.config = config
@@ -620,7 +614,7 @@ class StreamManagerWorker(threading.Thread):
 
     @staticmethod
     def create(cache: BinanceCache, config: Config, logger: Logger) -> BinanceStreamManager:
-        fut = concurrent.futures.Future()
+        fut: Future = Future()
         execution_thread = StreamManagerWorker(cache, config, logger, fut)
         execution_thread.start()
         return fut.result()
