@@ -7,7 +7,7 @@ import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from traceback import format_exc
-from typing import Callable, Dict, Optional, Tuple, no_type_check
+from typing import Callable, Dict, Optional
 
 from binance.client import Client
 from binance.exceptions import (
