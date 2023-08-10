@@ -171,7 +171,6 @@ class BinanceAPIManager:
         self.stream_manager: Optional[BinanceStreamManager] = None
         self._setup_websockets()
 
-    # region Staticmethods
     @staticmethod
     def _common_factory(
         config: Config,
@@ -208,9 +207,6 @@ class BinanceAPIManager:
             ),
         )
 
-    # endregion
-
-    # region Private methods
     def _setup_websockets(self):
         self.stream_manager = StreamManagerWorker.create(self.cache, self.config, self.logger)
 
@@ -290,9 +286,6 @@ class BinanceAPIManager:
         write_trade_log()
         return order
 
-    # endregion
-
-    # region Public methods - Helper functions from .binance_ws
     def get_currency_balance(self, currency_symbol: str, force: bool = False) -> float:
         return self.order_balance_manager.get_currency_balance(currency_symbol, force)
 
@@ -313,9 +306,6 @@ class BinanceAPIManager:
     ) -> Tuple[float, float]:
         return self.stream_manager.get_market_sell_price_fill_quote(symbol, quote_amount)
 
-    # endregion
-
-    # region Public methods - Native helper functions
     @cached(cache=TTLCache(maxsize=1, ttl=43200))
     def get_trade_fees(self) -> Dict[str, float]:
         return {
@@ -389,9 +379,12 @@ class BinanceAPIManager:
             return 1 - step_size.find(".")
         return step_size.find("1") - 1
 
-    # endregion
+    @cached(cache=TTLCache(maxsize=2000, ttl=43200))
+    def get_min_notional(self, origin_symbol: str, target_symbol: str):
+        return float(
+            self.get_symbol_filter(origin_symbol, target_symbol, "NOTIONAL")["minNotional"]
+        )
 
-    # region Public methods - Main functions
     def buy_quantity(
         self,
         origin_symbol: str,
@@ -418,11 +411,3 @@ class BinanceAPIManager:
 
     def sell_alt(self, origin_coin: str, target_coin: str, sell_price: float) -> BinanceOrder:
         return self._retry(self._sell_alt, origin_coin, target_coin, sell_price)
-
-    @cached(cache=TTLCache(maxsize=2000, ttl=43200))
-    def get_min_notional(self, origin_symbol: str, target_symbol: str):
-        return float(
-            self.get_symbol_filter(origin_symbol, target_symbol, "NOTIONAL")["minNotional"]
-        )
-
-    # endregion
