@@ -7,7 +7,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, query
 
 from .config import Config
 from .database import Database
@@ -23,7 +23,7 @@ config = Config()
 db = Database(logger, config)
 
 
-def filter_period(query, model):
+def filter_period(query, model) -> query.Query:
     period = request.args.get("period")
     if not period:
         return query

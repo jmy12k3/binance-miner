@@ -1,6 +1,6 @@
 import queue
-import threading
 from os import path
+from threading import Thread
 
 import apprise
 
@@ -21,7 +21,7 @@ class NotificationHandler:
             self.enabled = False
 
     def start_worker(self):
-        threading.Thread(target=self.process_queue, daemon=True).start()
+        Thread(target=self.process_queue, daemon=True).start()
 
     def process_queue(self):
         while True:

@@ -25,7 +25,7 @@ class Config:
             "paper_wallet_balance": "10000",
         }
 
-        # XXX: Notify users when the default config is loaded
+        # XXX: Notify user when the config could not be loaded
         if not os.path.exists(CFG):
             config[CFG_SECTION] = {}
         else:
