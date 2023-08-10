@@ -15,7 +15,7 @@ class SafeScheduler(Scheduler):
     whether other jobs will run or if they'll crash the entire script.
     """
 
-    def __init__(self, logger: logging.Logger, rerun_immediately=True):
+    def __init__(self, logger: logging.Logger, rerun_immediately: bool = True):
         self.logger = logger
         self.rerun_immediately = rerun_immediately
         super().__init__()
@@ -27,6 +27,6 @@ class SafeScheduler(Scheduler):
             self.logger.error(f"An error occured while {next(iter(job.tags))}: {format_exc()}")
             job.last_run = datetime.datetime.now()
             if not self.rerun_immediately:
-                # Reschedule the job for the next time it should run,
-                # instead of running on the next run_pending() tick
+                # Rather than running on the next run_pending() tick,
+                # we reschedule the job running on the next time it was meant to run
                 job._schedule_next_run()  # pylint: disable=protected-access
