@@ -22,8 +22,8 @@ LogScout = namedtuple(
 
 
 class Database:
-    URL = "http://api:5000"  # Docker URL
     URI = "sqlite:///data/crypto_trading.db"  # SQLAlchemy URI
+    URL = "http://api:5000"  # REST API URL, as defined in docker-compose.yml
 
     def __init__(self, logger: Logger, config: Config):
         self.logger = Logger
