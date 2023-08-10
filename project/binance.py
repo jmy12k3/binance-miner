@@ -242,7 +242,6 @@ class BinanceAPIManager:
             quantity=order_quantity,
             quote_quantity=target_balance,
         )
-        self.logger.info(order)
         order = BinanceOrder(order)  # type: ignore
         executed_qty = order.cumulative_filled_quantity  # type: ignore
         if executed_qty > 0 and order.status == "FILLED":  # type: ignore
@@ -267,13 +266,13 @@ class BinanceAPIManager:
         from_coin_price = sell_price
         order_quantity = self.sell_quantity(origin_symbol, target_symbol, origin_balance)
         self.logger.info(f"Selling {order_quantity} <{origin_symbol}>")
+        self.logger.info(f"Balance is {origin_balance}")
         order = self.order_balance_manager.make_order(
             side=Client.SIDE_SELL,
             symbol=origin_symbol + target_symbol,
             quantity=order_quantity,
             quote_quantity=from_coin_price * order_quantity,
         )
-        self.logger.info(order)
         order = BinanceOrder(order)  # type: ignore
         new_balance = self.get_currency_balance(origin_symbol)
         while new_balance >= origin_balance:
