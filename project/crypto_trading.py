@@ -68,7 +68,6 @@ def main():
     logger.info(f"Paper trading: {config.ENABLE_PAPER_TRADING}")
 
     # Initialize database
-    logger.info("Warming up order books")
     db.create_database()
     db.set_coins(config.WATCHLIST)
     time.sleep(10)
