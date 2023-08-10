@@ -169,6 +169,7 @@ class BinanceAPIManager:
         self.stream_manager: Optional[BinanceStreamManager] = None
         self._setup_websockets()
 
+    # region Staticmethod
     @staticmethod
     def _common_factory(
         config: Config,
@@ -208,6 +209,9 @@ class BinanceAPIManager:
             ),
         )
 
+    # endregion
+
+    # region Private methods
     def _setup_websockets(self):
         self.stream_manager = StreamManagerWorker.create(self.cache, self.config, self.logger)
 
@@ -288,9 +292,32 @@ class BinanceAPIManager:
         write_trade_log()
         return order
 
+    # endregion
+
+    # region Public methods - Helper functions that call from the parent classes
     def get_currency_balance(self, currency_symbol: str, force: bool = False) -> float:
         return self.order_balance_manager.get_currency_balance(currency_symbol, force)
 
+    # Type check disabled because of module conflict
+    @no_type_check
+    def get_market_sell_price(self, symbol: str, amount: float) -> Tuple[float, float]:
+        return self.stream_manager.get_market_sell_price(symbol, amount)
+
+    # Type check disabled because of module conflict
+    @no_type_check
+    def get_market_buy_price(self, symbol: str, quote_amount: float) -> Tuple[float, float]:
+        return self.stream_manager.get_market_buy_price(symbol, quote_amount)
+
+    # Type check disabled because of module conflict
+    @no_type_check
+    def get_market_sell_price_fill_quote(
+        self, symbol: str, quote_amount: float
+    ) -> Tuple[float, float]:
+        return self.stream_manager.get_market_sell_price_fill_quote(symbol, quote_amount)
+
+    # endregion
+
+    # region Public methods - Native helper functions
     @cached(cache=TTLCache(maxsize=1, ttl=43200))
     def get_trade_fees(self) -> Dict[str, float]:
         return {
@@ -331,23 +358,6 @@ class BinanceAPIManager:
     def get_account(self) -> Dict:
         return self.binance_client.get_account()
 
-    # Type check disabled because of module conflict
-    @no_type_check
-    def get_market_sell_price(self, symbol: str, amount: float) -> Tuple[float, float]:
-        return self.stream_manager.get_market_sell_price(symbol, amount)
-
-    # Type check disabled because of module conflict
-    @no_type_check
-    def get_market_buy_price(self, symbol: str, quote_amount: float) -> Tuple[float, float]:
-        return self.stream_manager.get_market_buy_price(symbol, quote_amount)
-
-    # Type check disabled because of module conflict
-    @no_type_check
-    def get_market_sell_price_fill_quote(
-        self, symbol: str, quote_amount: float
-    ) -> Tuple[float, float]:
-        return self.stream_manager.get_market_sell_price_fill_quote(symbol, quote_amount)
-
     # XXX: Improve logging semantics
     def get_ticker_price(self, ticker_symbol: str) -> float:
         price = self.cache.ticker_values.get(ticker_symbol, None)
@@ -381,6 +391,9 @@ class BinanceAPIManager:
             return 1 - step_size.find(".")
         return step_size.find("1") - 1
 
+    # endregion
+
+    # region Public methods - Main functions
     def buy_quantity(
         self,
         origin_symbol: str,
@@ -407,6 +420,8 @@ class BinanceAPIManager:
 
     def sell_alt(self, origin_coin: str, target_coin: str, sell_price: float) -> BinanceOrder:
         return self._retry(self._sell_alt, origin_coin, target_coin, sell_price)
+
+    # endregion
 
     @cached(cache=TTLCache(maxsize=2000, ttl=43200))
     def get_min_notional(self, origin_symbol: str, target_symbol: str):
