@@ -56,10 +56,10 @@ def main():
         logger.error(f"An error occured: {e}")
         return
 
-    # Initialize strategy
+    # Initialize autotrader
     strategy = get_strategy(config.STRATEGY)
     if strategy is None:
-        logger.error(f"Invalid strategy: {config.STRATEGY}")
+        logger.error(f"Invalid strategy: {strategy}")
         return
     trader = strategy(manager, db, logger, config)
 
