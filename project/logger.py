@@ -13,10 +13,11 @@ class Logger:
         self.Logger.propagate = False
         formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 
-        fh = logging.FileHandler(f"logs/{logging_service}.log")
-        fh.setLevel(logging.DEBUG)
-        fh.setFormatter(formatter)
-        self.Logger.addHandler(fh)
+        if logging_service:
+            fh = logging.FileHandler(f"logs/{logging_service}.log")
+            fh.setLevel(logging.DEBUG)
+            fh.setFormatter(formatter)
+            self.Logger.addHandler(fh)
 
         ch = logging.StreamHandler()
         ch.setLevel(logging.INFO)
