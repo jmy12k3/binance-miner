@@ -42,7 +42,7 @@ class AbstractOrderBalanceManager(ABC):
     def create_order(self, **params) -> Dict:
         pass
 
-    def make_order(self, side: str, symbol: str, quantity: float, quote_quantity: float) -> Dict:
+    def make_order(self, side: str, symbol: str, quantity: float, quote_quantity: float):
         params = {
             "symbol": symbol,
             "side": side,
@@ -133,7 +133,7 @@ class BinanceOrderBalanceManager(AbstractOrderBalanceManager):
         return self.binance_client.create_order(**params)
 
     # XXX: Improve logging semantics
-    def get_currency_balance(self, currency_symbol: str, force: bool = False) -> float:
+    def get_currency_balance(self, currency_symbol: str, force: bool = False):
         with self.cache.open_balances() as cache_balances:
             balance = cache_balances.get(currency_symbol, None)
             if force or balance is None:
@@ -286,25 +286,17 @@ class BinanceAPIManager:
         write_trade_log()
         return order
 
-    def get_currency_balance(self, currency_symbol: str, force: bool = False) -> float:
+    def get_currency_balance(self, currency_symbol: str, force: bool = False):
         return self.order_balance_manager.get_currency_balance(currency_symbol, force)
 
-    # Type check disabled because of module conflict
-    @no_type_check
-    def get_market_sell_price(self, symbol: str, amount: float) -> Tuple[float, float]:
-        return self.stream_manager.get_market_sell_price(symbol, amount)
+    def get_market_sell_price(self, symbol: str, amount: float):
+        return self.stream_manager.get_market_sell_price(symbol, amount)  # type: ignore
 
-    # Type check disabled because of module conflict
-    @no_type_check
-    def get_market_buy_price(self, symbol: str, quote_amount: float) -> Tuple[float, float]:
-        return self.stream_manager.get_market_buy_price(symbol, quote_amount)
+    def get_market_buy_price(self, symbol: str, quote_amount: float):
+        return self.stream_manager.get_market_buy_price(symbol, quote_amount)  # type: ignore
 
-    # Type check disabled because of module conflict
-    @no_type_check
-    def get_market_sell_price_fill_quote(
-        self, symbol: str, quote_amount: float
-    ) -> Tuple[float, float]:
-        return self.stream_manager.get_market_sell_price_fill_quote(symbol, quote_amount)
+    def get_market_sell_price_fill_quote(self, symbol: str, quote_amount: float):
+        return self.stream_manager.get_market_sell_price_fill_quote(symbol, quote_amount)  # type: ignore
 
     @cached(cache=TTLCache(maxsize=1, ttl=43200))
     def get_trade_fees(self) -> Dict[str, float]:
