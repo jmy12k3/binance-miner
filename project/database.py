@@ -2,7 +2,7 @@ import time
 from collections import namedtuple
 from contextlib import contextmanager
 from datetime import datetime
-from typing import List, Optional, Union
+from typing import List, Optional, Union, no_type_check
 
 from dateutil.relativedelta import relativedelta
 from socketio import Client
@@ -75,6 +75,7 @@ class Database:
             "update", {"table": model.__tablename__, "data": model.info()}, "/backend"
         )
 
+    @no_type_check
     def set_coins(self, symbols: List[str]):
         session: Session
         with self.db_session() as session:
@@ -122,7 +123,7 @@ class Database:
             return coin
         session: Session
         with self.db_session() as session:
-            coin = session.get(Coin, coin)
+            coin = session.get(Coin, coin)  # type: ignore
             session.expunge(coin)
             return coin
 
@@ -132,7 +133,7 @@ class Database:
         with self.db_session() as session:
             if isinstance(coin, Coin):
                 coin = session.merge(coin)
-            cc = CurrentCoin(coin)
+            cc = CurrentCoin(coin)  # type: ignore
             session.add(cc)
             self.send_update(cc)
 
@@ -151,7 +152,7 @@ class Database:
         to_coin = self.get_coin(to_coin)
         session: Session
         with self.db_session() as session:
-            pair: Pair = (
+            pair: Union[Pair, None] = (
                 session.query(Pair)
                 .filter(Pair.from_coin == from_coin, Pair.to_coin == to_coin)
                 .first()
@@ -286,9 +287,11 @@ class TradeLog:
             session.flush()
             self.db.send_update(self.trade)
 
+    @no_type_check
     def set_ordered(
         self, alt_starting_balance: float, crypto_starting_balance: float, alt_trade_amount: float
     ):
+        """Type check disabled because of conflict with SQLAlchemy"""
         session: Session
         with self.db.db_session() as session:
             trade: Trade = session.merge(self.trade)
@@ -298,7 +301,9 @@ class TradeLog:
             trade.state = TradeState.ORDERED
             self.db.send_update(trade)
 
+    @no_type_check
     def set_complete(self, crypto_trade_amount: float):
+        """Type check disabled because of conflict with SQLAlchemy"""
         session: Session
         with self.db.db_session() as session:
             trade: Trade = session.merge(self.trade)

@@ -9,7 +9,7 @@ CFG = "config/user.cfg"
 WATCHLIST = "config/watchlist.txt"
 
 
-# XXX: Simplify the transformation of the config values
+# XXX: Simplify the transformation of config values
 class Config:
     def __init__(self):
         config = configparser.ConfigParser()
