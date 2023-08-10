@@ -93,7 +93,7 @@ class PaperOrderBalanceManager(AbstractOrderBalanceManager):
     def get_currency_balance(self, currency_symbol: str, force: bool = False) -> float:
         return self.balances.get(currency_symbol, 0.0)
 
-    def create_order(self, **params) -> Dict:
+    def create_order(self, **params):
         return {}
 
     def make_order(self, side: str, symbol: str, quantity: float, quote_quantity: float):

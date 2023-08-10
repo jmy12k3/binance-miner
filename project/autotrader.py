@@ -70,7 +70,7 @@ class AutoTrader(ABC):
         to_coin_buy_price: float,
         to_coin_amount: float,
         quote_amount: float,
-    ) -> bool:
+    ):
         if to_coin_buy_price is None:
             self.logger.info(
                 f"Skipping update... current coin {to_coin.symbol + self.config.BRIDGE.symbol} not found"
@@ -111,7 +111,7 @@ class AutoTrader(ABC):
             )
         return True
 
-    def _max_value_in_wallet(self) -> float:
+    def _max_value_in_wallet(self):
         balances = {
             coin.symbol: self.manager.get_currency_balance(coin.symbol)
             for coin in CoinStub.get_all()
@@ -185,8 +185,8 @@ class AutoTrader(ABC):
 
     # XXX: Improve logging semantics
     def _get_ratios(
-        self, coin: CoinStub, coin_sell_price, quote_amount, enable_scout_log=True
-    ) -> Tuple[Dict[Tuple[int, int], float], Dict[str, Tuple[float, float]]]:
+        self, coin: CoinStub, coin_sell_price, quote_amount, enable_scout_log: bool = True
+    ):
         ratio_dict: Dict[Tuple[int, int], float] = {}
         price_amounts: Dict[str, Tuple[float, float]] = {}
         scout_logs = []
