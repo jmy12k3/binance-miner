@@ -22,15 +22,16 @@ LogScout = namedtuple(
 
 
 class Database:
-    URI = "sqlite:///data/crypto_trading.db"
+    URL = "http://api:5000"  # Docker URL
+    URI = "sqlite:///data/crypto_trading.db"  # SQLAlchemy URI
 
     def __init__(self, logger: Logger, config: Config):
-        self.logger = logger
+        self.logger = Logger
         self.config = config
         self.engine = create_engine(self.URI, future=True)
         self.session_factory = scoped_session(sessionmaker(bind=self.engine))
         self.ratios_manager: Optional[RatiosManager] = None
-        self.sio_client = Client()
+        self.socketio = Client()
 
     @contextmanager
     def db_session(self):
@@ -39,57 +40,13 @@ class Database:
         session.commit()
         session.close()
 
-    @heavy_call
-    def batch_log_scout(self, logs: List[LogScout]):
-        session: Session
-        with self.db_session() as session:
-            dt = datetime.now()
-            session.execute(
-                insert(ScoutHistory),
-                [
-                    {
-                        "pair_id": ls.pair_id,
-                        "ratio_diff": ls.ratio_diff,
-                        "target_ratio": ls.target_ratio,
-                        "current_coin_price": ls.coin_price,
-                        "other_coin_price": ls.optional_coin_price,
-                        "datetime": dt,
-                    }
-                    for ls in logs
-                ],
-            )
-
-    @heavy_call
-    def commit_ratios(self):
-        dirty_cells = self.ratios_manager.get_dirty()
-        if len(dirty_cells) == 0:
-            return
-        pair_t = Pair.__table__
-        stmt = (
-            pair_t.update()
-            .where(pair_t.c.id == bindparam("pair_id"))
-            .values(ratio=bindparam("pair_ratio"))
-        )
-        with self.db_session() as session:
-            session.execute(
-                stmt,
-                [
-                    {
-                        "pair_id": self.ratios_manager.get_pair_id(from_idx, to_idx),
-                        "pair_ratio": self.ratios_manager.get(from_idx, to_idx),
-                    }
-                    for from_idx, to_idx in dirty_cells
-                ],
-            )
-        self.ratios_manager.commit()
-
-    def _sio_connect(self):
-        if self.sio_client.connected and self.sio_client.namespaces:
+    def _rest_api(self):
+        if self.socketio.connected and self.socketio.namespaces:
             return True
         try:
-            if not self.sio_client.connected:
-                self.sio_client.connect("http://api:5000", namespaces=["/backend"])
-            while not self.sio_client.connected or not self.sio_client.namespaces:
+            if not self.socketio.connected:
+                self.socketio.connect(self.URL, namespaces=["/backend"])
+            while not self.socketio.connected or not self.socketio.namespaces:
                 time.sleep(0.1)
             return True
         except SocketIOConnectionError:
@@ -104,12 +61,14 @@ class Database:
             pass
 
     def send_update(self, model):
-        if not self._sio_connect():
+        if not self._rest_api():
+            self.logger.info(
+                f"Heartbeat to {self.URL} failed. "
+                "This might be an issue if you are running in Docker."
+            )
             return
-        self.sio_client.emit(
-            "update",
-            {"table": model.__tablename__, "data": model.info()},
-            namespace="/backend",
+        self.socketio.emit(
+            "update", {"table": model.__tablename__, "data": model.info()}, "/backend"
         )
 
     def set_coins(self, symbols: List[str]):
@@ -264,6 +223,50 @@ class Database:
                     for cv in cv_batch
                 ],
             )
+
+    @heavy_call
+    def batch_log_scout(self, logs: List[LogScout]):
+        session: Session
+        with self.db_session() as session:
+            dt = datetime.now()
+            session.execute(
+                insert(ScoutHistory),
+                [
+                    {
+                        "pair_id": ls.pair_id,
+                        "ratio_diff": ls.ratio_diff,
+                        "target_ratio": ls.target_ratio,
+                        "current_coin_price": ls.coin_price,
+                        "other_coin_price": ls.optional_coin_price,
+                        "datetime": dt,
+                    }
+                    for ls in logs
+                ],
+            )
+
+    @heavy_call
+    def commit_ratios(self):
+        dirty_cells = self.ratios_manager.get_dirty()
+        if len(dirty_cells) == 0:
+            return
+        pair_t = Pair.__table__
+        stmt = (
+            pair_t.update()
+            .where(pair_t.c.id == bindparam("pair_id"))
+            .values(ratio=bindparam("pair_ratio"))
+        )
+        with self.db_session() as session:
+            session.execute(
+                stmt,
+                [
+                    {
+                        "pair_id": self.ratios_manager.get_pair_id(from_idx, to_idx),
+                        "pair_ratio": self.ratios_manager.get(from_idx, to_idx),
+                    }
+                    for from_idx, to_idx in dirty_cells
+                ],
+            )
+        self.ratios_manager.commit()
 
     def start_trade_log(self, from_coin: str, to_coin: str, selling: bool):
         return TradeLog(self, from_coin, to_coin, selling)

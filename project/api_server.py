@@ -16,9 +16,9 @@ from .models import Coin, CoinValue, CurrentCoin, Pair, ScoutHistory, Trade
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
-sio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*")
 
-logger = Logger("api_server")
+logger = Logger(logging_service=None, enable_notifications=False)
 config = Config()
 db = Database(logger, config)
 
@@ -39,8 +39,8 @@ def filter_period(query, model):
         return query.filter(model.datetime >= datetime.now() - relativedelta(months=1))
 
 
-@app.route("/api/value_history/<coin>")
 @app.route("/api/value_history")
+@app.route("/api/value_history/<coin>")
 def value_history(coin: str = None):
     session: Session
     with db.db_session() as session:
@@ -59,6 +59,7 @@ def value_history(coin: str = None):
 def total_value_history():
     session: Session
     with db.db_session() as session:
+        # pylint: disable=not-callable
         query = session.query(
             CoinValue.datetime,
             func.sum(CoinValue.btc_value),
@@ -129,10 +130,10 @@ def pairs():
         return jsonify([pair.info() for pair in all_pairs])
 
 
-@sio.on("update", namespace="/backend")
-def event_handler(msg):
+@socketio.on("update", namespace="/backend")
+def on_update(msg):
     emit("update", msg, namespace="/frontend", broadcast=True)
 
 
 if __name__ == "__main__":
-    sio.run(app, debug=True)
+    socketio.run(app, debug=True)
