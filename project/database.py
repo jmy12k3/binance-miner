@@ -26,7 +26,7 @@ class Database:
     URL = "http://api:5000"  # REST API URL, as defined in docker-compose.yml
 
     def __init__(self, logger: Logger, config: Config):
-        self.logger = Logger
+        self.logger = logger
         self.config = config
         self.engine = create_engine(self.URI, future=True)
         self.session_factory = scoped_session(sessionmaker(bind=self.engine))
@@ -63,8 +63,7 @@ class Database:
     def send_update(self, model):
         if not self._rest_api():
             self.logger.warning(
-                f"Heartbeat to {self.URL} failed. "
-                "This might be an issue if you are running in Docker."
+                f"Heartbeat to {self.URL} failed. This might be an issue if you are running in Docker."
             )
             return
         self.socketio.emit(
