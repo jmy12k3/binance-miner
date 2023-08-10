@@ -236,6 +236,7 @@ def backtest(
         logger.error(f"Invalid strategy: {strategy}")
         return manager
     trader = strategy(manager, db, logger, config)
+    logger.info(f"Chosen strategy: {strategy}")
     trader.initialize()
 
     # Initiate yields
