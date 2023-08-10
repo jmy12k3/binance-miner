@@ -2,7 +2,7 @@ import time
 from collections import namedtuple
 from contextlib import contextmanager
 from datetime import datetime
-from typing import Generator, List, Optional, Union
+from typing import List, Optional, Union
 
 from dateutil.relativedelta import relativedelta
 from socketio import Client
@@ -29,7 +29,7 @@ class Database:
     # Define constants that could be overridden by child
     URI = "sqlite:///data/crypto_trading.db"
 
-    def __init__(self, logger: Logger, config: Config) -> None:
+    def __init__(self, logger: Logger, config: Config):
         self.logger = logger
         self.config = config
         self.engine = create_engine(self.URI, future=True)
@@ -38,13 +38,13 @@ class Database:
         self.socketio_client = Client()
 
     @contextmanager
-    def db_session(self) -> Generator:
+    def db_session(self):
         session: Session = self.session_factory()
         yield session
         session.commit()
         session.close()
 
-    def _api_session(self) -> bool:
+    def _api_session(self):
         if self.socketio_client.connected and self.socketio_client.namespaces:
             return True
         try:
@@ -56,7 +56,7 @@ class Database:
         except SocketIOConnectionError:
             return False
 
-    def create_database(self) -> None:
+    def create_database(self):
         Base.metadata.create_all(self.engine)
         try:
             with self.db_session() as session:
@@ -64,7 +64,7 @@ class Database:
         except:  # pylint: disable=bare-except
             pass
 
-    def send_update(self, model) -> None:
+    def send_update(self, model):
         if not self._api_session():
             self.logger.warning(
                 f"Heartbeat to API {API_GATEWAY} failed. "
@@ -75,7 +75,7 @@ class Database:
             "update", {"table": model.__tablename__, "data": model.info()}, "/backend"
         )
 
-    def set_coins(self, symbols: List[str]) -> None:
+    def set_coins(self, symbols: List[str]):
         session: Session
         with self.db_session() as session:
             coins: List[Coin] = session.query(Coin).all()
@@ -107,7 +107,7 @@ class Database:
             pairs = session.query(Pair).filter(Pair.enabled.is_(True)).all()
             self.ratios_manager = RatiosManager(pairs)
 
-    def get_coins(self, only_enabled=True) -> List[Coin]:
+    def get_coins(self, only_enabled: bool = True) -> List[Coin]:
         session: Session
         with self.db_session() as session:
             if only_enabled:
@@ -117,7 +117,7 @@ class Database:
             session.expunge_all()
             return coins
 
-    def get_coin(self, coin: Union[Coin, str]) -> Coin:
+    def get_coin(self, coin: Union[Coin, str]):
         if isinstance(coin, Coin):
             return coin
         session: Session
@@ -126,7 +126,7 @@ class Database:
             session.expunge(coin)
             return coin
 
-    def set_current_coin(self, coin: Union[Coin, str]) -> None:
+    def set_current_coin(self, coin: Union[Coin, str]):
         coin = self.get_coin(coin)
         session: Session
         with self.db_session() as session:
@@ -146,7 +146,7 @@ class Database:
             session.expunge(coin)
             return coin
 
-    def get_pair(self, from_coin: Union[Coin, str], to_coin: Union[Coin, str]) -> Pair:
+    def get_pair(self, from_coin: Union[Coin, str], to_coin: Union[Coin, str]):
         from_coin = self.get_coin(from_coin)
         to_coin = self.get_coin(to_coin)
         session: Session
@@ -159,13 +159,13 @@ class Database:
             session.expunge(pair)
             return pair
 
-    def prune_scout_history(self) -> None:
+    def prune_scout_history(self):
         time_diff = datetime.now() - relativedelta(hours=self.config.SCOUT_HISTORY_PRUNE_TIME)
         session: Session
         with self.db_session() as session:
             session.query(ScoutHistory).filter(ScoutHistory.datetime < time_diff).delete()
 
-    def prune_value_history(self) -> None:
+    def prune_value_history(self):
         def _datetime_id_query(dt_format):
             dt_column = func.strftime(dt_format, CoinValue.datetime)
             # pylint: disable=not-callable
@@ -210,7 +210,7 @@ class Database:
                 CoinValue.interval == Interval.DAILY, CoinValue.datetime < time_diff
             ).delete()
 
-    def batch_update_coin_values(self, cv_batch: List[CoinValue]) -> None:
+    def batch_update_coin_values(self, cv_batch: List[CoinValue]):
         session: Session
         with self.db_session() as session:
             session.execute(
@@ -229,7 +229,7 @@ class Database:
             )
 
     @heavy_call
-    def batch_log_scout(self, logs: List[LogScout]) -> None:
+    def batch_log_scout(self, logs: List[LogScout]):
         session: Session
         with self.db_session() as session:
             dt = datetime.now()
@@ -249,7 +249,7 @@ class Database:
             )
 
     @heavy_call
-    def commit_ratios(self) -> None:
+    def commit_ratios(self):
         dirty_cells = self.ratios_manager.get_dirty()
         if len(dirty_cells) == 0:
             return
@@ -272,12 +272,12 @@ class Database:
             )
         self.ratios_manager.commit()
 
-    def start_trade_log(self, from_coin: str, to_coin: str, selling: bool) -> "TradeLog":
+    def start_trade_log(self, from_coin: str, to_coin: str, selling: bool):
         return TradeLog(self, from_coin, to_coin, selling)
 
 
 class TradeLog:
-    def __init__(self, db: Database, from_coin: str, to_coin: str, selling: bool) -> None:
+    def __init__(self, db: Database, from_coin: str, to_coin: str, selling: bool):
         self.db = db
         session: Session
         with self.db.db_session() as session:
@@ -288,7 +288,7 @@ class TradeLog:
 
     def set_ordered(
         self, alt_starting_balance: float, crypto_starting_balance: float, alt_trade_amount: float
-    ) -> None:
+    ):
         session: Session
         with self.db.db_session() as session:
             trade: Trade = session.merge(self.trade)
@@ -298,7 +298,7 @@ class TradeLog:
             trade.state = TradeState.ORDERED
             self.db.send_update(trade)
 
-    def set_complete(self, crypto_trade_amount: float) -> None:
+    def set_complete(self, crypto_trade_amount: float):
         session: Session
         with self.db.db_session() as session:
             trade: Trade = session.merge(self.trade)
