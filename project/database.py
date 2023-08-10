@@ -62,7 +62,7 @@ class Database:
 
     def send_update(self, model):
         if not self._rest_api():
-            self.logger.info(
+            self.logger.warning(
                 f"Heartbeat to {self.URL} failed. "
                 "This might be an issue if you are running in Docker."
             )
