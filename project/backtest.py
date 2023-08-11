@@ -239,7 +239,7 @@ def backtest(
     logger.info(f"Chosen strategy: {strategy}")
     trader.initialize()
 
-    # Initiate yields
+    # Yield manager
     manager.set_reinit_trader_callback(trader.initialize)
     yield manager
 
