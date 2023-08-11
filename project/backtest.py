@@ -202,7 +202,7 @@ def backtest(
     starting_coin: Optional[str] = None,
     config: Optional[Config] = None,
 ):
-    # Initialize variables
+    # Initialize modules
     sqlite_cache = SqliteDict("data/backtest_cache.db")
     config = config or Config()
     logger = Logger("backtesting", enable_notifications=False)
