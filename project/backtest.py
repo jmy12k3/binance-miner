@@ -184,7 +184,7 @@ class MockBinanceManager(BinanceAPIManager):
 
 
 class MockDatabase(Database):
-    URI = "sqlite:///"
+    DB = "sqlite:///"
 
     def __init__(self, logger: Logger, config: Config):  # pylint: disable=useless-super-delegation
         super().__init__(logger, config)
