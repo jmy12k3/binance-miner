@@ -1,5 +1,5 @@
+import enum
 from datetime import datetime
-from enum import Enum as Enum_
 
 from sqlalchemy import (
     Boolean,
@@ -16,7 +16,7 @@ from sqlalchemy.orm import relationship
 from .base import Base
 
 
-class TradeState(Enum_):
+class TradeState(enum.Enum):
     STARTING = "STARTING"
     ORDERED = "ORDERED"
     COMPLETE = "COMPLETE"

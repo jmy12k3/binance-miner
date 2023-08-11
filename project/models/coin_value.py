@@ -1,5 +1,5 @@
+import enum
 from datetime import datetime as datetime_
-from enum import Enum as Enum_
 
 from sqlalchemy import Column, DateTime, Enum, Float, ForeignKey, Integer, String
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -9,7 +9,7 @@ from .base import Base
 from .coin import Coin
 
 
-class Interval(Enum_):
+class Interval(enum.Enum):
     MINUTELY = "MINUTELY"
     HOURLY = "HOURLY"
     DAILY = "DAILY"
