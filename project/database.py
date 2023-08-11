@@ -22,17 +22,17 @@ LogScout = namedtuple(
 )
 
 # Define constants that could not be overridden by child
-API_GATEWAY = "http://api:5000"
+API = "http://api:5000"
 
 
 class Database:
     # Define constants that could be overridden by child
-    URI = "sqlite:///data/crypto_trading.db"
+    DB = "sqlite:///data/crypto_trading.db"
 
     def __init__(self, logger: Logger, config: Config):
         self.logger = logger
         self.config = config
-        self.engine = create_engine(self.URI, future=True)
+        self.engine = create_engine(self.DB, future=True)
         self.session_factory = scoped_session(sessionmaker(bind=self.engine))
         self.ratios_manager: Optional[RatiosManager] = None
         self.socketio_client = Client()
@@ -49,7 +49,7 @@ class Database:
             return True
         try:
             if not self.socketio_client.connected:
-                self.socketio_client.connect(API_GATEWAY, namespaces=["/backend"])
+                self.socketio_client.connect(API, namespaces=["/backend"])
             while not self.socketio_client.connected or not self.socketio_client.namespaces:
                 time.sleep(0.1)
             return True
@@ -67,7 +67,7 @@ class Database:
     def send_update(self, model):
         if not self._api_session():
             self.logger.warning(
-                f"Heartbeat to API {API_GATEWAY} failed. "
+                f"Heartbeat to API {API} failed. "
                 "This might be an issue if you are running in Docker."
             )
             return
@@ -75,7 +75,6 @@ class Database:
             "update", {"table": model.__tablename__, "data": model.info()}, "/backend"
         )
 
-    # Type check disabled because of module conflict
     @no_type_check
     def set_coins(self, symbols: List[str]):
         session: Session
@@ -288,7 +287,6 @@ class TradeLog:
             session.flush()
             self.db.send_update(self.trade)
 
-    # Type check disabled because of module conflict
     @no_type_check
     def set_ordered(
         self, alt_starting_balance: float, crypto_starting_balance: float, alt_trade_amount: float
@@ -302,7 +300,6 @@ class TradeLog:
             trade.state = TradeState.ORDERED
             self.db.send_update(trade)
 
-    # Type check disabled because of module conflict
     @no_type_check
     def set_complete(self, crypto_trade_amount: float):
         session: Session
