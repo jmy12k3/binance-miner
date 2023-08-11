@@ -250,7 +250,7 @@ def backtest(
             try:
                 trader.scout()
             except Exception:  # pylint: disable=broad-except
-                logger.warning(f"An error occured: {format_exc()}")
+                logger.warning(f"An error occured: \n\n{format_exc()}")
             manager.increment(interval)
             if n % yield_interval == 0:  # type: ignore
                 yield manager
