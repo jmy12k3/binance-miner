@@ -235,7 +235,7 @@ def backtest(
     if strategy is None:
         logger.error(f"Invalid strategy: {strategy}")
         return manager
-    trader = strategy(manager, db, logger, config)
+    trader = strategy(logger, config, db, manager)
     logger.info(f"Chosen strategy: {strategy}")
     trader.initialize()
 

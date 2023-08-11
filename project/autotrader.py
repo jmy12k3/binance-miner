@@ -17,12 +17,12 @@ from .ratios import CoinStub
 
 class AutoTrader(ABC):
     def __init__(
-        self, binance_manager: BinanceAPIManager, database: Database, logger: Logger, config: Config
+        self, logger: Logger, config: Config, database: Database, binance_manager: BinanceAPIManager
     ):
-        self.manager = binance_manager
-        self.db = database
         self.logger = logger
         self.config = config
+        self.db = database
+        self.manager = binance_manager
 
     def initialize(self):
         self.initialize_trade_thresholds()

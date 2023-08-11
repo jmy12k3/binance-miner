@@ -61,7 +61,7 @@ def main():
     if strategy is None:
         logger.error(f"Invalid strategy: {strategy}")
         return
-    trader = strategy(manager, db, logger, config)
+    trader = strategy(logger, config, db, manager)
 
     # Log configurations
     logger.info(f"Chosen strategy: {config.STRATEGY}")
