@@ -28,9 +28,8 @@ def main():
     else:
         manager = BinanceAPIManager.create_manager(config, db, logger)
 
-    # Initialize exit timeout
+    # Initiate a thread to close the manager in the given timeout
     def timeout_exit(timeout: int):
-        logger.info(f"Waiting for {timeout} seconds at most to clean-up")
         thread = Thread(target=manager.close)
         thread.start()
         thread.join(timeout)
