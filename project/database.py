@@ -184,14 +184,8 @@ class Database:
             )
 
         hourly_update_query = _update_query(_datetime_id_query("%H"), Interval.HOURLY)
-        weekly_update_query = _update_query(
-            _datetime_id_query("%Y-%W"),
-            Interval.WEEKLY,
-        )
-        daily_update_query = _update_query(
-            _datetime_id_query("%Y-%j"),
-            Interval.DAILY,
-        )
+        weekly_update_query = _update_query(_datetime_id_query("%Y-%W"), Interval.WEEKLY)
+        daily_update_query = _update_query(_datetime_id_query("%Y-%j"), Interval.DAILY)
         session: Session
         with self.db_session() as session:
             session.execute(hourly_update_query)
