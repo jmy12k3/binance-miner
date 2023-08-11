@@ -436,7 +436,7 @@ class UserDataListener(AsyncListener):
     async def handle_signal(self, signal):
         signal_type = signal["type"]
         if signal_type == "CONNECT":
-            self.async_context.logger.debug("Connect for userdata arrived", False)
+            self.async_context.logger.debug("Connect for userdata arrived")
             await self._invalidate_balances()
 
 

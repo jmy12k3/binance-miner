@@ -15,7 +15,7 @@ class SafeScheduler(Scheduler):
     whether other jobs will run or if they'll crash the entire script.
     """
 
-    def __init__(self, logger: logging.Logger, rerun_immediately=True):
+    def __init__(self, logger: logging.Logger, rerun_immediately: bool = True):
         self.logger = logger
         self.rerun_immediately = rerun_immediately
         super().__init__()

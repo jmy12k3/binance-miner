@@ -8,7 +8,7 @@ APPRISE_CONFIG_PATH = "config/apprise.yml"
 
 
 class NotificationHandler:
-    def __init__(self, enabled=True):
+    def __init__(self, enabled: bool = True):
         if enabled and path.exists(APPRISE_CONFIG_PATH):
             self.apobj = apprise.Apprise()
             config = apprise.AppriseConfig()
