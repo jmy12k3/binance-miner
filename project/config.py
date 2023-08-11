@@ -14,7 +14,6 @@ class Config:
     def __init__(self):
         config = configparser.ConfigParser()
         config["DEFAULT"] = {
-            "bridge": "BUSD",
             "use_margin": "true",
             "scout_multiplier": "5",
             "scout_margin": "0.8",
