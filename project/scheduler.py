@@ -24,7 +24,7 @@ class SafeScheduler(Scheduler):
         try:
             super()._run_job(job)
         except Exception:  # pylint: disable=broad-except
-            self.logger.error(f"An error occured: \n\n{format_exc()}")
+            self.logger.error(f"An error occured\n\n{format_exc()}")
             job.last_run = datetime.datetime.now()
             if not self.rerun_immediately:
                 job._schedule_next_run()  # pylint: disable=protected-access
