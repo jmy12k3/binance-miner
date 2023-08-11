@@ -13,8 +13,10 @@ from .strategies import get_strategy
 
 
 def main():
-    # Initialize modules
+    # Initialize exit flag
     exiting = False
+
+    # Initialize modules
     logger = Logger()
     logger.info("Starting")
     config = Config()
@@ -28,7 +30,7 @@ def main():
     else:
         manager = BinanceAPIManager.create_manager(config, db, logger)
 
-    # Initiate a thread to close the manager within a given timeout
+    # Initialize worker to exit handler
     def timeout_exit(timeout: int):
         thread = Thread(target=manager.close)
         thread.start()
@@ -43,7 +45,7 @@ def main():
         timeout_exit(10)
         os._exit(0)
 
-    # Hook exit handler
+    # Hook signals to exit handler
     signal.signal(signal.SIGINT, exit_handler)
     signal.signal(signal.SIGTERM, exit_handler)
     atexit.register(exit_handler)
