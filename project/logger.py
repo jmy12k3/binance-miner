@@ -1,5 +1,5 @@
 import logging.handlers
-from typing import Optional
+from typing import Optional, Union
 
 from .notifications import NotificationHandler
 
@@ -8,35 +8,34 @@ class Logger:
     Logger = None
     NotificationHandler = None
 
-    def __init__(self, logging_service: str, enable_notifications: Optional[bool] = False):
-        # Initialize logger
+    def __init__(
+        self, logging_service: Union[str, None], enable_notifications: Optional[bool] = False
+    ):
         self.Logger = logging.getLogger(f"{logging_service}_logger")
         self.Logger.setLevel(logging.DEBUG)
         self.Logger.propagate = False
         formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 
-        # Initialize file handler
         if logging_service:
             fh = logging.FileHandler(f"logs/{logging_service}.log")
             fh.setLevel(logging.DEBUG)
             fh.setFormatter(formatter)
             self.Logger.addHandler(fh)
 
-        # Initialize console handler
         ch = logging.StreamHandler()
         ch.setLevel(logging.INFO)
         ch.setFormatter(formatter)
         self.Logger.addHandler(ch)
-
-        # Initialize notification handler
         self.NotificationHandler = NotificationHandler(enable_notifications)
 
     def close(self):
         for handler in self.Logger.handlers[:]:
             handler.close()
 
-    def log(self, message: str, level: int, notification: bool):
-        # Log message
+    def log(self, message: str, level: int, notification: Optional[bool] = True):
+        # Mypy references
+        assert self.Logger and self.NotificationHandler
+
         if level == logging.DEBUG:
             self.Logger.debug(message)
         elif level == logging.INFO:
@@ -46,7 +45,6 @@ class Logger:
         elif level == logging.ERROR:
             self.Logger.error(message)
 
-        # Send notification if enabled
         if notification and self.NotificationHandler.enabled:
             self.NotificationHandler.send_notification(str(message))
 

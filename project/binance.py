@@ -7,7 +7,7 @@ import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from traceback import format_exc
-from typing import Callable, Dict, Optional
+from typing import Annotated, Callable, Dict, Optional
 
 from binance.client import Client
 from binance.exceptions import (
@@ -16,6 +16,7 @@ from binance.exceptions import (
     BinanceRequestException,
 )
 from cachetools import TTLCache, cached
+from easydict import EasyDict
 
 from .binance_ws import (
     BinanceCache,
@@ -23,7 +24,7 @@ from .binance_ws import (
     BinanceStreamManager,
     StreamManagerWorker,
 )
-from .config import Config
+from .config import CONFIG
 from .database import Database
 from .logger import Logger
 from .postpone import heavy_call
@@ -157,7 +158,7 @@ class BinanceAPIManager:
         self,
         client: Client,
         cache: BinanceCache,
-        config: Config,
+        config: Annotated[EasyDict, CONFIG],
         db: Database,
         logger: Logger,
         order_balance_manager: AbstractOrderBalanceManager,
@@ -173,7 +174,7 @@ class BinanceAPIManager:
 
     @staticmethod
     def _common_factory(
-        config: Config,
+        config: Annotated[EasyDict, CONFIG],
         db: Database,
         logger: Logger,
         ob_factory: Callable[[Client, BinanceCache], AbstractOrderBalanceManager],
@@ -183,7 +184,9 @@ class BinanceAPIManager:
         return BinanceAPIManager(client, cache, config, db, logger, ob_factory(client, cache))
 
     @staticmethod
-    def create_manager(config: Config, db: Database, logger: Logger) -> BinanceAPIManager:
+    def create_manager(
+        config: Annotated[EasyDict, CONFIG], db: Database, logger: Logger
+    ) -> BinanceAPIManager:
         return BinanceAPIManager._common_factory(
             config,
             db,
@@ -193,7 +196,10 @@ class BinanceAPIManager:
 
     @staticmethod
     def create_manager_paper_trading(
-        config: Config, db: Database, logger: Logger, initial_balances: Dict[str, float]
+        config: Annotated[EasyDict, CONFIG],
+        db: Database,
+        logger: Logger,
+        initial_balances: Dict[str, float],
     ) -> BinanceAPIManager:
         return BinanceAPIManager._common_factory(
             config,
@@ -211,7 +217,7 @@ class BinanceAPIManager:
         self.stream_manager = StreamManagerWorker.create(self.cache, self.config, self.logger)
 
     # XXX: Improve logging semantics
-    def _retry(self, func, *args, **kwargs):
+    def _retry(self, func: Callable, *args, **kwargs):
         for attempt in range(20):
             try:
                 return func(*args, **kwargs)

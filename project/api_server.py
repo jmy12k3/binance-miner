@@ -1,6 +1,6 @@
 from datetime import datetime
 from itertools import groupby
-from typing import List, Tuple
+from typing import List, Optional, Tuple, Union
 
 from dateutil.relativedelta import relativedelta
 from flask import Flask, jsonify, request
@@ -10,7 +10,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.query import Query
 
-from .config import Config
+from .config import CONFIG
 from .database import Database
 from .logger import Logger
 from .models import Coin, CoinValue, CurrentCoin, Pair, ScoutHistory, Trade
@@ -19,12 +19,15 @@ app = Flask(__name__)
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-logger = Logger(logging_service=None, enable_notifications=False)
-config = Config()
-db = Database(logger, config)
+logger = Logger(None)
+db = Database(logger, CONFIG)
 
 
-def filter_period(query, model) -> Query:
+# pylint: disable=inconsistent-return-statements
+def filter_period(  # type: ignore
+    query: Query,
+    model: Union[CoinValue, CurrentCoin, ScoutHistory, Trade],
+) -> Query:
     period = request.args.get("period")
     if not period:
         return query
@@ -42,11 +45,11 @@ def filter_period(query, model) -> Query:
 
 @app.route("/api/value_history")
 @app.route("/api/value_history/<coin>")
-def value_history(coin: str = None):
+def value_history(coin: Optional[str] = None):
     session: Session
     with db.db_session() as session:
         query = session.query(CoinValue).order_by(CoinValue.coin_id.asc(), CoinValue.datetime.asc())
-        query = filter_period(query, CoinValue)
+        query = filter_period(query, CoinValue)  # type: ignore
         if coin:
             values: List[CoinValue] = query.filter(CoinValue.coin_id == coin).all()
             return jsonify([entry.info() for entry in values])

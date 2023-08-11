@@ -2,12 +2,13 @@ import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, Optional, Tuple
+from typing import Annotated, Dict, Optional, Tuple
 
+from easydict import EasyDict
 from sqlalchemy.orm import Session
 
 from .binance import BinanceAPIManager
-from .config import Config
+from .config import CONFIG
 from .database import Database, LogScout
 from .logger import Logger
 from .models import CoinValue, Pair
@@ -17,7 +18,11 @@ from .ratios import CoinStub
 
 class AutoTrader(ABC):
     def __init__(
-        self, logger: Logger, config: Config, database: Database, binance_manager: BinanceAPIManager
+        self,
+        logger: Logger,
+        config: Annotated[EasyDict, CONFIG],
+        database: Database,
+        binance_manager: BinanceAPIManager,
     ):
         self.logger = logger
         self.config = config
@@ -29,13 +34,17 @@ class AutoTrader(ABC):
 
     # XXX: Improve logging semantics
     def transaction_through_bridge(
-        self, from_coin: CoinStub, to_coin: CoinStub, sell_price: float, buy_price: float
+        self,
+        from_coin: CoinStub,
+        to_coin: CoinStub,
+        sell_price: float,
+        buy_price: float,
     ):
         to_coin_original_amount = self.manager.get_currency_balance(to_coin.symbol)
         if self.manager.sell_alt(from_coin.symbol, self.config.BRIDGE.symbol, sell_price) is None:
             self.logger.error(
-                f"Market sell failed, from_coin: {from_coin.symbol}, to_coin: {to_coin.symbol},"
-                f" sell_price: {sell_price}"
+                "Market sell failed, from_coin: {from_coin.symbol}, to_coin: {to_coin.symbol}, sell"
+                f" _price: {sell_price}"
             )
         result = self.manager.buy_alt(to_coin.symbol, self.config.BRIDGE.symbol, buy_price)
         if result is not None:
@@ -73,7 +82,8 @@ class AutoTrader(ABC):
     ):
         if to_coin_buy_price is None:
             self.logger.info(
-                f"Skipping update... current coin {to_coin.symbol + self.config.BRIDGE.symbol} not found"
+                f"Skipping update... current coin {to_coin.symbol + self.config.BRIDGE.symbol}"
+                " not found"
             )
             return False
         for coin in CoinStub.get_all():
@@ -84,8 +94,8 @@ class AutoTrader(ABC):
             )
             if coin_price is None:
                 self.logger.info(
-                    f"Update for coin {coin.symbol + self.config.BRIDGE.symbol} can't be performed, not enough "
-                    f"orders in order book "
+                    f"Update for coin {coin.symbol + self.config.BRIDGE.symbol} can't be performed,"
+                    " not enough orders in order book"
                 )
                 return False
             self.db.ratios_manager.set(coin.idx, to_coin.idx, coin_price / to_coin_buy_price)  # type: ignore
@@ -98,7 +108,8 @@ class AutoTrader(ABC):
             )
             if from_coin_buy_price is None or to_coin_sell_price is None:
                 self.logger.info(
-                    f"Can't update reverse pair {to_coin.symbol}->{from_coin.symbol}, not enough orders in order book"
+                    f"Can't update reverse pair {to_coin.symbol}->{from_coin.symbol}, not enough or"
+                    "ders in order book"
                 )
                 return False
             self.db.ratios_manager.set(  # type: ignore
@@ -145,7 +156,8 @@ class AutoTrader(ABC):
             for from_coin_symbol, group in grouped_pairs.items():
                 from_coin_idx = CoinStub.get_by_symbol(from_coin_symbol).idx
                 self.logger.info(
-                    f"Initializing {from_coin_symbol} vs [{', '.join([p.to_coin.symbol for p in group])}]"
+                    f"Initializing {from_coin_symbol} vs "
+                    f"[{', '.join([p.to_coin.symbol for p in group])}]"
                 )
                 for pair in group:
                     for _ in range(10):
@@ -157,7 +169,8 @@ class AutoTrader(ABC):
                         time.sleep(1)
                     if from_coin_price is None:
                         self.logger.info(
-                            f"Skipping initializing {pair.from_coin + self.config.BRIDGE}, symbol not found"
+                            f"Skipping initializing {pair.from_coin + self.config.BRIDGE}, symbol n"
+                            "ot found"
                         )
                         continue
                     for _ in range(10):
@@ -169,7 +182,8 @@ class AutoTrader(ABC):
                         time.sleep(10)
                     if to_coin_price is None:
                         self.logger.info(
-                            f"Skipping initializing {pair.to_coin + self.config.BRIDGE}, symbol not found"
+                            f"Skipping initializing {pair.to_coin + self.config.BRIDGE}, symbol not"
+                            " found"
                         )
                         continue
                     ratios_manager.set(
@@ -199,7 +213,8 @@ class AutoTrader(ABC):
             )
             if optional_coin_buy_price is None:
                 self.logger.info(
-                    f"Market price for coin {to_coin.symbol + self.config.BRIDGE.symbol} can't be calculated, skipping"
+                    f"Market price for coin {to_coin.symbol + self.config.BRIDGE.symbol} can't be c"
+                    "alculated, skipping"
                 )
                 continue
             price_amounts[to_coin.symbol] = (optional_coin_buy_price, optional_coin_amount)

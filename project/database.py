@@ -2,34 +2,35 @@ import time
 from collections import namedtuple
 from contextlib import contextmanager
 from datetime import datetime
-from typing import List, Optional, Union, no_type_check
+from typing import Annotated, List, Optional, Union, no_type_check
 
 from dateutil.relativedelta import relativedelta
+from easydict import EasyDict
 from socketio import Client
 from socketio.exceptions import ConnectionError as SocketIOConnectionError
 from sqlalchemy import bindparam, create_engine, func, insert, select, update
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
-from .config import Config
+from .config import CONFIG
 from .logger import Logger
 from .models import *
 from .postpone import heavy_call
 from .ratios import CoinStub, RatiosManager
 
-# Define types
+# LogScout is both a namedtuple and a dataclass
 LogScout = namedtuple(
     "LogScout", ["pair_id", "ratio_diff", "target_ratio", "coin_price", "optional_coin_price"]
 )
 
-# Define constants that could not be overridden by child
+# Constant that are immutable by inheritance
 API = "http://api:5000"
 
 
 class Database:
-    # Define constants that could be overridden by child
+    # Constant that are mutable by inheritance
     DB = "sqlite:///data/crypto_trading.db"
 
-    def __init__(self, logger: Logger, config: Config):
+    def __init__(self, logger: Logger, config: Annotated[EasyDict, CONFIG]):
         self.logger = logger
         self.config = config
         self.engine = create_engine(self.DB, future=True)

@@ -5,14 +5,15 @@ import uuid
 from collections import deque
 from concurrent.futures import Future
 from contextlib import asynccontextmanager, contextmanager, suppress
-from typing import Callable, Deque, Dict, List, Optional, Set, Union
+from typing import Annotated, Callable, Deque, Dict, List, Optional, Set, Union
 
 import binance.client
 from binance.exceptions import BinanceAPIException
+from easydict import EasyDict
 from sortedcontainers import SortedDict
 from unicorn_binance_websocket_api import BinanceWebSocketApiManager
 
-from .config import Config
+from .config import CONFIG
 from .logger import Logger
 
 BUFFER_NAME_MINITICKERS = "mt"
@@ -147,7 +148,8 @@ class DepthCacheManager:
             return
         if data["first_update_id_in_event"] > self.last_update_id + 1:
             self.logger.debug(
-                f"OB: {self.symbol} reinit, update delta: {data['first_update_id_in_event'] - self.last_update_id}"
+                f"OB: {self.symbol} reinit, update delta: "
+                f"{data['first_update_id_in_event'] - self.last_update_id}"
             )
             await self.reinit()
             return
@@ -541,7 +543,9 @@ class AutoReplacingStream(LoopExecutor):  # pylint:disable=too-few-public-method
 
 
 class StreamManagerWorker(threading.Thread):
-    def __init__(self, cache: BinanceCache, config: Config, logger: Logger, fut: Future):
+    def __init__(
+        self, cache: BinanceCache, config: Annotated[EasyDict, CONFIG], logger: Logger, fut: Future
+    ):
         super().__init__()
         self.cache = cache
         self.config = config
@@ -614,7 +618,9 @@ class StreamManagerWorker(threading.Thread):
             asyncio.run(self.arun())
 
     @staticmethod
-    def create(cache: BinanceCache, config: Config, logger: Logger) -> BinanceStreamManager:
+    def create(
+        cache: BinanceCache, config: Annotated[EasyDict, CONFIG], logger: Logger
+    ) -> BinanceStreamManager:
         fut: Future = Future()
         execution_thread = StreamManagerWorker(cache, config, logger, fut)
         execution_thread.start()

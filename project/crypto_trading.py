@@ -5,32 +5,32 @@ import time
 from threading import Thread
 
 from .binance import BinanceAPIManager
-from .config import Config
+from .config import CONFIG
 from .database import Database
 from .logger import Logger
 from .scheduler import SafeScheduler
 from .strategies import get_strategy
 
 
+# pylint: disable=no-member
 def main():
     # Initialize exit flag
     exiting = False
 
     # Initialize modules
-    logger = Logger()
+    logger = Logger(logging_service="crypto_trading")
     logger.info("Starting")
-    config = Config()
-    db = Database(logger, config)
+    db = Database(logger, CONFIG)
 
     # Initialize manager
-    if config.ENABLE_PAPER_TRADING:
+    if CONFIG.ENABLE_PAPER_TRADING:
         manager = BinanceAPIManager.create_manager_paper_trading(
-            config, db, logger, {config.BRIDGE.symbol: config.PAPER_BALANCE}
+            CONFIG, db, logger, {CONFIG.BRIDGE.symbol: CONFIG.PAPER_WALLET_BALANCE}
         )
     else:
-        manager = BinanceAPIManager.create_manager(config, db, logger)
+        manager = BinanceAPIManager.create_manager(CONFIG, db, logger)
 
-    # Initialize worker to exit handler
+    # Initialize clean-up
     def timeout_exit(timeout: int):
         thread = Thread(target=manager.close)
         thread.start()
@@ -50,7 +50,7 @@ def main():
     signal.signal(signal.SIGTERM, exit_handler)
     atexit.register(exit_handler)
 
-    # Check if API keys are valid
+    # Initiate websocket (test if private API keys are valid)
     try:
         _ = manager.get_account()
     except Exception as e:  # pylint: disable=broad-exception-caught
@@ -58,25 +58,25 @@ def main():
         return
 
     # Initialize autotrader
-    strategy = get_strategy(config.STRATEGY)
+    strategy = get_strategy(CONFIG.STRATEGY)
     if strategy is None:
         logger.error(f"Invalid strategy: {strategy}")
         return
-    trader = strategy(logger, config, db, manager)
+    trader = strategy(logger, CONFIG, db, manager)
 
-    # Log configurations
-    logger.info(f"Chosen strategy: {config.STRATEGY}")
-    logger.info(f"Paper trading: {config.ENABLE_PAPER_TRADING}")
+    # Log configurations (partially)
+    logger.info(f"Chosen strategy: {CONFIG.STRATEGY}")
+    logger.info(f"Paper trading: {CONFIG.ENABLE_PAPER_TRADING}")
 
     # Initialize database
     db.create_database()
-    db.set_coins(config.WATCHLIST)
+    db.set_coins(CONFIG.WATCHLIST)
     time.sleep(10)
     trader.initialize()
 
     # Initialize scheduler
     schedule = SafeScheduler(logger)
-    schedule.every(config.SCOUT_SLEEP_TIME).seconds.do(trader.scout)
+    schedule.every(CONFIG.SCOUT_SLEEP_TIME).seconds.do(trader.scout)
     schedule.every(1).minutes.do(trader.update_values)
     schedule.every(1).minutes.do(db.prune_scout_history)
     schedule.every(1).hours.do(db.prune_value_history)

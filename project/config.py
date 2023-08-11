@@ -1,92 +1,66 @@
-import configparser
 import os
+from typing import Annotated, Optional
+from warnings import filterwarnings
+
+import pydantic_settings
+from easydict import EasyDict
 
 from .models import Coin
 
-CFG_SECTION = "project"
+filterwarnings("ignore", module=pydantic_settings.__name__)
 
-CFG = "config/user.cfg"
-WATCHLIST = "config/watchlist.txt"
+CONFIG_PATH = "config"
+
+ENV_PATH_NAME = os.path.join(CONFIG_PATH, ".env.production")
+WATCHLIST_PATH_NAME = os.path.join(CONFIG_PATH, "watchlist.txt")
 
 
-# XXX: Simplify the transformation of config values
-class Config:
-    def __init__(self):
-        config = configparser.ConfigParser()
-        config["DEFAULT"] = {
-            "use_margin": "true",
-            "scout_multiplier": "5",
-            "scout_margin": "0.8",
-            "scout_sleep_time": "1",
-            "hourToKeepScoutHistory": "1",
-            "strategy": "default",
-            "enable_paper_trading": "true",
-            "paper_wallet_balance": "10000",
-        }
+class Config(pydantic_settings.BaseSettings):
+    model_config = pydantic_settings.SettingsConfigDict(
+        env_file=ENV_PATH_NAME,
+        env_file_encoding="utf-8",
+        secrets_dir="/run/secrets",
+    )
 
-        # XXX: Notify user when the config could not be loaded
-        if not os.path.exists(CFG):
-            config[CFG_SECTION] = {}
-        else:
-            config.read(CFG)
+    BRIDGE_SYMBOL: str
+    SCOUT_HISTORY_PRUNE_TIME: Optional[float] = 1
+    SCOUT_MULTIPLIER: Optional[float] = 5
+    SCOUT_SLEEP_TIME: Optional[int] = 1
+    USE_MARGIN: Optional[bool] = True
+    SCOUT_MARGIN: Optional[float] = 0.8
+    BINANCE_API_KEY: str
+    BINANCE_API_SECRET_KEY: str
+    WATCHLIST: Optional[str] = ""
+    STRATEGY: Optional[str] = "default"
+    ENABLE_PAPER_TRADING: bool
+    PAPER_WALLET_BALANCE: Optional[float] = 10_000
 
-        self.BRIDGE_SYMBOL = os.environ.get("BRIDGE_SYMBOL") or config.get(CFG_SECTION, "bridge")
 
-        self.BRIDGE = Coin(self.BRIDGE_SYMBOL, False)
+settings = Config()  # type: ignore
 
-        self.SCOUT_HISTORY_PRUNE_TIME = float(
-            os.environ.get("HOURS_TO_KEEP_SCOUTING_HISTORY")
-            or config.get(CFG_SECTION, "hourToKeepScoutHistory")
-        )
+watchlist = [coin.strip() for coin in os.environ.get("WATCHLIST", "").split() if coin.strip()]
+if not watchlist and os.path.exists(WATCHLIST_PATH_NAME):
+    with open(WATCHLIST_PATH_NAME) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or line in watchlist:
+                continue
+            watchlist.append(line)
 
-        self.SCOUT_MULTIPLIER = float(
-            os.environ.get("SCOUT_MULTIPLIER") or config.get(CFG_SECTION, "scout_multiplier")
-        )
-
-        self.SCOUT_SLEEP_TIME = int(
-            os.environ.get("SCOUT_SLEEP_TIME") or config.get(CFG_SECTION, "scout_sleep_time")
-        )
-
-        use_margin = os.environ.get("USE_MARGIN") or config.get(CFG_SECTION, "use_margin")
-        self.USE_MARGIN = {"true": True, "false": False}.get(str(use_margin).lower())
-        if self.USE_MARGIN is None:
-            raise ValueError("use_margin parameter must be either 'true' or 'false'")
-
-        self.SCOUT_MARGIN = os.environ.get("SCOUT_MARGIN") or config.get(
-            CFG_SECTION, "scout_margin"
-        )
-
-        self.SCOUT_MARGIN = float(self.SCOUT_MARGIN)
-
-        self.BINANCE_API_KEY = os.environ.get("API_KEY") or config.get(CFG_SECTION, "api_key")
-
-        self.BINANCE_API_SECRET_KEY = os.environ.get("API_SECRET_KEY") or config.get(
-            CFG_SECTION, "api_secret_key"
-        )
-
-        watchlist = [
-            coin.strip() for coin in os.environ.get("WATCHLIST", "").split() if coin.strip()
-        ]
-        if not watchlist and os.path.exists(WATCHLIST):
-            with open(WATCHLIST) as rfh:
-                for line in rfh:
-                    line = line.strip()
-                    if not line or line.startswith("#") or line in watchlist:
-                        continue
-                    watchlist.append(line)
-        self.WATCHLIST = watchlist
-
-        self.STRATEGY = os.environ.get("STRATEGY") or config.get(CFG_SECTION, "strategy")
-
-        enable_paper_trading = os.environ.get("ENABLE_PAPER_TRADING") or config.get(
-            CFG_SECTION, "enable_paper_trading"
-        )
-        self.ENABLE_PAPER_TRADING = {"true": True, "false": False}.get(
-            str(enable_paper_trading).lower()
-        )
-        if self.ENABLE_PAPER_TRADING is None:
-            raise ValueError("enable_paper_trading parameter must be either 'true' or 'false'")
-
-        self.PAPER_BALANCE = float(
-            os.environ.get("PAPER_BALANCE") or config.get(CFG_SECTION, "paper_wallet_balance")
-        )
+CONFIG: Annotated[EasyDict, "CONFIG"] = EasyDict(
+    {
+        "BRIDGE_SYMBOL": settings.BRIDGE_SYMBOL,
+        "BRIDGE": Coin(settings.BRIDGE_SYMBOL, False),
+        "SCOUT_HISTORY_PRUNE_TIME": settings.SCOUT_HISTORY_PRUNE_TIME,
+        "SCOUT_MULTIPLIER": settings.SCOUT_MULTIPLIER,
+        "SCOUT_SLEEP_TIME": settings.SCOUT_SLEEP_TIME,
+        "USE_MARGIN": settings.USE_MARGIN,
+        "SCOUT_MARGIN": settings.SCOUT_MARGIN,
+        "BINANCE_API_KEY": settings.BINANCE_API_KEY,
+        "BINANCE_API_SECRET_KEY": settings.BINANCE_API_SECRET_KEY,
+        "WATCHLIST": settings.WATCHLIST or watchlist,
+        "STRATEGY": settings.STRATEGY,
+        "ENABLE_PAPER_TRADING": settings.ENABLE_PAPER_TRADING,
+        "PAPER_WALLET_BALANCE": settings.PAPER_WALLET_BALANCE,
+    }
+)

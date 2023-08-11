@@ -1,18 +1,18 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
 from traceback import format_exc
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Annotated, Dict, List, Optional, Set, Tuple, Union
 
 from binance import Client
 from binance.exceptions import BinanceAPIException
+from easydict import EasyDict
 from sqlitedict import SqliteDict
 
 from .binance import BinanceAPIManager, BinanceOrderBalanceManager
 from .binance_ws import BinanceCache, BinanceOrder
-from .config import Config
-from .database import Database
+from .config import CONFIG
+from .database import Database, LogScout
 from .logger import Logger
-from .models import ScoutHistory
 from .strategies import get_strategy
 
 
@@ -22,7 +22,7 @@ class MockBinanceManager(BinanceAPIManager):
         client: Client,
         sqlite_cache: SqliteDict,
         binance_cache: BinanceCache,
-        config: Config,
+        config: EasyDict,
         db: Database,
         logger: Logger,
         start_date: datetime,
@@ -186,13 +186,15 @@ class MockBinanceManager(BinanceAPIManager):
 class MockDatabase(Database):
     DB = "sqlite:///"
 
-    def __init__(self, logger: Logger, config: Config):  # pylint: disable=useless-super-delegation
+    # pylint: disable=useless-super-delegation
+    def __init__(self, logger: Logger, config: Annotated[EasyDict, CONFIG]):
         super().__init__(logger, config)
 
-    def batch_log_scout(self, logs: List[ScoutHistory]):
+    def batch_log_scout(self, logs: List[LogScout]):
         pass
 
 
+# pylint: disable=no-member
 def backtest(
     start_date: datetime,
     end_date: Optional[datetime] = None,
@@ -200,42 +202,40 @@ def backtest(
     yield_interval: Optional[int] = 100,
     start_balances: Optional[Dict[str, float]] = None,
     starting_coin: Optional[str] = None,
-    config: Optional[Config] = None,
 ):
     # Initialize modules
     sqlite_cache = SqliteDict("data/backtest_cache.db")
-    config = config or Config()
-    logger = Logger("backtesting", enable_notifications=False)
+    logger = Logger(logging_service="backtesting")
     end_date = end_date or datetime.today()
-    start_balances = start_balances or {config.BRIDGE.symbol: config.PAPER_BALANCE}
+    start_balances = start_balances or {CONFIG.BRIDGE.symbol: CONFIG.PAPER_BALANCE}
 
     # Initialize database
-    db = MockDatabase(logger, config)
+    db = MockDatabase(logger, CONFIG)
     db.create_database()
-    db.set_coins(config.WATCHLIST)
+    db.set_coins(CONFIG.WATCHLIST)
 
     # Initialize manager (and database)
     manager = MockBinanceManager(
-        Client(config.BINANCE_API_KEY, config.BINANCE_API_SECRET_KEY),
+        Client(CONFIG.BINANCE_API_KEY, CONFIG.BINANCE_API_SECRET_KEY),
         sqlite_cache,
         BinanceCache(),
-        config,
+        CONFIG,
         db,
         logger,
         start_date,
         start_balances,
     )
-    starting_coin = db.get_coin(starting_coin or config.WATCHLIST[0])
+    starting_coin = db.get_coin(starting_coin or CONFIG.WATCHLIST[0])
     if manager.get_currency_balance(starting_coin.symbol) == 0:  # type: ignore
-        manager.buy_alt(starting_coin.symbol, config.BRIDGE.symbol, 0.0)  # type: ignore
+        manager.buy_alt(starting_coin.symbol, CONFIG.BRIDGE.symbol, 0.0)  # type: ignore
     db.set_current_coin(starting_coin)  # type: ignore
 
     # Initialize autotrader
-    strategy = get_strategy(config.STRATEGY)
+    strategy = get_strategy(CONFIG.STRATEGY)
     if strategy is None:
         logger.error(f"Invalid strategy: {strategy}")
         return manager
-    trader = strategy(logger, config, db, manager)
+    trader = strategy(logger, CONFIG, db, manager)
     logger.info(f"Chosen strategy: {strategy}")
     trader.initialize()
 
