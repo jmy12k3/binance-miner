@@ -141,8 +141,8 @@ class AutoTrader(ABC):
             time.sleep(1)
         return max_quote_amount
 
-    # XXX: Refactor
     # XXX: Improve logging semantics
+    # XXX: Refactor function
     def initialize_trade_thresholds(self):
         ratios_manager = self.db.ratios_manager
         max_quote_amount = self._max_value_in_wallet()
