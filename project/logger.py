@@ -33,8 +33,7 @@ class Logger:
             handler.close()
 
     def log(self, message: str, level: int, notification: Optional[bool] = True):
-        # Mypy references
-        assert self.Logger and self.NotificationHandler
+        assert self.Logger and self.NotificationHandler  # mypy
 
         if level == logging.DEBUG:
             self.Logger.debug(message)
