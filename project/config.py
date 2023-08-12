@@ -1,3 +1,4 @@
+# mypy: disable-error-code="call-arg, union-attr"
 import os
 from typing import Optional
 
@@ -29,9 +30,9 @@ class Settings(BaseSettings):
     PAPER_WALLET_BALANCE: Optional[float] = 10_000
 
 
-settings = Settings()  # type: ignore
+settings = Settings()
 
-WATCHLIST = [coin.strip() for coin in settings.WATCHLIST.split() if coin.strip()]  # type: ignore
+WATCHLIST = [coin.strip() for coin in settings.WATCHLIST.split() if coin.strip()]
 if not WATCHLIST and os.path.exists(WATCHLIST_PATH_NAME):
     with open(WATCHLIST_PATH_NAME) as file:
         for line in file:

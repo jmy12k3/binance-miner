@@ -1,3 +1,4 @@
+# mypy: disable-error-code="call-overload"
 from __future__ import annotations
 
 from array import array
@@ -64,8 +65,8 @@ class RatiosManager:
                 val = pair.ratio if pair.ratio is not None else nan
                 pair_id = pair.id if pair.id is not None else 0
                 idx = self.n * i + j
-                self._data[idx] = val  # type: ignore
-                self._ids[idx] = pair_id  # type: ignore
+                self._data[idx] = val
+                self._ids[idx] = pair_id
 
     def set(self, from_coin_idx: int, to_coin_idx: int, val: float):
         cell = (from_coin_idx, to_coin_idx)

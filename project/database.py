@@ -17,7 +17,6 @@ from .models import *
 from .postpone import heavy_call
 from .ratios import CoinStub, RatiosManager
 
-# LogScout is both a namedtuple and a dataclass
 LogScout = namedtuple(
     "LogScout", ["pair_id", "ratio_diff", "target_ratio", "coin_price", "optional_coin_price"]
 )
