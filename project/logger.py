@@ -31,6 +31,7 @@ class Logger:
 
     def log(self, message: str, level: int, notification: bool | None = True):
         assert self.Logger and self.NotificationHandler
+
         if level == logging.DEBUG:
             self.Logger.debug(message)
         elif level == logging.INFO:
