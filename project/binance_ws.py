@@ -149,6 +149,7 @@ class DepthCacheManager:
         self.logger = logger
 
     # XXX: Improve logging semantics
+    # XXX: Specify type hint of data
     async def _handle_data(self, data: dict):
         if data["final_update_id_in_event"] <= self.last_update_id:
             return
@@ -165,6 +166,7 @@ class DepthCacheManager:
     def buffer_incoming_data(self):
         return self.pending_signals_counter > 0 or self.pending_reinit
 
+    # XXX: Specify type hint of data
     async def process_data(self, data: dict):
         if self.buffer_incoming_data():
             self.data_queue.append(data)
@@ -174,6 +176,7 @@ class DepthCacheManager:
             await self._handle_data(pop_data)
         await self._handle_data(data)
 
+    # XXX: Specify type hint of msg
     def apply_orders(self, msg: dict):
         for bid in msg["bids"]:
             self.depth_cache.add_bid(bid)
@@ -197,6 +200,7 @@ class DepthCacheManager:
         self.pending_reinit = False
 
     # XXX: Improve logging semantics
+    # XXX: Specify type hint of signal
     async def process_signal(self, signal: dict):
         if signal["type"] == "CONNECT":
             self.logger.debug(f"OB: CONNECT arrived for symbol {self.symbol}")
@@ -304,6 +308,7 @@ class AsyncListenerContext:
             return None, None
         return quote_amount / amount, amount
 
+    # XXX: Specify type hint of signal_data
     def add_signal_data(self, signal_data: dict):
         if self.stopped:
             return
@@ -370,13 +375,16 @@ class AsyncListener(LoopExecutor):
         self.buffer_name = buffer_name
         self.async_context = async_context
 
+    # XXX: Specify type hint of obj
     @staticmethod
     def is_stream_signal(obj: dict):
         return "type" in obj
 
+    # XXX: Specify type hint of signal
     async def handle_signal(self, signal: dict):
         ...
 
+    # XXX: Specify type hint of data
     async def handle_data(self, data: dict):
         ...
 
@@ -407,6 +415,7 @@ class TickerListener(AsyncListener):
         super().__init__(BUFFER_NAME_MINITICKERS, async_context)
 
     # XXX: Improve logging semantics
+    # XXX: Specify type hint of data
     async def handle_data(self, data: dict):
         if "event_type" in data:
             if data["event_type"] == "24hrMiniTicker":
@@ -423,6 +432,7 @@ class UserDataListener(AsyncListener):
         super().__init__(BUFFER_NAME_USERDATA, async_context)
 
     # XXX: Improve logging semantics
+    # XXX: Specify type hint of data
     async def handle_data(self, data: dict):
         if "event_type" in data:
             event_type = data["event_type"]
@@ -446,6 +456,7 @@ class UserDataListener(AsyncListener):
             self.async_context.cache.balances_changed_event.set()
 
     # XXX: Improve logging semantics
+    # XXX: Specify type hint of signal
     async def handle_signal(self, signal: dict):
         signal_type = signal["type"]
         if signal_type == "CONNECT":
@@ -462,10 +473,12 @@ class DepthListener(AsyncListener):
         super().__init__(BUFFER_NAME_DEPTH, async_context)
         self.depth_cache_managers = depth_cache_managers
 
+    # XXX: Specify type hint of data
     async def handle_data(self, data: dict):
         if "symbol" in data:
             await self.depth_cache_managers[data["symbol"]].process_data(data)
 
+    # XXX: Specify type hint of signal
     async def handle_signal(self, signal: dict):
         dcms = self.depth_cache_managers.values()
         for dcm in dcms:
