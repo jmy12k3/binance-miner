@@ -213,7 +213,7 @@ def backtest(
     db.create_database()
     db.set_coins(CONFIG.WATCHLIST)
 
-    # Initialize manager (and database)
+    # Initialize manager and database
     manager = MockBinanceManager(
         Client(CONFIG.BINANCE_API_KEY, CONFIG.BINANCE_API_SECRET_KEY),
         sqlite_cache,
