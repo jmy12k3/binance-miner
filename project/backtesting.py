@@ -1,4 +1,4 @@
-# mypy: disable-error-code=union-attr
+# mypy: disable-error-code="operator, union-attr"
 from collections import defaultdict
 from datetime import datetime, timedelta
 from traceback import format_exc
@@ -61,7 +61,7 @@ class MockBinanceManager(BinanceAPIManager):
     def get_fee(self, origin_coin: str, target_coin: str, selling: bool):
         return 0.001
 
-    def get_ticker_price(self, ticker_symbol: str):
+    def get_ticker_price(self, ticker_symbol: str) -> Union[float, None]:
         target_date = self.datetime.strftime("%d %b %Y %H:%M:%S")
         key = f"{ticker_symbol} - {target_date}"
         val = self.sqlite_cache.get(key, None)
@@ -253,7 +253,7 @@ def backtest(
             except Exception:  # pylint: disable=broad-except
                 logger.warning(f"An error occured\n\n{format_exc()}")
             manager.increment(interval)
-            if n % yield_interval:  # type: ignore
+            if n % yield_interval:
                 yield manager
             n += 1
     except KeyboardInterrupt:
