@@ -1,7 +1,6 @@
 import queue
 from os import path
 from threading import Thread
-from typing import Optional
 
 import apprise
 
@@ -11,7 +10,7 @@ from .config import CONFIG_PATH
 class NotificationHandler:
     APPRISE_CONFIG_PATH = path.join(CONFIG_PATH, "apprise.yml")
 
-    def __init__(self, enabled: Optional[bool] = True):
+    def __init__(self, enabled: bool | None = True):
         if enabled and path.exists(self.APPRISE_CONFIG_PATH):
             self.apobj = apprise.Apprise()
             config = apprise.AppriseConfig()

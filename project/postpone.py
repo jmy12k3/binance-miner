@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from contextvars import ContextVar
-from typing import Callable, List, Optional, TypeVar
+from typing import TypeVar
 
 from typing_extensions import ParamSpec
 
@@ -7,7 +8,7 @@ T = TypeVar("T")
 P = ParamSpec("P")
 
 
-def _default_list() -> Optional[List]:
+def _default_list() -> list | None:
     return None
 
 
@@ -15,7 +16,7 @@ should_postpone = ContextVar("should_postpone", default=False)
 postponed_calls = ContextVar("postponed_calls", default=_default_list())
 
 
-def heavy_call(func: Callable[P, T]) -> Callable[P, T]:
+def heavy_call(func: Callable[P, T]) -> Callable[P, T | None]:
     def wrap(*args, **kwargs):
         if should_postpone.get():
             postponed_calls.get().append((func, args, kwargs))
@@ -25,7 +26,7 @@ def heavy_call(func: Callable[P, T]) -> Callable[P, T]:
     return wrap
 
 
-def postpone_heavy_calls(func: Callable[P, T]) -> Callable[P, T]:
+def postpone_heavy_calls(func: Callable[P, T]) -> Callable[P, T | None]:
     def wrap(*args, **kwargs):
         if should_postpone.get():
             func(*args, **kwargs)

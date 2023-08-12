@@ -1,3 +1,4 @@
+# mypy: disable-error-code=assignment
 import enum
 from datetime import datetime
 
@@ -30,7 +31,7 @@ class Trade(Base):
     crypto_coin_id = Column(String, ForeignKey("coins.symbol"))
     crypto_coin = relationship("Coin", foreign_keys=[crypto_coin_id], lazy="joined")
     selling = Column(Boolean)
-    state = Column(Enum(TradeState))
+    state: Column[str] = Column(Enum(TradeState))
     alt_starting_balance = Column(Float)
     alt_trade_amount = Column(Float)
     crypto_starting_balance = Column(Float)

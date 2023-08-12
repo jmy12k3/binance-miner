@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 
 from easydict import EasyDict
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -16,17 +15,17 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=ENV_PATH_NAME, env_file_encoding="utf-8")
 
     BRIDGE_SYMBOL: str
-    SCOUT_HISTORY_PRUNE_TIME: Optional[float] = 1
-    SCOUT_MULTIPLIER: Optional[float] = 5
-    SCOUT_SLEEP_TIME: Optional[int] = 1
-    USE_MARGIN: Optional[bool] = True
-    SCOUT_MARGIN: Optional[float] = 0.8
+    SCOUT_HISTORY_PRUNE_TIME: float | None = 1
+    SCOUT_MULTIPLIER: float | None = 5
+    SCOUT_SLEEP_TIME: int | None = 1
+    USE_MARGIN: bool | None = True
+    SCOUT_MARGIN: float | None = 0.8
     BINANCE_API_KEY: str
     BINANCE_API_SECRET_KEY: str
-    WATCHLIST: Optional[str] = ""
-    STRATEGY: Optional[str] = "default"
+    WATCHLIST: str | None = ""
+    STRATEGY: str | None = "default"
     ENABLE_PAPER_TRADING: bool
-    PAPER_WALLET_BALANCE: Optional[float] = 10_000
+    PAPER_WALLET_BALANCE: float | None = 10_000
 
 
 settings = Settings()  # type: ignore

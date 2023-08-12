@@ -12,7 +12,6 @@ from .scheduler import SafeScheduler
 from .strategies import get_strategy
 
 
-# pylint: disable=no-member
 def main():
     # Initialize exit flag
     exiting = False
@@ -53,7 +52,7 @@ def main():
     # Initiate websocket (test if private API keys are valid)
     try:
         _ = manager.get_account()
-    except Exception as e:  # pylint: disable=broad-exception-caught
+    except Exception as e:
         logger.error(f"An error occured: {e}")
         return
 

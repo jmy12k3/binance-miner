@@ -1,3 +1,4 @@
+# mypy: disable-error-code=misc
 from sqlalchemy.orm import declarative_base
 
 

@@ -1,3 +1,4 @@
+# mypy: disable-error-code="assignment, no-redef"
 import enum
 from datetime import datetime as datetime_
 
@@ -24,7 +25,7 @@ class CoinValue(Base):
     balance = Column(Float)
     usd_price = Column(Float)
     btc_price = Column(Float)
-    interval = Column(Enum(Interval))
+    interval: Column[str] = Column(Enum(Interval))
     datetime = Column(DateTime)
 
     def __init__(
@@ -33,7 +34,7 @@ class CoinValue(Base):
         balance: float,
         usd_price: float,
         btc_price: float,
-        interval=Interval.MINUTELY,
+        interval: Interval = Interval.MINUTELY,
         datetime: datetime_ = None,
     ):
         self.coin = coin

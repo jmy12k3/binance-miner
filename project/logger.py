@@ -1,5 +1,4 @@
 import logging.handlers
-from typing import Optional, Union
 
 from .notifications import NotificationHandler
 
@@ -8,9 +7,7 @@ class Logger:
     Logger = None
     NotificationHandler = None
 
-    def __init__(
-        self, logging_service: Union[str, None], enable_notifications: Optional[bool] = False
-    ):
+    def __init__(self, logging_service: str | None, enable_notifications: bool | None = False):
         self.Logger = logging.getLogger(f"{logging_service}_logger")
         self.Logger.setLevel(logging.DEBUG)
         self.Logger.propagate = False
@@ -32,8 +29,8 @@ class Logger:
         for handler in self.Logger.handlers[:]:
             handler.close()
 
-    def log(self, message: str, level: int, notification: Optional[bool] = True):
-        assert self.Logger and self.NotificationHandler  # mypy
+    def log(self, message: str, level: int, notification: bool | None = True):
+        assert self.Logger and self.NotificationHandler  # mypy type-safe
 
         if level == logging.DEBUG:
             self.Logger.debug(message)
@@ -47,14 +44,15 @@ class Logger:
         if notification and self.NotificationHandler.enabled:
             self.NotificationHandler.send_notification(str(message))
 
-    def debug(self, message: str, notification: Optional[bool] = False):
+    def debug(self, message: str, notification: bool | None = False):
         self.log(message, logging.DEBUG, notification)
 
-    def info(self, message: str, notification: Optional[bool] = True):
+    def info(self, message: str, notification: bool | None = True):
         self.log(message, logging.INFO, notification)
 
-    def warning(self, message: str, notification: Optional[bool] = True):
+    def warning(self, message: str, notification: bool | None = True):
         self.log(message, logging.WARNING, notification)
 
-    def error(self, message: str, notification: Optional[bool] = True):
+    def error(self, message: str, notification: bool | None = True):
+        self.log(message, logging.ERROR, notification)
         self.log(message, logging.ERROR, notification)

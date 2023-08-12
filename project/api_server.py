@@ -1,6 +1,7 @@
+# mypy: disable-error-code=annotation-unchecked
 from datetime import datetime
 from itertools import groupby
-from typing import List, Optional, Tuple, Union, no_type_check
+from typing import no_type_check
 
 from dateutil.relativedelta import relativedelta
 from flask import Flask, jsonify, request
@@ -24,7 +25,7 @@ db = Database(logger, CONFIG)
 
 
 @no_type_check
-def filter_period(query: Query, model: Union[CoinValue, CurrentCoin, ScoutHistory, Trade]) -> Query:
+def filter_period(query: Query, model: CoinValue | CurrentCoin | ScoutHistory | Trade) -> Query:
     period = request.args.get("period")
     if not period:
         return query
@@ -42,13 +43,13 @@ def filter_period(query: Query, model: Union[CoinValue, CurrentCoin, ScoutHistor
 
 @app.route("/api/value_history")
 @app.route("/api/value_history/<coin>")
-def value_history(coin: Optional[str] = None):
+def value_history(coin: str | None = None):
     session: Session
     with db.db_session() as session:
         query = session.query(CoinValue).order_by(CoinValue.coin_id.asc(), CoinValue.datetime.asc())
         query = filter_period(query, CoinValue)  # type: ignore
         if coin:
-            values: List[CoinValue] = query.filter(CoinValue.coin_id == coin).all()
+            values: list[CoinValue] = query.filter(CoinValue.coin_id == coin).all()
             return jsonify([entry.info() for entry in values])
         coin_values = groupby(query.all(), key=lambda cv: cv.coin)
         return jsonify(
@@ -60,14 +61,13 @@ def value_history(coin: Optional[str] = None):
 def total_value_history():
     session: Session
     with db.db_session() as session:
-        # pylint: disable=not-callable
         query = session.query(
             CoinValue.datetime,
             func.sum(CoinValue.btc_value),
             func.sum(CoinValue.usd_value),
         ).group_by(CoinValue.datetime)
         query = filter_period(query, CoinValue)
-        total_values: List[Tuple[datetime, float, float]] = query.all()
+        total_values: list[tuple[datetime, float, float]] = query.all()
         return jsonify([{"datetime": tv[0], "btc": tv[1], "usd": tv[2]} for tv in total_values])
 
 
@@ -77,7 +77,7 @@ def trade_history():
     with db.db_session() as session:
         query = session.query(Trade).order_by(Trade.datetime.asc())
         query = filter_period(query, Trade)
-        trades: List[Trade] = query.all()
+        trades: list[Trade] = query.all()
         return jsonify([trade.info() for trade in trades])
 
 
@@ -94,7 +94,7 @@ def scouting_history():
             .order_by(ScoutHistory.datetime.asc())
         )
         query = filter_period(query, ScoutHistory)
-        scouts: List[ScoutHistory] = query.all()
+        scouts: list[ScoutHistory] = query.all()
         return jsonify([scout.info() for scout in scouts])
 
 
@@ -110,7 +110,7 @@ def current_coin_history():
     with db.db_session() as session:
         query = session.query(CurrentCoin)
         query = filter_period(query, CurrentCoin)
-        current_coins: List[CurrentCoin] = query.all()
+        current_coins: list[CurrentCoin] = query.all()
         return jsonify([cc.info() for cc in current_coins])
 
 
@@ -119,7 +119,7 @@ def coins():
     session: Session
     with db.db_session() as session:
         _current_coin = session.merge(db.get_current_coin())
-        _coins: List[Coin] = session.query(Coin).all()
+        _coins: list[Coin] = session.query(Coin).all()
         return jsonify([{**coin.info(), "is_current": coin == _current_coin} for coin in _coins])
 
 
@@ -127,7 +127,7 @@ def coins():
 def pairs():
     session: Session
     with db.db_session() as session:
-        all_pairs: List[Pair] = session.query(Pair).all()
+        all_pairs: list[Pair] = session.query(Pair).all()
         return jsonify([pair.info() for pair in all_pairs])
 
 

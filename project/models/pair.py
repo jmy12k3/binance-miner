@@ -1,5 +1,6 @@
+# mypy: disable-error-code=assignment
 from sqlalchemy import Column, Float, ForeignKey, Integer, String, func, or_, select
-from sqlalchemy.orm import column_property, relationship
+from sqlalchemy.orm import MappedSQLExpression, column_property, relationship
 
 from .base import Base
 from .coin import Coin
@@ -13,14 +14,14 @@ class Pair(Base):
     to_coin_id = Column(String, ForeignKey("coins.symbol"))
     to_coin = relationship("Coin", foreign_keys=[to_coin_id], lazy="joined")
     ratio = Column(Float)
-    enabled = column_property(
-        select(func.count(Coin.symbol) == 2)  # pylint: disable=not-callable
+    enabled: MappedSQLExpression = column_property(
+        select(func.count(Coin.symbol) == 2)
         .where(or_(Coin.symbol == from_coin_id, Coin.symbol == to_coin_id))
         .where(Coin.enabled.is_(True))
         .scalar_subquery()
     )
 
-    def __init__(self, from_coin: Coin, to_coin: Coin, ratio=None):
+    def __init__(self, from_coin: Coin, to_coin: Coin, ratio: float | None):
         self.from_coin = from_coin
         self.to_coin = to_coin
         self.ratio = ratio

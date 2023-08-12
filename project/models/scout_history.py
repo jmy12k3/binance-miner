@@ -1,3 +1,4 @@
+# mypy: disable-error-code=assignment
 from datetime import datetime
 
 from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String

@@ -2,7 +2,7 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
 from traceback import format_exc
-from typing import Annotated, Dict, List, Optional, Set, Tuple, Union
+from typing import Annotated
 
 from binance import Client
 from binance.exceptions import BinanceAPIException
@@ -27,7 +27,7 @@ class MockBinanceManager(BinanceAPIManager):
         db: Database,
         logger: Logger,
         start_date: datetime,
-        start_balances: Dict[str, float],
+        start_balances: dict[str, float],
     ):
         super().__init__(
             client,
@@ -41,13 +41,13 @@ class MockBinanceManager(BinanceAPIManager):
         self.config = config
         self.datetime = start_date
         self.balances = start_balances
-        self.non_existing_pairs: Set = set()
+        self.non_existing_pairs: set = set()
         self.reinit_trader_callback = None
 
     def set_reinit_trader_callback(self, reinit_trader_callback):
         self.reinit_trader_callback = reinit_trader_callback
 
-    def set_coins(self, coins_list: List[str]):
+    def set_coins(self, coins_list: list[str]):
         self.db.set_coins(coins_list)
         if self.reinit_trader_callback is not None:
             self.reinit_trader_callback()
@@ -61,7 +61,7 @@ class MockBinanceManager(BinanceAPIManager):
     def get_fee(self, origin_coin: str, target_coin: str, selling: bool):
         return 0.001
 
-    def get_ticker_price(self, ticker_symbol: str) -> Union[float, None]:
+    def get_ticker_price(self, ticker_symbol: str) -> float | None:
         target_date = self.datetime.strftime("%d %b %Y %H:%M:%S")
         key = f"{ticker_symbol} - {target_date}"
         val = self.sqlite_cache.get(key, None)
@@ -99,19 +99,19 @@ class MockBinanceManager(BinanceAPIManager):
 
     def get_market_sell_price(
         self, symbol: str, amount: float
-    ) -> Union[Tuple[float, float], Tuple[None, None]]:
+    ) -> tuple[float, float] | tuple[None, None]:
         price = self.get_ticker_price(symbol)
         return (price, amount * price) if price is not None else (None, None)
 
     def get_market_buy_price(
         self, symbol: str, quote_amount: float
-    ) -> Union[Tuple[float, float], Tuple[None, None]]:
+    ) -> tuple[float, float] | tuple[None, None]:
         price = self.get_ticker_price(symbol)
         return (price, quote_amount / price) if price is not None else (None, None)
 
     def get_market_sell_price_fill_quote(
         self, symbol: str, quote_amount: float
-    ) -> Union[Tuple[float, float], Tuple[None, None]]:
+    ) -> tuple[float, float] | tuple[None, None]:
         price = self.get_ticker_price(symbol)
         return (price, quote_amount / price) if price is not None else (None, None)
 
@@ -187,22 +187,20 @@ class MockBinanceManager(BinanceAPIManager):
 class MockDatabase(Database):
     DB = "sqlite:///"
 
-    # pylint: disable=useless-super-delegation
     def __init__(self, logger: Logger, config: Annotated[EasyDict, CONFIG]):
         super().__init__(logger, config)
 
-    def batch_log_scout(self, logs: List[LogScout]):
+    def batch_log_scout(self, logs: list[LogScout]):
         pass
 
 
-# pylint: disable=no-member
 def backtest(
     start_date: datetime,
-    end_date: Optional[datetime] = None,
-    interval: Optional[int] = 1,
-    yield_interval: Optional[int] = 100,
-    start_balances: Optional[Dict[str, float]] = None,
-    starting_coin: Optional[str] = None,
+    end_date: datetime | None = None,
+    interval: int | None = 1,
+    yield_interval: int | None = 100,
+    start_balances: dict[str, float] | None = None,
+    starting_coin: str | None = None,
 ):
     # Initialize modules
     sqlite_cache = SqliteDict("data/backtest_cache.db")
@@ -250,7 +248,7 @@ def backtest(
         while manager.datetime < end_date:
             try:
                 trader.scout()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 logger.warning(f"An error occured\n\n{format_exc()}")
             manager.increment(interval)
             if n % yield_interval:

@@ -7,24 +7,16 @@ import os
 import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from collections.abc import Callable
 from traceback import format_exc
-from typing import Annotated, Callable, Dict, Optional
+from typing import Annotated
 
 from binance.client import Client
-from binance.exceptions import (
-    BinanceAPIException,
-    BinanceOrderException,
-    BinanceRequestException,
-)
+from binance.exceptions import BinanceAPIException, BinanceOrderException, BinanceRequestException
 from cachetools import TTLCache, cached
 from easydict import EasyDict
 
-from .binance_ws import (
-    BinanceCache,
-    BinanceOrder,
-    BinanceStreamManager,
-    StreamManagerWorker,
-)
+from .binance_ws import BinanceCache, BinanceOrder, BinanceStreamManager, StreamManagerWorker
 from .config import CONFIG
 from .database import Database
 from .logger import Logger
@@ -41,7 +33,7 @@ class AbstractOrderBalanceManager(ABC):
         pass
 
     @abstractmethod
-    def create_order(self, **params) -> Dict:
+    def create_order(self, **params) -> dict:
         pass
 
     def make_order(self, side: str, symbol: str, quantity: float, quote_quantity: float):
@@ -65,7 +57,7 @@ class PaperOrderBalanceManager(AbstractOrderBalanceManager):
         bridge_symbol: str,
         client: Client,
         cache: BinanceCache,
-        initial_balances: Dict[str, float],
+        initial_balances: dict[str, float],
         read_persist: bool = True,
     ):
         self.balances = initial_balances
@@ -82,7 +74,7 @@ class PaperOrderBalanceManager(AbstractOrderBalanceManager):
                 else:
                     self.balances = data
 
-    def _read_persist(self) -> Optional[Dict]:
+    def _read_persist(self) -> dict | None:
         if os.path.exists(self.PERSIST_FILE_PATH):
             with open(self.PERSIST_FILE_PATH) as json_file:
                 return json.load(json_file)
@@ -170,7 +162,7 @@ class BinanceAPIManager:
         self.config = config
         self.cache = cache
         self.order_balance_manager = order_balance_manager
-        self.stream_manager: Optional[BinanceStreamManager] = None
+        self.stream_manager: BinanceStreamManager | None = None
         self._setup_websockets()
 
     @staticmethod
@@ -200,7 +192,7 @@ class BinanceAPIManager:
         config: Annotated[EasyDict, CONFIG],
         db: Database,
         logger: Logger,
-        initial_balances: Dict[str, float],
+        initial_balances: dict[str, float],
     ) -> BinanceAPIManager:
         return BinanceAPIManager._common_factory(
             config,
@@ -306,7 +298,7 @@ class BinanceAPIManager:
         return self.stream_manager.get_market_sell_price_fill_quote(symbol, quote_amount)
 
     @cached(cache=TTLCache(maxsize=1, ttl=43200))
-    def get_trade_fees(self) -> Dict[str, float]:
+    def get_trade_fees(self) -> dict[str, float]:
         return {
             ticker["symbol"]: float(ticker["takerCommission"])
             for ticker in self.binance_client.get_trade_fee()
@@ -342,7 +334,7 @@ class BinanceAPIManager:
         if self.stream_manager:
             self.stream_manager.close()
 
-    def get_account(self) -> Dict:
+    def get_account(self) -> dict:
         return self.binance_client.get_account()
 
     # XXX: Improve logging semantics
@@ -362,7 +354,7 @@ class BinanceAPIManager:
                 self.cache.non_existent_tickers.add(ticker_symbol)
         return price
 
-    def get_symbol_filter(self, origin_symbol: str, target_symbol: str, filter_type: str) -> Dict:
+    def get_symbol_filter(self, origin_symbol: str, target_symbol: str, filter_type: str) -> dict:
         return next(
             _filter
             for _filter in self.binance_client.get_symbol_info(origin_symbol + target_symbol)[
@@ -388,8 +380,8 @@ class BinanceAPIManager:
         self,
         origin_symbol: str,
         target_symbol: str,
-        target_balance: Optional[float] = None,
-        from_coin_price: Optional[float] = None,
+        target_balance: float | None = None,
+        from_coin_price: float | None = None,
     ) -> float:
         target_balance = target_balance or self.get_currency_balance(target_symbol)
         from_coin_price = from_coin_price or self.get_ticker_price(origin_symbol + target_symbol)
@@ -399,7 +391,7 @@ class BinanceAPIManager:
         )
 
     def sell_quantity(
-        self, origin_symbol: str, target_symbol: str, origin_balance: Optional[float] = None
+        self, origin_symbol: str, target_symbol: str, origin_balance: float | None = None
     ) -> float:
         origin_balance = origin_balance or self.get_currency_balance(origin_symbol)
         origin_tick = self.get_alt_tick(origin_symbol, target_symbol)

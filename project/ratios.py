@@ -2,15 +2,15 @@
 from __future__ import annotations
 
 from array import array
+from collections.abc import Iterable, KeysView
 from math import nan
-from typing import Dict, Iterable, KeysView, List, Optional, Tuple, Type
 
 from .models import Pair
 
 
 class CoinStub:
-    _instances: List[CoinStub] = []
-    _instances_by_symbol: Dict[str, CoinStub] = {}
+    _instances: list[CoinStub] = []
+    _instances_by_symbol: dict[str, CoinStub] = {}
 
     def __init__(self, ratio_idx: int, symbol: str):
         self.idx = ratio_idx
@@ -20,7 +20,7 @@ class CoinStub:
         return f"CoinStub({self.idx}, {self.symbol})"
 
     @classmethod
-    def create(cls: Type[CoinStub], symbol: str) -> CoinStub:
+    def create(cls: type[CoinStub], symbol: str) -> CoinStub:
         idx = len(cls._instances)
         new_instance = cls(idx, symbol)
         cls._instances.append(new_instance)
@@ -28,35 +28,35 @@ class CoinStub:
         return new_instance
 
     @classmethod
-    def get_by_idx(cls: Type[CoinStub], idx: int) -> CoinStub:
+    def get_by_idx(cls: type[CoinStub], idx: int) -> CoinStub:
         return cls._instances[idx]
 
     @classmethod
-    def get_by_symbol(cls: Type[CoinStub], symbol: str) -> CoinStub:
+    def get_by_symbol(cls: type[CoinStub], symbol: str) -> CoinStub:
         return cls._instances_by_symbol.get(symbol, None)  # type: ignore
 
     @classmethod
-    def reset(cls: Type[CoinStub]):
+    def reset(cls: type[CoinStub]):
         cls._instances.clear()
         cls._instances_by_symbol.clear()
 
     @classmethod
-    def len_coins(cls: Type[CoinStub]) -> int:
+    def len_coins(cls: type[CoinStub]) -> int:
         return len(cls._instances)
 
     @classmethod
-    def get_all(cls: Type[CoinStub]) -> List[CoinStub]:
+    def get_all(cls: type[CoinStub]) -> list[CoinStub]:
         return cls._instances
 
 
 class RatiosManager:
-    def __init__(self, ratios: Optional[Iterable[Pair]] = None):
+    def __init__(self, ratios: Iterable[Pair] | None = None):
         self.n = CoinStub.len_coins()
         self._data = array(
             "d", (nan if i != j else 1.0 for i in range(self.n) for j in range(self.n))
         )
-        self._dirty: Dict[Tuple[int, int], float] = {}
-        self._ids: Optional[array] = None
+        self._dirty: dict[tuple[int, int], float] = {}
+        self._ids: array | None = None
         if ratios is not None:
             self._ids = array("Q", (0 for _ in range(self.n * self.n)))
             for pair in ratios:
@@ -83,7 +83,7 @@ class RatiosManager:
     def get_to_coin(self, to_coin_idx: int):
         return self._data[to_coin_idx :: self.n]
 
-    def get_dirty(self) -> KeysView[Tuple[int, int]]:
+    def get_dirty(self) -> KeysView[tuple[int, int]]:
         return self._dirty.keys()
 
     def get_pair_id(self, from_coin_idx: int, to_coin_idx: int) -> int:

@@ -1,8 +1,9 @@
+# mypy: disable-error-code=annotation-unchecked
 import time
 from collections import namedtuple
 from contextlib import contextmanager
 from datetime import datetime
-from typing import Annotated, List, Optional, Union, no_type_check
+from typing import Annotated, no_type_check
 
 from dateutil.relativedelta import relativedelta
 from easydict import EasyDict
@@ -13,7 +14,7 @@ from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
 from .config import CONFIG
 from .logger import Logger
-from .models import *
+from .models import *  # noqa: F403
 from .postpone import heavy_call
 from .ratios import CoinStub, RatiosManager
 
@@ -34,7 +35,7 @@ class Database:
         self.config = config
         self.engine = create_engine(self.DB, future=True)
         self.session_factory = scoped_session(sessionmaker(bind=self.engine))
-        self.ratios_manager: Optional[RatiosManager] = None
+        self.ratios_manager: RatiosManager | None = None
         self.socketio_client = Client()
 
     @contextmanager
@@ -61,7 +62,7 @@ class Database:
         try:
             with self.db_session() as session:
                 session.execute("ALTER TABLE scout_history ADD COLUMN ratio_diff float;")
-        except:  # pylint: disable=bare-except
+        except:  # noqa: E722
             pass
 
     def send_update(self, model):
@@ -76,10 +77,10 @@ class Database:
         )
 
     @no_type_check
-    def set_coins(self, symbols: List[str]):
+    def set_coins(self, symbols: list[str]):
         session: Session
         with self.db_session() as session:
-            coins: List[Coin] = session.query(Coin).all()
+            coins: list[Coin] = session.query(Coin).all()
             for coin in coins:
                 if coin.symbol not in symbols:
                     coin.enabled = False
@@ -91,7 +92,7 @@ class Database:
                     coin.enabled = True
         CoinStub.reset()
         with self.db_session() as session:
-            coins: List[Coin] = session.query(Coin).filter(Coin.enabled).order_by(Coin.symbol).all()
+            coins: list[Coin] = session.query(Coin).filter(Coin.enabled).order_by(Coin.symbol).all()
             for coin in coins:
                 CoinStub.create(coin.symbol)
             for from_coin in coins:
@@ -108,7 +109,7 @@ class Database:
             pairs = session.query(Pair).filter(Pair.enabled.is_(True)).all()
             self.ratios_manager = RatiosManager(pairs)
 
-    def get_coins(self, only_enabled: bool = True) -> List[Coin]:
+    def get_coins(self, only_enabled: bool = True) -> list[Coin]:
         session: Session
         with self.db_session() as session:
             if only_enabled:
@@ -118,7 +119,7 @@ class Database:
             session.expunge_all()
             return coins
 
-    def get_coin(self, coin: Union[Coin, str]):
+    def get_coin(self, coin: Coin | str):
         if isinstance(coin, Coin):
             return coin
         session: Session
@@ -127,7 +128,7 @@ class Database:
             session.expunge(coin)
             return coin
 
-    def set_current_coin(self, coin: Union[Coin, str]):
+    def set_current_coin(self, coin: Coin | str):
         coin = self.get_coin(coin)
         session: Session
         with self.db_session() as session:
@@ -137,7 +138,7 @@ class Database:
             session.add(cc)
             self.send_update(cc)
 
-    def get_current_coin(self) -> Optional[Coin]:
+    def get_current_coin(self) -> Coin | None:
         session: Session
         with self.db_session() as session:
             current_coin = session.query(CurrentCoin).order_by(CurrentCoin.datetime.desc()).first()
@@ -147,12 +148,12 @@ class Database:
             session.expunge(coin)
             return coin
 
-    def get_pair(self, from_coin: Union[Coin, str], to_coin: Union[Coin, str]):
+    def get_pair(self, from_coin: Coin | str, to_coin: Coin | str):
         from_coin = self.get_coin(from_coin)
         to_coin = self.get_coin(to_coin)
         session: Session
         with self.db_session() as session:
-            pair: Union[Pair, None] = (
+            pair: Pair | None = (
                 session.query(Pair)
                 .filter(Pair.from_coin == from_coin, Pair.to_coin == to_coin)
                 .first()
@@ -169,7 +170,6 @@ class Database:
     def prune_value_history(self):
         def _datetime_id_query(dt_format):
             dt_column = func.strftime(dt_format, CoinValue.datetime)
-            # pylint: disable=not-callable
             grouped = select(CoinValue, func.max(CoinValue.datetime), dt_column).group_by(
                 CoinValue.coin_id, CoinValue, dt_column
             )
@@ -205,7 +205,7 @@ class Database:
                 CoinValue.interval == Interval.DAILY, CoinValue.datetime < time_diff
             ).delete()
 
-    def batch_update_coin_values(self, cv_batch: List[CoinValue]):
+    def batch_update_coin_values(self, cv_batch: list[CoinValue]):
         session: Session
         with self.db_session() as session:
             session.execute(
@@ -224,7 +224,7 @@ class Database:
             )
 
     @heavy_call
-    def batch_log_scout(self, logs: List[LogScout]):
+    def batch_log_scout(self, logs: list[LogScout]):
         session: Session
         with self.db_session() as session:
             dt = datetime.now()
@@ -301,4 +301,5 @@ class TradeLog:
             trade: Trade = session.merge(self.trade)
             trade.crypto_trade_amount = crypto_trade_amount
             trade.state = TradeState.COMPLETE
+            self.db.send_update(trade)
             self.db.send_update(trade)

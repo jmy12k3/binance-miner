@@ -1,9 +1,9 @@
-# mypy: disable-error-code=union-attr
+# mypy: disable-error-code="annotation-unchecked, union-attr"
 import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from datetime import datetime
-from typing import Annotated, Dict, Optional, Tuple
+from typing import Annotated
 
 from easydict import EasyDict
 from sqlalchemy.orm import Session
@@ -35,17 +35,15 @@ class AutoTrader(ABC):
 
     # XXX: Improve logging semantics
     def transaction_through_bridge(
-        self,
-        from_coin: CoinStub,
-        to_coin: CoinStub,
-        sell_price: float,
-        buy_price: float,
+        self, from_coin: CoinStub, to_coin: CoinStub, sell_price: float, buy_price: float
     ):
         to_coin_original_amount = self.manager.get_currency_balance(to_coin.symbol)
         if self.manager.sell_alt(from_coin.symbol, self.config.BRIDGE.symbol, sell_price) is None:
             self.logger.error(
-                "Market sell failed, from_coin: {from_coin.symbol}, to_coin: {to_coin.symbol}, sell"
-                f" _price: {sell_price}"
+                "Market sell failed, "
+                f"from_coin: {from_coin.symbol}, "
+                f"to_coin: {to_coin.symbol}, "
+                f"sell_price: {sell_price}"
             )
         result = self.manager.buy_alt(to_coin.symbol, self.config.BRIDGE.symbol, buy_price)
         if result is not None:
@@ -76,15 +74,15 @@ class AutoTrader(ABC):
     def update_trade_threshold(
         self,
         to_coin: CoinStub,
-        from_coin: Optional[CoinStub],
+        from_coin: CoinStub | None,
         to_coin_buy_price: float,
         to_coin_amount: float,
         quote_amount: float,
     ):
         if to_coin_buy_price is None:
             self.logger.info(
-                f"Skipping update... current coin {to_coin.symbol + self.config.BRIDGE.symbol}"
-                " not found"
+                "Skipping update... current coin "
+                f"{to_coin.symbol + self.config.BRIDGE.symbol} not found"
             )
             return False
         for coin in CoinStub.get_all():
@@ -95,8 +93,8 @@ class AutoTrader(ABC):
             )
             if coin_price is None:
                 self.logger.info(
-                    f"Update for coin {coin.symbol + self.config.BRIDGE.symbol} can't be performed,"
-                    " not enough orders in order book"
+                    f"Update for coin {coin.symbol + self.config.BRIDGE.symbol} "
+                    "can't be performed, not enough orders in order book"
                 )
                 return False
             self.db.ratios_manager.set(coin.idx, to_coin.idx, coin_price / to_coin_buy_price)
@@ -109,8 +107,8 @@ class AutoTrader(ABC):
             )
             if from_coin_buy_price is None or to_coin_sell_price is None:
                 self.logger.info(
-                    f"Can't update reverse pair {to_coin.symbol}->{from_coin.symbol}, not enough or"
-                    "ders in order book"
+                    f"Can't update reverse pair {to_coin.symbol}->{from_coin.symbol}, "
+                    "not enough orders in order book"
                 )
                 return False
             self.db.ratios_manager.set(
@@ -143,6 +141,7 @@ class AutoTrader(ABC):
             time.sleep(1)
         return max_quote_amount
 
+    # XXX: Refactor
     # XXX: Improve logging semantics
     def initialize_trade_thresholds(self):
         ratios_manager = self.db.ratios_manager
@@ -170,8 +169,8 @@ class AutoTrader(ABC):
                         time.sleep(1)
                     if from_coin_price is None:
                         self.logger.info(
-                            f"Skipping initializing {pair.from_coin + self.config.BRIDGE}, symbol n"
-                            "ot found"
+                            f"Skipping initializing {pair.from_coin + self.config.BRIDGE}, "
+                            "symbol not found"
                         )
                         continue
                     for _ in range(10):
@@ -183,8 +182,8 @@ class AutoTrader(ABC):
                         time.sleep(10)
                     if to_coin_price is None:
                         self.logger.info(
-                            f"Skipping initializing {pair.to_coin + self.config.BRIDGE}, symbol not"
-                            " found"
+                            f"Skipping initializing {pair.to_coin + self.config.BRIDGE}, "
+                            "symbol not found"
                         )
                         continue
                     ratios_manager.set(
@@ -202,8 +201,8 @@ class AutoTrader(ABC):
     def _get_ratios(
         self, coin: CoinStub, coin_sell_price, quote_amount, enable_scout_log: bool = True
     ):
-        ratio_dict: Dict[Tuple[int, int], float] = {}
-        price_amounts: Dict[str, Tuple[float, float]] = {}
+        ratio_dict: dict[tuple[int, int], float] = {}
+        price_amounts: dict[str, tuple[float, float]] = {}
         scout_logs = []
         for to_idx, target_ratio in enumerate(self.db.ratios_manager.get_from_coin(coin.idx)):
             if coin.idx == to_idx:
@@ -214,8 +213,8 @@ class AutoTrader(ABC):
             )
             if optional_coin_buy_price is None:
                 self.logger.info(
-                    f"Market price for coin {to_coin.symbol + self.config.BRIDGE.symbol} can't be c"
-                    "alculated, skipping"
+                    f"Market price for coin {to_coin.symbol + self.config.BRIDGE.symbol} "
+                    "can't be calculated, skipping"
                 )
                 continue
             price_amounts[to_coin.symbol] = (optional_coin_buy_price, optional_coin_amount)
@@ -368,4 +367,5 @@ class AutoTrader(ABC):
             btc_value = self.manager.get_ticker_price(coin + "BTC")
             cv = CoinValue(coin, balance, usd_value, btc_value, datetime=now)
             cv_batch.append(cv)
+        self.db.batch_update_coin_values(cv_batch)
         self.db.batch_update_coin_values(cv_batch)

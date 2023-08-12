@@ -1,32 +1,34 @@
-# mypy: disable-error-code=misc
-import abc
+# mypy: disable-error-code="annotation-unchecked, misc"
 import asyncio
-import threading
-import uuid
-from collections import deque
+from abc import ABC, abstractmethod
+from collections import defaultdict, deque
+from collections.abc import Callable
 from concurrent.futures import Future
 from contextlib import asynccontextmanager, contextmanager, suppress
-from typing import Annotated, Callable, Deque, Dict, List, Optional, Set, Union
+from threading import Event, Lock, Thread
+from types import TracebackType
+from typing import Annotated, TypeVar
+from uuid import UUID, uuid4
 
 import binance.client
 from binance.exceptions import BinanceAPIException
 from easydict import EasyDict
 from sortedcontainers import SortedDict
+from typing_extensions import ParamSpec
 from unicorn_binance_websocket_api import BinanceWebSocketApiManager
 
 from .config import CONFIG
 from .logger import Logger
 
-BUFFER_NAME_MINITICKERS = "mt"
-BUFFER_NAME_USERDATA = "ud"
-BUFFER_NAME_DEPTH = "de"
+T = TypeVar("T")
+P = ParamSpec("P")
 
 
 class ThreadSafeAsyncLock:
     def __init__(self):
-        self._init_lock = threading.Lock()
-        self._async_lock: Optional[asyncio.Lock] = None
-        self.loop: Optional[asyncio.AbstractEventLoop] = None
+        self._init_lock = Lock()
+        self._async_lock: asyncio.Lock | None = None
+        self.loop: asyncio.AbstractEventLoop | None = None
 
     def attach_loop(self):
         with self._init_lock:
@@ -44,8 +46,11 @@ class ThreadSafeAsyncLock:
         if self._async_lock is not None:
             asyncio.run_coroutine_threadsafe(self._async_lock.__aenter__(), self.loop).result()
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self, exc_type: type[BaseException], exc_val: BaseException, exc_tb: TracebackType
+    ):
         if self._async_lock is not None:
+            assert self.loop  # mypy type-safe
             asyncio.run_coroutine_threadsafe(
                 self._async_lock.__aexit__(exc_type, exc_val, exc_tb), self.loop
             ).result()
@@ -59,7 +64,7 @@ class ThreadSafeAsyncLock:
 
 
 class BinanceOrder:
-    def __init__(self, report):
+    def __init__(self, report: dict[str, str | int] | defaultdict):
         self.symbol = report["symbol"]
         self.side = report["side"]
         self.order_type = report["type"]
@@ -76,11 +81,11 @@ class BinanceOrder:
 
 class BinanceCache:
     def __init__(self):
-        self.ticker_values: Dict[str, float] = {}
-        self._balances: Dict[str, float] = {}
+        self.ticker_values: dict[str, float] = {}
+        self._balances: dict[str, float] = {}
         self._balances_mutex: ThreadSafeAsyncLock = ThreadSafeAsyncLock()
-        self.non_existent_tickers: Set[str] = set()
-        self.balances_changed_event = threading.Event()
+        self.non_existent_tickers: set[str] = set()
+        self.balances_changed_event = Event()
 
     def attach_loop(self):
         self._balances_mutex.attach_loop()
@@ -103,7 +108,7 @@ class DepthCache:
         self.keep_limit = keep_limit
         self.max_size = max_size
 
-    def add_bid(self, bid):
+    def add_bid(self, bid: list[float]):
         price = float(bid[0])
         amount = self.bids[price] = float(bid[1])
         if amount == 0:
@@ -111,7 +116,7 @@ class DepthCache:
         elif len(self.bids) >= self.max_size:
             self.bids = SortedDict({k: self.bids[k] for k in self.bids.keys()[-self.keep_limit :]})
 
-    def add_ask(self, ask):
+    def add_ask(self, ask: list[float]):
         price = float(ask[0])
         amount = self.asks[price] = float(ask[1])
         if amount == 0:
@@ -119,10 +124,10 @@ class DepthCache:
         elif len(self.asks) >= self.max_size:
             self.asks = SortedDict({k: self.asks[k] for k in self.asks.keys()[: self.keep_limit]})
 
-    def get_bids(self):
-        return reversed(self.bids.items())
+    def get_bids(self) -> list[list[float]]:
+        return reversed(self.bids.items())  # type: ignore
 
-    def get_asks(self) -> List:
+    def get_asks(self) -> list[list[float]]:
         return self.asks.items()
 
     def clear(self):
@@ -131,11 +136,11 @@ class DepthCache:
 
 
 class DepthCacheManager:
-    def __init__(self, symbol, client: binance.AsyncClient, logger: Logger, limit: int = 100):
-        self.id = uuid.uuid4()
+    def __init__(self, symbol: str, client: binance.AsyncClient, logger: Logger, limit: int = 100):
+        self.id = uuid4()
         self.pending_signals_counter = 0
         self.pending_reinit = False
-        self.data_queue: Deque = deque()
+        self.data_queue: deque = deque()
         self.symbol = symbol
         self.depth_cache = DepthCache()
         self.client = client
@@ -144,7 +149,7 @@ class DepthCacheManager:
         self.logger = logger
 
     # XXX: Improve logging semantics
-    async def _handle_data(self, data):
+    async def _handle_data(self, data: dict):
         if data["final_update_id_in_event"] <= self.last_update_id:
             return
         if data["first_update_id_in_event"] > self.last_update_id + 1:
@@ -160,7 +165,7 @@ class DepthCacheManager:
     def buffer_incoming_data(self):
         return self.pending_signals_counter > 0 or self.pending_reinit
 
-    async def process_data(self, data):
+    async def process_data(self, data: dict):
         if self.buffer_incoming_data():
             self.data_queue.append(data)
             return
@@ -169,7 +174,7 @@ class DepthCacheManager:
             await self._handle_data(pop_data)
         await self._handle_data(data)
 
-    def apply_orders(self, msg):
+    def apply_orders(self, msg: dict):
         for bid in msg["bids"]:
             self.depth_cache.add_bid(bid)
         for ask in msg["asks"]:
@@ -192,7 +197,7 @@ class DepthCacheManager:
         self.pending_reinit = False
 
     # XXX: Improve logging semantics
-    async def process_signal(self, signal):
+    async def process_signal(self, signal: dict):
         if signal["type"] == "CONNECT":
             self.logger.debug(f"OB: CONNECT arrived for symbol {self.symbol}")
             await self.reinit()
@@ -209,13 +214,13 @@ class DepthCacheManager:
 class AsyncListenerContext:
     def __init__(
         self,
-        buffer_names: List[str],
+        buffer_names: list[str],
         cache: BinanceCache,
         logger: Logger,
         client: binance.AsyncClient,
-        depth_cache_managers: Dict[str, DepthCacheManager],
+        depth_cache_managers: dict[str, DepthCacheManager],
     ):
-        self.queues: Dict[str, asyncio.Queue] = {name: asyncio.Queue() for name in buffer_names}
+        self.queues: dict[str, asyncio.Queue] = {name: asyncio.Queue() for name in buffer_names}
         self.loop = asyncio.get_running_loop()
         self.buffer_names = buffer_names
         self.cache = cache
@@ -224,19 +229,19 @@ class AsyncListenerContext:
         self.stopped = False
         self.client = client
         self.depth_cache_managers = depth_cache_managers
-        self.replace_signals: Dict = {"CONNECT": set(), "DISCONNECT": set()}
+        self.replace_signals: dict = {"CONNECT": set(), "DISCONNECT": set()}
 
-    def attach_stream_uuid_resolver(self, resolver: Callable[[uuid.UUID], str]):
+    def attach_stream_uuid_resolver(self, resolver: Callable[[UUID], str]):
         self.resolver = resolver  # type: ignore
 
-    def notify_stream_replace(self, old_stream_id: uuid.UUID, new_stream_id: uuid.UUID):
+    def notify_stream_replace(self, old_stream_id: UUID, new_stream_id: UUID):
         self.replace_signals["CONNECT"].add(new_stream_id)
         self.replace_signals["DISCONNECT"].add(old_stream_id)
 
-    def resolve_stream_id(self, stream_id: uuid.UUID) -> str:
+    def resolve_stream_id(self, stream_id: UUID) -> str:
         return self.resolver(stream_id)
 
-    def add_stream_data(self, stream_data, stream_buffer_name: Union[str, bool] = False):
+    def add_stream_data(self, stream_data: Future, stream_buffer_name: str | bool = False):
         if self.stopped:
             return
         asyncio.run_coroutine_threadsafe(
@@ -299,7 +304,7 @@ class AsyncListenerContext:
             return None, None
         return quote_amount / amount, amount
 
-    def add_signal_data(self, signal_data: Dict):
+    def add_signal_data(self, signal_data: dict):
         if self.stopped:
             return
         stream_id = signal_data["stream_id"]
@@ -320,13 +325,13 @@ class AsyncListenerContext:
 
 
 class AppendProxy:
-    def __init__(self, append_proxy_func):
+    def __init__(self, append_proxy_func: Callable[P, T]):
         self.append_proxy_func = append_proxy_func
 
-    def append(self, obj):
-        self.append_proxy_func(obj)
+    def append(self, *args: P.args, **kwargs: P.kwargs):
+        self.append_proxy_func(*args, **kwargs)
 
-    def pop(self):  # pylint: disable=no-self-use
+    def pop(self):
         return None
 
 
@@ -339,7 +344,7 @@ class AsyncListenedBWAM(BinanceWebSocketApiManager):
         self.stream_signal_buffer = AppendProxy(self.async_listener_context.add_signal_data)
         self.async_listener_context.attach_stream_uuid_resolver(self.stream_uuid_resolver)
 
-    def stream_uuid_resolver(self, stream_id: uuid.UUID) -> str:
+    def stream_uuid_resolver(self, stream_id: UUID) -> str:
         return self.stream_list[stream_id]["stream_buffer_name"]
 
     def stop_manager_with_all_streams(self):
@@ -349,8 +354,13 @@ class AsyncListenedBWAM(BinanceWebSocketApiManager):
         )
 
 
-class LoopExecutor(abc.ABC):  # pylint:disable=too-few-public-methods
-    @abc.abstractmethod
+BUFFER_NAME_MINITICKERS = "mt"
+BUFFER_NAME_USERDATA = "ud"
+BUFFER_NAME_DEPTH = "de"
+
+
+class LoopExecutor(ABC):
+    @abstractmethod
     async def run_loop(self):
         ...
 
@@ -361,13 +371,13 @@ class AsyncListener(LoopExecutor):
         self.async_context = async_context
 
     @staticmethod
-    def is_stream_signal(obj):
+    def is_stream_signal(obj: dict):
         return "type" in obj
 
-    async def handle_signal(self, signal):  # pylint: disable=unused-argument, no-self-use
+    async def handle_signal(self, signal: dict):
         ...
 
-    async def handle_data(self, data):  # pylint: disable=unused-argument, no-self-use
+    async def handle_data(self, data: dict):
         ...
 
     # XXX: Improve logging semantics
@@ -397,7 +407,7 @@ class TickerListener(AsyncListener):
         super().__init__(BUFFER_NAME_MINITICKERS, async_context)
 
     # XXX: Improve logging semantics
-    async def handle_data(self, data):
+    async def handle_data(self, data: dict):
         if "event_type" in data:
             if data["event_type"] == "24hrMiniTicker":
                 for event in data["data"]:
@@ -413,7 +423,7 @@ class UserDataListener(AsyncListener):
         super().__init__(BUFFER_NAME_USERDATA, async_context)
 
     # XXX: Improve logging semantics
-    async def handle_data(self, data):
+    async def handle_data(self, data: dict):
         if "event_type" in data:
             event_type = data["event_type"]
             if event_type == "balanceUpdate":
@@ -436,7 +446,7 @@ class UserDataListener(AsyncListener):
             self.async_context.cache.balances_changed_event.set()
 
     # XXX: Improve logging semantics
-    async def handle_signal(self, signal):
+    async def handle_signal(self, signal: dict):
         signal_type = signal["type"]
         if signal_type == "CONNECT":
             self.async_context.logger.debug("Connect for userdata arrived")
@@ -447,16 +457,16 @@ class DepthListener(AsyncListener):
     def __init__(
         self,
         async_context: AsyncListenerContext,
-        depth_cache_managers: Dict[str, DepthCacheManager],
+        depth_cache_managers: dict[str, DepthCacheManager],
     ):
         super().__init__(BUFFER_NAME_DEPTH, async_context)
         self.depth_cache_managers = depth_cache_managers
 
-    async def handle_data(self, data):
+    async def handle_data(self, data: dict):
         if "symbol" in data:
             await self.depth_cache_managers[data["symbol"]].process_data(data)
 
-    async def handle_signal(self, signal):
+    async def handle_signal(self, signal: dict):
         dcms = self.depth_cache_managers.values()
         for dcm in dcms:
             dcm.notify_pending_signal()
@@ -469,7 +479,7 @@ class BinanceStreamManager:
         logger: Logger,
         async_context: AsyncListenerContext,
         bwam: AsyncListenedBWAM,
-        execution_thread: threading.Thread,
+        execution_thread: Thread,
     ):
         self.logger = logger
         self.bwam: AsyncListenedBWAM = bwam
@@ -497,18 +507,18 @@ class BinanceStreamManager:
         ).result()
 
 
-class AutoReplacingStream(LoopExecutor):  # pylint:disable=too-few-public-methods
+class AutoReplacingStream(LoopExecutor):
     def __init__(
         self,
         bwam: BinanceWebSocketApiManager,
         context: AsyncListenerContext,
-        channels,
-        markets,
-        api_key: Union[str, bool] = False,
-        api_secret: Union[str, bool] = False,
-        stream_buffer_name: Union[str, bool] = False,
-        restart_every=60 * 60,
-    ):  # pylint:disable=too-many-arguments
+        channels: list[str],
+        markets: list[str],
+        api_key: str | bool = False,
+        api_secret: str | bool = False,
+        stream_buffer_name: str | bool = False,
+        restart_every: int = 60 * 60,
+    ):
         self.context = context
         self.restart_every = restart_every
         self.bwam = bwam
@@ -543,7 +553,7 @@ class AutoReplacingStream(LoopExecutor):  # pylint:disable=too-few-public-method
             self.context.notify_stream_replace(old_stream_id, self.last_stream_id)
 
 
-class StreamManagerWorker(threading.Thread):
+class StreamManagerWorker(Thread):
     def __init__(
         self, cache: BinanceCache, config: Annotated[EasyDict, CONFIG], logger: Logger, fut: Future
     ):
@@ -579,7 +589,7 @@ class StreamManagerWorker(threading.Thread):
         quotes = set(map(str.lower, [self.config.BRIDGE.symbol, "btc", "bnb"]))
         markets = [coin.lower() + quote for quote in quotes for coin in self.config.WATCHLIST]
         restart_every = 3600 * 4
-        streams: List[LoopExecutor] = [
+        streams: list[LoopExecutor] = [
             AutoReplacingStream(
                 bwam,
                 async_context,
@@ -604,12 +614,12 @@ class StreamManagerWorker(threading.Thread):
             api_secret=self.config.BINANCE_API_SECRET_KEY,
             stream_buffer_name=BUFFER_NAME_USERDATA,
         )
-        listeners: List[LoopExecutor] = [
+        listeners: list[LoopExecutor] = [
             TickerListener(async_context),
             UserDataListener(async_context),
             DepthListener(async_context, depth_cache_managers),
         ]
-        executors: List[LoopExecutor] = listeners + streams
+        executors: list[LoopExecutor] = listeners + streams
         stream_manager = BinanceStreamManager(self.logger, async_context, bwam, self)
         self.fut.set_result(stream_manager)
         await asyncio.gather(*[executable.run_loop() for executable in executors])
