@@ -1,13 +1,10 @@
 import os
 from typing import Optional
-from warnings import filterwarnings
 
-import pydantic_settings
 from easydict import EasyDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .models import Coin
-
-filterwarnings("ignore", module=pydantic_settings.__name__)
 
 CONFIG_PATH = "config"
 
@@ -15,10 +12,8 @@ ENV_PATH_NAME = os.path.join(CONFIG_PATH, ".env.production")
 WATCHLIST_PATH_NAME = os.path.join(CONFIG_PATH, "watchlist.txt")
 
 
-class Settings(pydantic_settings.BaseSettings):
-    model_config = pydantic_settings.SettingsConfigDict(
-        env_file=ENV_PATH_NAME, env_file_encoding="utf-8"
-    )
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=ENV_PATH_NAME, env_file_encoding="utf-8")
 
     BRIDGE_SYMBOL: str
     SCOUT_HISTORY_PRUNE_TIME: Optional[float] = 1
@@ -36,14 +31,14 @@ class Settings(pydantic_settings.BaseSettings):
 
 settings = Settings()  # type: ignore
 
-watchlist = [coin.strip() for coin in os.environ.get("WATCHLIST", "").split() if coin.strip()]
-if not watchlist and os.path.exists(WATCHLIST_PATH_NAME):
-    with open(WATCHLIST_PATH_NAME) as f:
-        for line in f:
+WATCHLIST = [coin.strip() for coin in settings.WATCHLIST.split() if coin.strip()]  # type: ignore
+if not WATCHLIST and os.path.exists(WATCHLIST_PATH_NAME):
+    with open(WATCHLIST_PATH_NAME) as file:
+        for line in file:
             line = line.strip()
-            if not line or line.startswith("#") or line in watchlist:
+            if not line or line in WATCHLIST:
                 continue
-            watchlist.append(line)
+            WATCHLIST.append(line)
 
 CONFIG: EasyDict = EasyDict(
     {
@@ -56,7 +51,7 @@ CONFIG: EasyDict = EasyDict(
         "SCOUT_MARGIN": settings.SCOUT_MARGIN,
         "BINANCE_API_KEY": settings.BINANCE_API_KEY,
         "BINANCE_API_SECRET_KEY": settings.BINANCE_API_SECRET_KEY,
-        "WATCHLIST": settings.WATCHLIST or watchlist,
+        "WATCHLIST": WATCHLIST,
         "STRATEGY": settings.STRATEGY,
         "ENABLE_PAPER_TRADING": settings.ENABLE_PAPER_TRADING,
         "PAPER_WALLET_BALANCE": settings.PAPER_WALLET_BALANCE,
