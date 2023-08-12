@@ -1,3 +1,4 @@
+# mypy: disable-error-code=union-attr
 from collections import defaultdict
 from datetime import datetime, timedelta
 from traceback import format_exc
@@ -159,10 +160,10 @@ class MockBinanceManager(BinanceAPIManager):
         )
 
     def collate_coins(self, target_symbol: str):
-        total = 0
+        total = 0.0
         for coin, balance in self.balances.items():
             if coin == target_symbol:
-                total += balance  # type: ignore
+                total += balance
                 continue
             if coin == self.config.BRIDGE.symbol:
                 price = self.get_ticker_price(target_symbol + coin)
@@ -226,8 +227,8 @@ def backtest(
         start_balances,
     )
     starting_coin = db.get_coin(starting_coin or CONFIG.WATCHLIST[0])
-    if manager.get_currency_balance(starting_coin.symbol) == 0:  # type: ignore
-        manager.buy_alt(starting_coin.symbol, CONFIG.BRIDGE.symbol, 0.0)  # type: ignore
+    if manager.get_currency_balance(starting_coin.symbol) == 0:
+        manager.buy_alt(starting_coin.symbol, CONFIG.BRIDGE.symbol, 0.0)
     db.set_current_coin(starting_coin)  # type: ignore
 
     # Initialize autotrader
@@ -252,7 +253,7 @@ def backtest(
             except Exception:  # pylint: disable=broad-except
                 logger.warning(f"An error occured\n\n{format_exc()}")
             manager.increment(interval)
-            if n % yield_interval == 0:  # type: ignore
+            if n % yield_interval:  # type: ignore
                 yield manager
             n += 1
     except KeyboardInterrupt:

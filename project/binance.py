@@ -1,3 +1,4 @@
+# mypy: disable-error-code=union-attr
 from __future__ import annotations
 
 import json
@@ -244,9 +245,9 @@ class BinanceAPIManager:
             quantity=order_quantity,
             quote_quantity=target_balance,
         )
-        order = BinanceOrder(order)  # type: ignore
-        executed_qty = order.cumulative_filled_quantity  # type: ignore
-        if executed_qty > 0 and order.status == "FILLED":  # type: ignore
+        order = BinanceOrder(order)
+        executed_qty = order.cumulative_filled_quantity
+        if executed_qty > 0 and order.status == "FILLED":
             order_quantity = executed_qty
         self.logger.info(f"Bought {origin_symbol}")
 
@@ -275,7 +276,7 @@ class BinanceAPIManager:
             quantity=order_quantity,
             quote_quantity=from_coin_price * order_quantity,
         )
-        order = BinanceOrder(order)  # type: ignore
+        order = BinanceOrder(order)
         new_balance = self.get_currency_balance(origin_symbol)
         while new_balance >= origin_balance:
             balances_changed = self.cache.balances_changed_event.wait(1.0)
@@ -296,13 +297,13 @@ class BinanceAPIManager:
         return self.order_balance_manager.get_currency_balance(currency_symbol, force)
 
     def get_market_sell_price(self, symbol: str, amount: float):
-        return self.stream_manager.get_market_sell_price(symbol, amount)  # type: ignore
+        return self.stream_manager.get_market_sell_price(symbol, amount)
 
     def get_market_buy_price(self, symbol: str, quote_amount: float):
-        return self.stream_manager.get_market_buy_price(symbol, quote_amount)  # type: ignore
+        return self.stream_manager.get_market_buy_price(symbol, quote_amount)
 
     def get_market_sell_price_fill_quote(self, symbol: str, quote_amount: float):
-        return self.stream_manager.get_market_sell_price_fill_quote(symbol, quote_amount)  # type: ignore
+        return self.stream_manager.get_market_sell_price_fill_quote(symbol, quote_amount)
 
     @cached(cache=TTLCache(maxsize=1, ttl=43200))
     def get_trade_fees(self) -> Dict[str, float]:

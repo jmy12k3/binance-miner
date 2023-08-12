@@ -1,3 +1,4 @@
+# mypy: disable-error-code=misc
 import abc
 import asyncio
 import threading
@@ -233,7 +234,7 @@ class AsyncListenerContext:
         self.replace_signals["DISCONNECT"].add(old_stream_id)
 
     def resolve_stream_id(self, stream_id: uuid.UUID) -> str:
-        return self.resolver(stream_id)  # type: ignore
+        return self.resolver(stream_id)
 
     def add_stream_data(self, stream_data, stream_buffer_name: Union[str, bool] = False):
         if self.stopped:
@@ -302,7 +303,7 @@ class AsyncListenerContext:
         if self.stopped:
             return
         stream_id = signal_data["stream_id"]
-        buffer_name = self.resolver(stream_id)  # type: ignore
+        buffer_name = self.resolver(stream_id)
         asyncio.run_coroutine_threadsafe(self.queues[buffer_name].put(signal_data), self.loop)
 
     # XXX: Improve logging semantics

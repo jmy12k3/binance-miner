@@ -1,4 +1,4 @@
-# mypy: disable-error-code="call-overload"
+# mypy: disable-error-code=call-overload
 from __future__ import annotations
 
 from array import array

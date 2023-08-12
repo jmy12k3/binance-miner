@@ -1,6 +1,6 @@
 from datetime import datetime
 from itertools import groupby
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, no_type_check
 
 from dateutil.relativedelta import relativedelta
 from flask import Flask, jsonify, request
@@ -23,11 +23,8 @@ logger = Logger(None)
 db = Database(logger, CONFIG)
 
 
-# pylint: disable=inconsistent-return-statements
-def filter_period(  # type: ignore
-    query: Query,
-    model: Union[CoinValue, CurrentCoin, ScoutHistory, Trade],
-) -> Query:
+@no_type_check
+def filter_period(query: Query, model: Union[CoinValue, CurrentCoin, ScoutHistory, Trade]) -> Query:
     period = request.args.get("period")
     if not period:
         return query
