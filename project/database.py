@@ -21,12 +21,12 @@ LogScout = namedtuple(
     "LogScout", ["pair_id", "ratio_diff", "target_ratio", "coin_price", "optional_coin_price"]
 )
 
-# Constant that are immutable by inheritance
+# Constants that are immutable by inheritance
 API = "http://api:5000"
 
 
 class Database:
-    # Constant that are mutable by inheritance
+    # Constants that are mutable by inheritance
     DB = "sqlite:///data/crypto_trading.db"
 
     def __init__(self, logger: Logger, config: Annotated[EasyDict, CONFIG]):
