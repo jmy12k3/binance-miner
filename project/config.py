@@ -1,5 +1,5 @@
 import os
-from typing import Annotated, Optional
+from typing import Optional
 from warnings import filterwarnings
 
 import pydantic_settings
@@ -15,11 +15,9 @@ ENV_PATH_NAME = os.path.join(CONFIG_PATH, ".env.production")
 WATCHLIST_PATH_NAME = os.path.join(CONFIG_PATH, "watchlist.txt")
 
 
-class Config(pydantic_settings.BaseSettings):
+class Settings(pydantic_settings.BaseSettings):
     model_config = pydantic_settings.SettingsConfigDict(
-        env_file=ENV_PATH_NAME,
-        env_file_encoding="utf-8",
-        secrets_dir="/run/secrets",
+        env_file=ENV_PATH_NAME, env_file_encoding="utf-8"
     )
 
     BRIDGE_SYMBOL: str
@@ -36,7 +34,7 @@ class Config(pydantic_settings.BaseSettings):
     PAPER_WALLET_BALANCE: Optional[float] = 10_000
 
 
-settings = Config()  # type: ignore
+settings = Settings()  # type: ignore
 
 watchlist = [coin.strip() for coin in os.environ.get("WATCHLIST", "").split() if coin.strip()]
 if not watchlist and os.path.exists(WATCHLIST_PATH_NAME):
@@ -47,7 +45,7 @@ if not watchlist and os.path.exists(WATCHLIST_PATH_NAME):
                 continue
             watchlist.append(line)
 
-CONFIG: Annotated[EasyDict, "CONFIG"] = EasyDict(
+CONFIG: EasyDict = EasyDict(
     {
         "BRIDGE_SYMBOL": settings.BRIDGE_SYMBOL,
         "BRIDGE": Coin(settings.BRIDGE_SYMBOL, False),
