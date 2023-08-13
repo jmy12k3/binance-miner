@@ -50,9 +50,8 @@ class ThreadSafeAsyncLock:
         self, exc_type: type[BaseException], exc_val: BaseException, exc_tb: TracebackType
     ):
         if self._async_lock is not None:
-            assert self.loop
             asyncio.run_coroutine_threadsafe(
-                self._async_lock.__aexit__(exc_type, exc_val, exc_tb), self.loop
+                self._async_lock.__aexit__(exc_type, exc_val, exc_tb), self.loop  # type: ignore
             ).result()
         self._init_lock.__exit__(exc_type, exc_val, exc_tb)
 
