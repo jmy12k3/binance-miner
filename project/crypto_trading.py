@@ -13,7 +13,7 @@ from .strategies import get_strategy
 
 
 def main():
-    # Initialize exit flag
+    # Initialize clean-up flag
     exiting = False
 
     # Initialize modules
@@ -29,7 +29,7 @@ def main():
     else:
         manager = BinanceAPIManager.create_manager(CONFIG, db, logger)
 
-    # Initialize worker of clean-up handler
+    # Initialize clean-up worker
     def timeout_exit(timeout: int):
         thread = Thread(target=manager.close)
         thread.start()
@@ -44,12 +44,12 @@ def main():
         timeout_exit(10)
         os._exit(0)
 
-    # Hook UNIX signals to clean-up handler
+    # Hook clean-up handler
     signal.signal(signal.SIGINT, exit_handler)
     signal.signal(signal.SIGTERM, exit_handler)
     atexit.register(exit_handler)
 
-    # Check if the Binance private API keys are valid
+    # Verify manager
     try:
         _ = manager.get_account()
     except Exception as e:
