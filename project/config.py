@@ -15,22 +15,22 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=ENV_PATH_NAME, env_file_encoding="utf-8")
 
     BRIDGE_SYMBOL: str
-    SCOUT_HISTORY_PRUNE_TIME: float | None = 1
-    SCOUT_MULTIPLIER: float | None = 5
-    SCOUT_SLEEP_TIME: int | None = 1
-    USE_MARGIN: bool | None = True
-    SCOUT_MARGIN: float | None = 0.8
+    SCOUT_HISTORY_PRUNE_TIME: float = 1
+    SCOUT_MULTIPLIER: float = 5
+    SCOUT_SLEEP_TIME: int = 1
+    USE_MARGIN: bool = True
+    SCOUT_MARGIN: float = 0.8
     BINANCE_API_KEY: str
     BINANCE_API_SECRET_KEY: str
-    WATCHLIST: str | None = ""
-    STRATEGY: str | None = "default"
+    WATCHLIST: str = ""
+    STRATEGY: str = "default"
     ENABLE_PAPER_TRADING: bool
-    PAPER_WALLET_BALANCE: float | None = 10_000
+    PAPER_WALLET_BALANCE: float = 10_000
 
 
 settings = Settings()  # type: ignore
 
-WATCHLIST = [coin.strip() for coin in settings.WATCHLIST.split() if coin.strip()]  # type: ignore
+WATCHLIST = [coin.strip() for coin in settings.WATCHLIST.split() if coin.strip()]
 if not WATCHLIST and os.path.exists(WATCHLIST_PATH_NAME):
     with open(WATCHLIST_PATH_NAME) as file:
         for line in file:

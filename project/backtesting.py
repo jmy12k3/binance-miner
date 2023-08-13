@@ -55,7 +55,7 @@ class MockBinanceManager(BinanceAPIManager):
     def setup_websockets(self):
         pass
 
-    def increment(self, interval=1):
+    def increment(self, interval: int = 1):
         self.datetime += timedelta(minutes=interval)
 
     def get_fee(self, origin_coin: str, target_coin: str, selling: bool):
@@ -197,8 +197,8 @@ class MockDatabase(Database):
 def backtest(
     start_date: datetime,
     end_date: datetime | None = None,
-    interval: int | None = 1,
-    yield_interval: int | None = 100,
+    interval: int = 1,
+    yield_interval: int = 100,
     start_balances: dict[str, float] | None = None,
     starting_coin: str | None = None,
 ):
