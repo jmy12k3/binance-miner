@@ -294,4 +294,3 @@ class TradeLog:
             trade.crypto_trade_amount = crypto_trade_amount
             trade.state = TradeState.COMPLETE
             self.db.send_update(trade)
-            self.db.send_update(trade)
