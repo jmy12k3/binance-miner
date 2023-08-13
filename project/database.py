@@ -48,7 +48,7 @@ class Database:
             return True
         try:
             if not self.socketio_client.connected:
-                self.socketio_client.connect(API, namespaces=["/backend"])
+                self.socketio_client.connect(self.API, namespaces=["/backend"])
             while not self.socketio_client.connected or not self.socketio_client.namespaces:
                 time.sleep(0.1)
             return True
@@ -65,10 +65,6 @@ class Database:
 
     def send_update(self, model):
         if not self._api_session():
-            self.logger.warning(
-                f"Heartbeat to API {API} failed. "
-                "This might be an issue if you are running in Docker."
-            )
             return
         self.socketio_client.emit(
             "update", {"table": model.__tablename__, "data": model.info()}, "/backend"
