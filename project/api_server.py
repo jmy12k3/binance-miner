@@ -43,6 +43,8 @@ class Period(Enum):
         return self.value
 
 
+# https://fastapi.tiangolo.com/async/
+# As SQLAlchemy is not fully async-compatible yet, FastAPI will be running in synchronous mode.
 @no_type_check
 def filter_period(period: list[Period], query: Query, model) -> Query:
     if not period:
@@ -59,8 +61,6 @@ def filter_period(period: list[Period], query: Query, model) -> Query:
         return query.filter(model.datetime >= datetime.now() - relativedelta(months=1))
 
 
-# https://fastapi.tiangolo.com/async/
-# As SQLAlchemy is yet to be fully async-compatiable, the rest of the code is not async either
 @app.get("/api/v1/value_history")
 def value_history(coin: str | None = None, period: list[Period] | None = None):
     session: Session
