@@ -18,8 +18,6 @@ from .models import *  # noqa: F403
 from .postpone import heavy_call
 from .ratios import CoinStub, RatiosManager
 
-API = "http://api:5000"
-
 LogScout = namedtuple(
     "LogScout", ["pair_id", "ratio_diff", "target_ratio", "coin_price", "optional_coin_price"]
 )
@@ -43,12 +41,13 @@ class Database:
         session.commit()
         session.close()
 
+    # Docker exclusive
     def _api_session(self):
         if self.socketio_client.connected and self.socketio_client.namespaces:
             return True
         try:
             if not self.socketio_client.connected:
-                self.socketio_client.connect(self.API, namespaces=["/backend"])
+                self.socketio_client.connect("http://api:5000", namespaces=["/backend"])
             while not self.socketio_client.connected or not self.socketio_client.namespaces:
                 time.sleep(0.1)
             return True
