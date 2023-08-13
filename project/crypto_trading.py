@@ -11,6 +11,9 @@ from .logger import Logger
 from .scheduler import SafeScheduler
 from .strategies import get_strategy
 
+# Initialize timeout for database initialization and clean-up
+TIMEOUT = 10
+
 
 def main():
     # Initialize clean-up flag
@@ -41,7 +44,7 @@ def main():
         if exiting:
             return
         exiting = True
-        timeout_exit(10)
+        timeout_exit(TIMEOUT)
         os._exit(0)
 
     # Hook clean-up handler
@@ -68,7 +71,7 @@ def main():
     # Initialize database
     db.create_database()
     db.set_coins(CONFIG.WATCHLIST)
-    time.sleep(10)
+    time.sleep(TIMEOUT)
     trader.initialize()
 
     # Initialize scheduler
