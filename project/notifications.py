@@ -1,5 +1,5 @@
-import queue
 from os import path
+from queue import Queue
 from threading import Thread
 
 import apprise
@@ -16,7 +16,7 @@ class NotificationHandler:
             config = apprise.AppriseConfig()
             config.add(self.APPRISE_CONFIG_PATH)
             self.apobj.add(config)
-            self.queue = queue.Queue()  # type: ignore
+            self.queue: Queue = Queue()
             self.start_worker()
             self.enabled = True
         else:

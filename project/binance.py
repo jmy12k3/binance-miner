@@ -9,18 +9,22 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable
 from traceback import format_exc
-from typing import Annotated
+from typing import Annotated, Any, TypeVar
 
 from binance.client import Client
 from binance.exceptions import BinanceAPIException, BinanceOrderException, BinanceRequestException
 from cachetools import TTLCache, cached
 from easydict import EasyDict
+from typing_extensions import ParamSpec
 
 from .binance_ws import BinanceCache, BinanceOrder, BinanceStreamManager, StreamManagerWorker
 from .config import CONFIG
 from .database import Database
 from .logger import Logger
 from .postpone import heavy_call
+
+T = TypeVar("T")
+P = ParamSpec("P")
 
 
 def float_as_decimal_str(num: float):
@@ -74,7 +78,7 @@ class PaperOrderBalanceManager(AbstractOrderBalanceManager):
                 else:
                     self.balances = data
 
-    def _read_persist(self) -> dict | None:
+    def _read_persist(self) -> dict[str, Any] | None:
         if os.path.exists(self.PERSIST_FILE_PATH):
             with open(self.PERSIST_FILE_PATH) as json_file:
                 return json.load(json_file)
@@ -210,7 +214,7 @@ class BinanceAPIManager:
         self.stream_manager = StreamManagerWorker.create(self.cache, self.config, self.logger)
 
     # XXX: Improve logging semantics
-    def _retry(self, func: Callable, *args, **kwargs):
+    def _retry(self, func: Callable[P, T], *args, **kwargs):
         for attempt in range(20):
             try:
                 return func(*args, **kwargs)
