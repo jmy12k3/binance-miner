@@ -94,7 +94,7 @@ class MockBinanceManager(BinanceAPIManager):
             val = self.sqlite_cache.get(key, None)
         return val if val != 0.0 else None
 
-    def get_currency_balance(self, currency_symbol: str, force=False):
+    def get_currency_balance(self, currency_symbol: str, force: bool = False):
         return self.balances.get(currency_symbol, 0)
 
     def get_market_sell_price(
@@ -204,7 +204,7 @@ def backtest(
 ):
     # Initialize modules
     sqlite_cache = SqliteDict("data/backtest_cache.db")
-    logger = Logger(logging_service="backtesting")
+    logger = Logger("backtesting", False)
     end_date = end_date or datetime.today()
     start_balances = start_balances or {CONFIG.BRIDGE.symbol: CONFIG.PAPER_BALANCE}
 
