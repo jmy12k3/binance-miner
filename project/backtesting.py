@@ -203,7 +203,7 @@ def backtest(
     starting_coin: str | None = None,
 ):
     # Initialize modules
-    sqlite_cache = SqliteDict("data/backtest_cache.db")
+    sqlite_cache = SqliteDict("data/backtesting_cache.db")
     logger = Logger("backtesting", False)
     end_date = end_date or datetime.today()
     start_balances = start_balances or {CONFIG.BRIDGE.symbol: CONFIG.PAPER_WALLET_BALANCE}
