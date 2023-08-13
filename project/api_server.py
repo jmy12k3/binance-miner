@@ -17,8 +17,7 @@ from .database import Database
 from .logger import Logger
 from .models import Coin, CoinValue, CurrentCoin, Pair, ScoutHistory, Trade
 
-db = Database(Logger(), CONFIG)
-
+# Initialize FastAPI with CORS and SocketIO
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -28,6 +27,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 sio = SocketManager(app)
+
+
+# Initialize modules
+logger = Logger()
+db = Database(logger, CONFIG)
 
 
 class Period(Enum):
