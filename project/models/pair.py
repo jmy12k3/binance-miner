@@ -21,7 +21,7 @@ class Pair(Base):
         .scalar_subquery()
     )
 
-    def __init__(self, from_coin: Coin, to_coin: Coin, ratio: float | None):
+    def __init__(self, from_coin: Coin, to_coin: Coin, ratio: float | None = None):
         self.from_coin = from_coin
         self.to_coin = to_coin
         self.ratio = ratio
