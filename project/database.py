@@ -41,7 +41,6 @@ class Database:
         session.commit()
         session.close()
 
-    # Docker exclusive
     def _api_session(self):
         if self.socketio_client.connected and self.socketio_client.namespaces:
             return True

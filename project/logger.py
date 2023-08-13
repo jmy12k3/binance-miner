@@ -8,26 +8,23 @@ class Logger:
     NotificationHandler = None
 
     def __init__(self, logging_service: str | None = None, enable_notifications: bool = False):
-        # Instantiate logger
-        self.Logger = logging.getLogger(f"{logging_service}_logger")
+        self.Logger = logging.getLogger(logging_service)
         self.Logger.setLevel(logging.DEBUG)
         self.Logger.propagate = False
         formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 
-        # Initialize notification handler
         self.NotificationHandler = NotificationHandler(enable_notifications)
 
-        # Return for only instantiating
         if not logging_service:
             return
 
-        # Initialize file handler
-        fh = logging.FileHandler(f"logs/{logging_service}.log")
+        fh = logging.handlers.RotatingFileHandler(
+            f"logs/{logging_service}.log", maxBytes=1000000, backupCount=5
+        )
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(formatter)
         self.Logger.addHandler(fh)
 
-        # Initialize console handler
         ch = logging.StreamHandler()
         ch.setLevel(logging.INFO)
         ch.setFormatter(formatter)
@@ -38,10 +35,8 @@ class Logger:
             handler.close()
 
     def log(self, message: str, level: int, notification: bool = True):
-        # Ensure logger and notification handler are instantiated
         assert self.Logger and self.NotificationHandler
 
-        # Log message
         if level == logging.DEBUG:
             self.Logger.debug(message)
         elif level == logging.INFO:
@@ -51,7 +46,6 @@ class Logger:
         elif level == logging.ERROR:
             self.Logger.error(message)
 
-        # Send notification
         if notification and self.NotificationHandler.enabled:
             self.NotificationHandler.send_notification(str(message))
 

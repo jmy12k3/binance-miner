@@ -17,7 +17,6 @@ from .database import Database
 from .logger import Logger
 from .models import Coin, CoinValue, CurrentCoin, Pair, ScoutHistory, Trade
 
-# Initialize FastAPI with CORS and SocketIO
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -29,7 +28,6 @@ app.add_middleware(
 sio = SocketManager(app)
 
 
-# Initialize modules
 logger = Logger()
 db = Database(logger, CONFIG)
 

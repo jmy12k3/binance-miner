@@ -597,7 +597,6 @@ class StreamManagerWorker(Thread):
         bwam = AsyncListenedBWAM(
             async_context, output_default="UnicornFy", enable_stream_signal_buffer=True
         )
-        # BNB is needed for discount calculation
         quotes = set(map(str.lower, [self.config.BRIDGE.symbol, "btc", "bnb"]))
         markets = [coin.lower() + quote for quote in quotes for coin in self.config.WATCHLIST]
         restart_every = 3600 * 4
