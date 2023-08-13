@@ -1,12 +1,13 @@
 # mypy: disable-error-code=annotation-unchecked
 from datetime import datetime
+from enum import Enum
 from itertools import groupby
 from typing import no_type_check
 
 from dateutil.relativedelta import relativedelta
-from flask import Flask, jsonify, request
-from flask_cors import CORS
-from flask_socketio import SocketIO, emit
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi_socketio import SocketManager
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.query import Query
@@ -16,49 +17,63 @@ from .database import Database
 from .logger import Logger
 from .models import Coin, CoinValue, CurrentCoin, Pair, ScoutHistory, Trade
 
-app = Flask(__name__)
-cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
-socketio = SocketIO(app, cors_allowed_origins="*")
+# Create a database instance
+db = Database(Logger(), CONFIG)
 
-logger = Logger(None)
-db = Database(logger, CONFIG)
+# Create a FastAPI instance with CORS and socketio
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+sio = SocketManager(app)
+
+
+class Period(Enum):
+    SECOND = "s"
+    HOUR = "h"
+    DAY = "d"
+    WEEK = "w"
+    MONTH = "m"
+
+    def __str__(self):
+        return self.value
 
 
 @no_type_check
-def filter_period(query: Query, model: CoinValue | CurrentCoin | ScoutHistory | Trade) -> Query:
-    period = request.args.get("period")
+def filter_period(period: list[Period], query: Query, model) -> Query:
     if not period:
         return query
-    if "s" in period:
+    if Period.SECOND in period:
         return query.filter(model.datetime >= datetime.now() - relativedelta(seconds=1))
-    if "h" in period:
+    if Period.HOUR in period:
         return query.filter(model.datetime >= datetime.now() - relativedelta(hours=1))
-    if "d" in period:
+    if Period.DAY in period:
         return query.filter(model.datetime >= datetime.now() - relativedelta(days=1))
-    if "w" in period:
+    if Period.WEEK in period:
         return query.filter(model.datetime >= datetime.now() - relativedelta(weeks=1))
-    if "m" in period:
+    if Period.MONTH in period:
         return query.filter(model.datetime >= datetime.now() - relativedelta(months=1))
 
 
-@app.route("/api/value_history")
-@app.route("/api/value_history/<coin>")
-def value_history(coin: str | None = None):
+@app.get("/api/v1/value_history")
+def value_history(coin: str | None = None, period: list[Period] | None = None):
     session: Session
     with db.db_session() as session:
         query = session.query(CoinValue).order_by(CoinValue.coin_id.asc(), CoinValue.datetime.asc())
-        query = filter_period(query, CoinValue)  # type: ignore
+        query = filter_period(period, query, CoinValue)  # type: ignore
         if coin:
             values: list[CoinValue] = query.filter(CoinValue.coin_id == coin).all()
-            return jsonify([entry.info() for entry in values])
+            return [entry.info() for entry in values]
         coin_values = groupby(query.all(), key=lambda cv: cv.coin)
-        return jsonify(
-            {coin.symbol: [entry.info() for entry in history] for coin, history in coin_values}
-        )
+        return {coin.symbol: [entry.info() for entry in history] for coin, history in coin_values}
 
 
-@app.route("/api/total_value_history")
-def total_value_history():
+@app.get("/api/v1/total_value_history")
+def total_value_history(period: list[Period] | None = None):
     session: Session
     with db.db_session() as session:
         query = session.query(
@@ -66,23 +81,23 @@ def total_value_history():
             func.sum(CoinValue.btc_value),
             func.sum(CoinValue.usd_value),
         ).group_by(CoinValue.datetime)
-        query = filter_period(query, CoinValue)
+        query = filter_period(period, query, CoinValue)
         total_values: list[tuple[datetime, float, float]] = query.all()
-        return jsonify([{"datetime": tv[0], "btc": tv[1], "usd": tv[2]} for tv in total_values])
+        return [{"datetime": tv[0], "btc": tv[1], "usd": tv[2]} for tv in total_values]
 
 
-@app.route("/api/trade_history")
-def trade_history():
+@app.get("/api/v1/trade_history")
+def trade_history(period: list[Period] | None = None):
     session: Session
     with db.db_session() as session:
         query = session.query(Trade).order_by(Trade.datetime.asc())
-        query = filter_period(query, Trade)
+        query = filter_period(period, query, Trade)
         trades: list[Trade] = query.all()
-        return jsonify([trade.info() for trade in trades])
+        return [trade.info() for trade in trades]
 
 
-@app.route("/api/scouting_history")
-def scouting_history():
+@app.get("/api/v1/scouting_history")
+def scouting_history(period: list[Period] | None = None):
     _current_coin = db.get_current_coin()
     coin = _current_coin.symbol if _current_coin is not None else None
     session: Session
@@ -93,48 +108,44 @@ def scouting_history():
             .filter(Pair.from_coin_id == coin)
             .order_by(ScoutHistory.datetime.asc())
         )
-        query = filter_period(query, ScoutHistory)
+        query = filter_period(period, query, ScoutHistory)
         scouts: list[ScoutHistory] = query.all()
-        return jsonify([scout.info() for scout in scouts])
+        return [scout.info() for scout in scouts]
 
 
-@app.route("/api/current_coin")
-def current_coin():
+@app.get("/api/v1/current_coin")
+def current_coin(period: list[Period] | None = None):
     coin = db.get_current_coin()
     return coin.info() if coin else None
 
 
-@app.route("/api/current_coin_history")
-def current_coin_history():
+@app.get("/api/v1/current_coin_history")
+def current_coin_history(period: list[Period] | None = None):
     session: Session
     with db.db_session() as session:
         query = session.query(CurrentCoin)
-        query = filter_period(query, CurrentCoin)
+        query = filter_period(period, query, CurrentCoin)
         current_coins: list[CurrentCoin] = query.all()
-        return jsonify([cc.info() for cc in current_coins])
+        return [cc.info() for cc in current_coins]
 
 
-@app.route("/api/coins")
-def coins():
+@app.get("/api/v1/coins")
+def coins(period: list[Period] | None = None):
     session: Session
     with db.db_session() as session:
         _current_coin = session.merge(db.get_current_coin())
         _coins: list[Coin] = session.query(Coin).all()
-        return jsonify([{**coin.info(), "is_current": coin == _current_coin} for coin in _coins])
+        return [{**coin.info(), "is_current": coin == _current_coin} for coin in _coins]
 
 
-@app.route("/api/pairs")
-def pairs():
+@app.get("/api/v1/pairs")
+def pairs(period: list[Period] | None = None):
     session: Session
     with db.db_session() as session:
         all_pairs: list[Pair] = session.query(Pair).all()
-        return jsonify([pair.info() for pair in all_pairs])
+        return [pair.info() for pair in all_pairs]
 
 
-@socketio.on("update", namespace="/backend")
-def on_update(msg):
-    emit("update", msg, namespace="/frontend", broadcast=True)
-
-
-if __name__ == "__main__":
-    socketio.run(app, debug=True)
+@sio.on("update", namespace="/backend")
+def on_update(msg: dict):
+    sio.emit("update", msg, namespace="/frontend")
