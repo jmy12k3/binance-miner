@@ -29,13 +29,13 @@ def main():
     else:
         manager = BinanceAPIManager.create_manager(CONFIG, db, logger)
 
-    # Initialize clean-up
+    # Initialize worker of clean-up handler
     def timeout_exit(timeout: int):
         thread = Thread(target=manager.close)
         thread.start()
         thread.join(timeout)
 
-    # Initialize exit handler
+    # Initialize clean-up handler
     def exit_handler(*_):
         nonlocal exiting
         if exiting:
@@ -44,12 +44,12 @@ def main():
         timeout_exit(10)
         os._exit(0)
 
-    # Hook signals to exit handler
+    # Hook UNIX signals to clean-up handler
     signal.signal(signal.SIGINT, exit_handler)
     signal.signal(signal.SIGTERM, exit_handler)
     atexit.register(exit_handler)
 
-    # Initiate websocket (test if private API keys are valid)
+    # Check if the Binance private API keys are valid
     try:
         _ = manager.get_account()
     except Exception as e:
@@ -62,8 +62,6 @@ def main():
         logger.error(f"Invalid strategy: {strategy}")
         return
     trader = strategy(logger, CONFIG, db, manager)
-
-    # Log configuration
     logger.info(f"Chosen strategy: {CONFIG.STRATEGY}")
     logger.info(f"Paper trading: {CONFIG.ENABLE_PAPER_TRADING}")
 
