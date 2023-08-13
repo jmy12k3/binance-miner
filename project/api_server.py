@@ -17,10 +17,8 @@ from .database import Database
 from .logger import Logger
 from .models import Coin, CoinValue, CurrentCoin, Pair, ScoutHistory, Trade
 
-# Create a database instance
 db = Database(Logger(), CONFIG)
 
-# Create a FastAPI instance with CORS and socketio
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -44,7 +42,6 @@ class Period(Enum):
 
 
 # https://fastapi.tiangolo.com/async/
-# As SQLAlchemy is not fully async-compatible yet, FastAPI will be running in synchronous mode.
 @no_type_check
 def filter_period(period: list[Period], query: Query, model) -> Query:
     if not period:
