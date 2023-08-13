@@ -63,7 +63,7 @@ def main():
         return
     trader = strategy(logger, CONFIG, db, manager)
 
-    # Log configurations (partially)
+    # Log configuration
     logger.info(f"Chosen strategy: {CONFIG.STRATEGY}")
     logger.info(f"Paper trading: {CONFIG.ENABLE_PAPER_TRADING}")
 
