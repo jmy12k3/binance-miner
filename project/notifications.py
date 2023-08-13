@@ -29,9 +29,9 @@ class NotificationHandler:
         while True:
             message, attachments = self.queue.get()
             if attachments:
-                self.apobj.notify(body=message, attach=attachments)
+                self.apobj.notify(message, attach=attachments)
             else:
-                self.apobj.notify(body=message)
+                self.apobj.notify(message)
             self.queue.task_done()
 
     def send_notification(self, message, attachments=None):
