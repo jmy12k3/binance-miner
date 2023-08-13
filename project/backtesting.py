@@ -232,7 +232,7 @@ def backtest(
     # Initialize autotrader
     strategy = get_strategy(CONFIG.STRATEGY)
     if strategy is None:
-        logger.error(f"Invalid strategy: {strategy}")
+        logger.error(f"Invalid strategy: {CONFIG.STRATEGY}")
         return manager
     trader = strategy(logger, CONFIG, db, manager)
     logger.info(f"Chosen strategy: {CONFIG.STRATEGY}")
