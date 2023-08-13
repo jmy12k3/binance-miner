@@ -2,7 +2,7 @@
 from datetime import datetime
 from enum import Enum
 from itertools import groupby
-from typing import no_type_check
+from typing import Any, no_type_check
 
 from dateutil.relativedelta import relativedelta
 from fastapi import FastAPI
@@ -148,5 +148,5 @@ def pairs(period: list[Period] | None = None):
 
 
 @sio.on("update", namespace="/backend")
-def on_update(msg: dict):
+def on_update(msg: dict[Any, Any]):
     sio.emit("update", msg, namespace="/frontend")
