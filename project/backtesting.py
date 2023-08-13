@@ -206,7 +206,7 @@ def backtest(
     sqlite_cache = SqliteDict("data/backtest_cache.db")
     logger = Logger("backtesting", False)
     end_date = end_date or datetime.today()
-    start_balances = start_balances or {CONFIG.BRIDGE.symbol: CONFIG.PAPER_BALANCE}
+    start_balances = start_balances or {CONFIG.BRIDGE.symbol: CONFIG.PAPER_WALLET_BALANCE}
 
     # Initialize database
     db = MockDatabase(logger, CONFIG)
