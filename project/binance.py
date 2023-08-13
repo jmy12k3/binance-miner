@@ -5,10 +5,10 @@ import json
 import math
 import os
 import time
+import traceback
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable
-from traceback import format_exc
 from typing import Annotated, Any, TypeVar
 
 from binance.client import Client
@@ -220,7 +220,7 @@ class BinanceAPIManager:
                 return func(*args, **kwargs)
             except (BinanceOrderException, BinanceAPIException, BinanceRequestException):
                 self.logger.warning(f"Failed to Buy/Sell. Retrying... (attempt {attempt}/20)")
-                self.logger.warning(format_exc())
+                self.logger.warning(traceback.format_exc())
             time.sleep(1)
         return None
 
@@ -405,4 +405,6 @@ class BinanceAPIManager:
         return self._retry(self._buy_alt, origin_coin, target_coin, buy_price)
 
     def sell_alt(self, origin_coin: str, target_coin: str, sell_price: float) -> BinanceOrder:
+        return self._retry(self._sell_alt, origin_coin, target_coin, sell_price)
+        return self._retry(self._sell_alt, origin_coin, target_coin, sell_price)
         return self._retry(self._sell_alt, origin_coin, target_coin, sell_price)

@@ -1,9 +1,9 @@
-from contextvars import copy_context
+import contextvars
 
 from .crypto_trading import main
 
 if __name__ == "__main__":
-    ctx = copy_context()
+    ctx = contextvars.copy_context()
     try:
         ctx.run(main())
     except KeyboardInterrupt:

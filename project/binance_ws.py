@@ -1,5 +1,6 @@
 # mypy: disable-error-code="annotation-unchecked, misc"
 import asyncio
+import uuid
 from abc import ABC, abstractmethod
 from collections import defaultdict, deque
 from collections.abc import Callable
@@ -8,9 +9,8 @@ from contextlib import asynccontextmanager, contextmanager, suppress
 from threading import Event, Lock, Thread
 from types import TracebackType
 from typing import Annotated, TypeVar
-from uuid import UUID, uuid4
 
-import binance.client
+from binance import AsyncClient
 from binance.exceptions import BinanceAPIException
 from easydict import EasyDict
 from sortedcontainers import SortedDict
@@ -135,8 +135,8 @@ class DepthCache:
 
 
 class DepthCacheManager:
-    def __init__(self, symbol: str, client: binance.AsyncClient, logger: Logger, limit: int = 100):
-        self.id = uuid4()
+    def __init__(self, symbol: str, client: AsyncClient, logger: Logger, limit: int = 100):
+        self.id = uuid.uuid4()
         self.pending_signals_counter = 0
         self.pending_reinit = False
         self.data_queue: deque = deque()
@@ -220,7 +220,7 @@ class AsyncListenerContext:
         buffer_names: list[str],
         cache: BinanceCache,
         logger: Logger,
-        client: binance.AsyncClient,
+        client: AsyncClient,
         depth_cache_managers: dict[str, DepthCacheManager],
     ):
         self.queues: dict[str, asyncio.Queue] = {name: asyncio.Queue() for name in buffer_names}
@@ -234,14 +234,14 @@ class AsyncListenerContext:
         self.depth_cache_managers = depth_cache_managers
         self.replace_signals: dict = {"CONNECT": set(), "DISCONNECT": set()}
 
-    def attach_stream_uuid_resolver(self, resolver: Callable[[UUID], str]):
+    def attach_stream_uuid_resolver(self, resolver: Callable[[uuid.UUID], str]):
         self.resolver = resolver  # type: ignore
 
-    def notify_stream_replace(self, old_stream_id: UUID, new_stream_id: UUID):
+    def notify_stream_replace(self, old_stream_id: uuid.UUID, new_stream_id: uuid.UUID):
         self.replace_signals["CONNECT"].add(new_stream_id)
         self.replace_signals["DISCONNECT"].add(old_stream_id)
 
-    def resolve_stream_id(self, stream_id: UUID) -> str:
+    def resolve_stream_id(self, stream_id: uuid.UUID) -> str:
         return self.resolver(stream_id)
 
     def add_stream_data(self, stream_data: Future, stream_buffer_name: str | bool = False):
@@ -348,7 +348,7 @@ class AsyncListenedBWAM(BinanceWebSocketApiManager):
         self.stream_signal_buffer = AppendProxy(self.async_listener_context.add_signal_data)
         self.async_listener_context.attach_stream_uuid_resolver(self.stream_uuid_resolver)
 
-    def stream_uuid_resolver(self, stream_id: UUID) -> str:
+    def stream_uuid_resolver(self, stream_id: uuid.UUID) -> str:
         return self.stream_list[stream_id]["stream_buffer_name"]
 
     def stop_manager_with_all_streams(self):
@@ -577,7 +577,7 @@ class StreamManagerWorker(Thread):
 
     async def arun(self):
         self.cache.attach_loop()
-        client = await binance.AsyncClient.create(
+        client = await AsyncClient.create(
             self.config.BINANCE_API_KEY, self.config.BINANCE_API_SECRET_KEY
         )
         depth_markets = [
@@ -646,4 +646,5 @@ class StreamManagerWorker(Thread):
         fut: Future = Future()
         execution_thread = StreamManagerWorker(cache, config, logger, fut)
         execution_thread.start()
+        return fut.result()
         return fut.result()
