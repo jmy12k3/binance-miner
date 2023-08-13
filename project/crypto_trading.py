@@ -47,12 +47,11 @@ def main():
         timeout_exit(TIMEOUT)
         os._exit(0)
 
-    # Hook clean-up handler
     signal.signal(signal.SIGINT, exit_handler)
     signal.signal(signal.SIGTERM, exit_handler)
     atexit.register(exit_handler)
 
-    # Verify manager
+    # Initialize manager
     try:
         _ = manager.get_account()
     except Exception as e:
