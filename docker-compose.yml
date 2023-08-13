@@ -24,4 +24,5 @@ services:
     container_name: crypto_trading_api
     ports:
       - 5000:5000
-    command: gunicorn project.api_server:app -k eventlet -w 1 --threads 1 -b 0.0.0.0:5000
+    command: >
+      gunicorn project.api_server:app --worker-class uvicorn.workers.UvicornWorker --workers 1 --threads 1 --bind 0.0.0.0:5000

@@ -34,7 +34,7 @@ class Database:
         self.logger = logger
         self.config = config
         self.engine = create_engine(self.DB, future=True)
-        self.session_factory = scoped_session(sessionmaker(bind=self.engine))
+        self.session_factory = scoped_session(sessionmaker(self.engine))
         self.ratios_manager: RatiosManager | None = None
         self.socketio_client = Client()
 

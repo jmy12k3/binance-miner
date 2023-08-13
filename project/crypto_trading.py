@@ -17,7 +17,7 @@ def main():
     exiting = False
 
     # Initialize modules
-    logger = Logger(logging_service="crypto_trading")
+    logger = Logger("crypto_trading")
     logger.info("Starting")
     db = Database(logger, CONFIG)
 
@@ -58,7 +58,7 @@ def main():
 
     # Initialize autotrader
     strategy = get_strategy(CONFIG.STRATEGY)
-    if strategy is None:
+    if not strategy:
         logger.error(f"Invalid strategy: {strategy}")
         return
     trader = strategy(logger, CONFIG, db, manager)
