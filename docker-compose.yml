@@ -17,7 +17,7 @@ services:
       - PYTHONUNBUFFERED=1
     command: python -m project
 
-  fastapi:
+  api:
     <<: *build
     depends_on:
       - backend
