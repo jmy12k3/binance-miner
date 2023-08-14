@@ -7,14 +7,6 @@ from schedule import Job, Scheduler
 
 # https://gist.github.com/mplewis/8483f1c24f2d6259aef6?permalink_comment_id=3703372#gistcomment-3703372
 class SafeScheduler(Scheduler):
-    """
-    An implementation of Scheduler that catches jobs that fail, logs their
-    exception tracebacks as errors.
-
-    Use this to run jobs that may or may not crash without worrying about
-    whether other jobs will run or if they'll crash the entire script.
-    """
-
     def __init__(self, logger: logging.Logger, rerun_immediately=True):
         self.logger = logger
         self.rerun_immediately = rerun_immediately
