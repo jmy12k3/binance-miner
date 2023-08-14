@@ -73,7 +73,7 @@ class Logger(AbstractLogger):
         if notification and self.NotificationHandler.enabled:
             self.NotificationHandler.send_notification(str(message))
 
-    # Convenience methods
+    # Initialize convenience functions
     def debug(self, message: str, notification=False):
         self.log(message, logging.DEBUG, notification)
 
