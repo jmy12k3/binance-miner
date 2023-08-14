@@ -1,4 +1,4 @@
-# mypy: disable-error-code="annotation-unchecked, misc"
+# mypy: disable-error-code=annotation-unchecked
 import asyncio
 import uuid
 from abc import ABC, abstractmethod
@@ -228,21 +228,21 @@ class AsyncListenerContext:
         self.buffer_names = buffer_names
         self.cache = cache
         self.logger = logger
-        self.resolver = None
+        self.resolver: Callable[[uuid.UUID], str] | None = None
         self.stopped = False
         self.client = client
         self.depth_cache_managers = depth_cache_managers
         self.replace_signals: dict = {"CONNECT": set(), "DISCONNECT": set()}
 
     def attach_stream_uuid_resolver(self, resolver: Callable[[uuid.UUID], str]):
-        self.resolver = resolver  # type: ignore
+        self.resolver = resolver
 
     def notify_stream_replace(self, old_stream_id: uuid.UUID, new_stream_id: uuid.UUID):
         self.replace_signals["CONNECT"].add(new_stream_id)
         self.replace_signals["DISCONNECT"].add(old_stream_id)
 
     def resolve_stream_id(self, stream_id: uuid.UUID) -> str:
-        return self.resolver(stream_id)
+        return self.resolver(stream_id)  # type: ignore
 
     def add_stream_data(self, stream_data: Future, stream_buffer_name: str | bool = False):
         if self.stopped:
@@ -312,7 +312,7 @@ class AsyncListenerContext:
         if self.stopped:
             return
         stream_id = signal_data["stream_id"]
-        buffer_name = self.resolver(stream_id)
+        buffer_name = self.resolver(stream_id)  # type: ignore
         asyncio.run_coroutine_threadsafe(self.queues[buffer_name].put(signal_data), self.loop)
 
     # XXX: Improve logging semantics
