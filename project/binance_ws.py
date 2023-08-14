@@ -135,7 +135,7 @@ class DepthCache:
 
 
 class DepthCacheManager:
-    def __init__(self, symbol: str, client: AsyncClient, logger: AbstractLogger, limit: int = 100):
+    def __init__(self, symbol: str, client: AsyncClient, logger: AbstractLogger, limit=100):
         self.id = uuid.uuid4()
         self.pending_signals_counter = 0
         self.pending_reinit = False
@@ -529,7 +529,7 @@ class AutoReplacingStream(LoopExecutor):
         api_key: str | bool = False,
         api_secret: str | bool = False,
         stream_buffer_name: str | bool = False,
-        restart_every: int = 60 * 60,
+        restart_every=60 * 60,
     ):
         self.context = context
         self.restart_every = restart_every

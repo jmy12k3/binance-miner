@@ -62,7 +62,7 @@ class PaperOrderBalanceManager(AbstractOrderBalanceManager):
         client: Client,
         cache: BinanceCache,
         initial_balances: dict[str, float],
-        read_persist: bool = True,
+        read_persist=True,
     ):
         self.balances = initial_balances
         self.bridge = bridge_symbol
