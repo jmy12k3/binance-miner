@@ -14,7 +14,7 @@ from sqlalchemy.orm.query import Query
 
 from .config import CONFIG
 from .database import Database
-from .logger import Logger
+from .logger import DummyLogger
 from .models import Coin, CoinValue, CurrentCoin, Pair, ScoutHistory, Trade
 
 # Initialize FastAPI
@@ -29,7 +29,7 @@ app.add_middleware(
 sio = SocketManager(app)
 
 # Initialize database
-logger = Logger()
+logger = DummyLogger()
 db = Database(logger, CONFIG)
 
 
