@@ -18,7 +18,7 @@ from typing_extensions import ParamSpec
 from unicorn_binance_websocket_api import BinanceWebSocketApiManager
 
 from .config import CONFIG
-from .logger import Logger
+from .logger import DummyLogger, Logger
 
 T = TypeVar("T")
 P = ParamSpec("P")
@@ -135,7 +135,9 @@ class DepthCache:
 
 
 class DepthCacheManager:
-    def __init__(self, symbol: str, client: AsyncClient, logger: Logger, limit: int = 100):
+    def __init__(
+        self, symbol: str, client: AsyncClient, logger: DummyLogger | Logger, limit: int = 100
+    ):
         self.id = uuid.uuid4()
         self.pending_signals_counter = 0
         self.pending_reinit = False
@@ -219,7 +221,7 @@ class AsyncListenerContext:
         self,
         buffer_names: list[str],
         cache: BinanceCache,
-        logger: Logger,
+        logger: DummyLogger | Logger,
         client: AsyncClient,
         depth_cache_managers: dict[str, DepthCacheManager],
     ):
@@ -488,7 +490,7 @@ class DepthListener(AsyncListener):
 class BinanceStreamManager:
     def __init__(
         self,
-        logger: Logger,
+        logger: DummyLogger | Logger,
         async_context: AsyncListenerContext,
         bwam: AsyncListenedBWAM,
         execution_thread: Thread,
@@ -567,7 +569,11 @@ class AutoReplacingStream(LoopExecutor):
 
 class StreamManagerWorker(Thread):
     def __init__(
-        self, cache: BinanceCache, config: Annotated[EasyDict, CONFIG], logger: Logger, fut: Future
+        self,
+        cache: BinanceCache,
+        config: Annotated[EasyDict, CONFIG],
+        logger: DummyLogger | Logger,
+        fut: Future,
     ):
         super().__init__()
         self.cache = cache
@@ -641,7 +647,7 @@ class StreamManagerWorker(Thread):
 
     @staticmethod
     def create(
-        cache: BinanceCache, config: Annotated[EasyDict, CONFIG], logger: Logger
+        cache: BinanceCache, config: Annotated[EasyDict, CONFIG], logger: DummyLogger | Logger
     ) -> BinanceStreamManager:
         fut: Future = Future()
         execution_thread = StreamManagerWorker(cache, config, logger, fut)

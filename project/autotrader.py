@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from .binance import BinanceAPIManager
 from .config import CONFIG
 from .database import Database, LogScout
-from .logger import Logger
+from .logger import DummyLogger, Logger
 from .models import CoinValue, Pair
 from .postpone import postpone_heavy_calls
 from .ratios import CoinStub
@@ -20,7 +20,7 @@ from .ratios import CoinStub
 class AutoTrader(ABC):
     def __init__(
         self,
-        logger: Logger,
+        logger: DummyLogger | Logger,
         config: Annotated[EasyDict, CONFIG],
         database: Database,
         binance_manager: BinanceAPIManager,
