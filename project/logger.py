@@ -1,6 +1,6 @@
 # mypy: disable-error-code=union-attr
 import logging.handlers
-from abc import ABC
+from abc import ABC, abstractmethod
 from logging.handlers import RotatingFileHandler
 
 from .notifications import NotificationHandler
@@ -9,6 +9,7 @@ from .notifications import NotificationHandler
 class AbstractLogger(ABC):
     Logger: logging.Logger | None = None
 
+    @abstractmethod
     def __getattr__(self, name):
         return lambda *args, **kwargs: None
 
@@ -18,6 +19,9 @@ class DummyLogger(AbstractLogger):
         self.Logger = logging.getLogger(__name__)
         self.Logger.addHandler(logging.NullHandler())
         self.Logger.propagtate = False
+
+    def __getattr__(self, name):
+        super().__getattr__(name)
 
 
 class Logger(AbstractLogger):
