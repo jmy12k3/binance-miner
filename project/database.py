@@ -12,7 +12,7 @@ from sqlalchemy import bindparam, create_engine, func, insert, select, update
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
 from .config import CONFIG
-from .logger import DummyLogger, Logger
+from .logger import AbstractLogger
 from .models import *  # noqa: F403
 from .postpone import heavy_call
 from .ratios import CoinStub, RatiosManager
@@ -29,7 +29,7 @@ class Database:
     # URL for API server deployed in Docker
     API = "http://api:5000"
 
-    def __init__(self, logger: DummyLogger | Logger, config: Annotated[EasyDict, CONFIG]):
+    def __init__(self, logger: AbstractLogger, config: Annotated[EasyDict, CONFIG]):
         self.logger = logger
         self.config = config
         self.engine = create_engine(self.URL, future=True)

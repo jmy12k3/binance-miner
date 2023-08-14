@@ -20,7 +20,7 @@ from typing_extensions import ParamSpec
 from .binance_ws import BinanceCache, BinanceOrder, BinanceStreamManager, StreamManagerWorker
 from .config import CONFIG
 from .database import Database
-from .logger import DummyLogger, Logger
+from .logger import AbstractLogger
 from .postpone import heavy_call
 
 T = TypeVar("T")
@@ -122,7 +122,7 @@ class PaperOrderBalanceManager(AbstractOrderBalanceManager):
 
 
 class BinanceOrderBalanceManager(AbstractOrderBalanceManager):
-    def __init__(self, logger: DummyLogger | Logger, binance_client: Client, cache: BinanceCache):
+    def __init__(self, logger: AbstractLogger, binance_client: Client, cache: BinanceCache):
         self.logger = logger
         self.binance_client = binance_client
         self.cache = cache
@@ -157,7 +157,7 @@ class BinanceAPIManager:
         cache: BinanceCache,
         config: Annotated[EasyDict, CONFIG],
         db: Database,
-        logger: DummyLogger | Logger,
+        logger: AbstractLogger,
         order_balance_manager: AbstractOrderBalanceManager,
     ):
         self.binance_client = client
@@ -173,7 +173,7 @@ class BinanceAPIManager:
     def _common_factory(
         config: Annotated[EasyDict, CONFIG],
         db: Database,
-        logger: DummyLogger | Logger,
+        logger: AbstractLogger,
         ob_factory: Callable[[Client, BinanceCache], AbstractOrderBalanceManager],
     ) -> BinanceAPIManager:
         cache = BinanceCache()
@@ -182,7 +182,7 @@ class BinanceAPIManager:
 
     @staticmethod
     def create_manager(
-        config: Annotated[EasyDict, CONFIG], db: Database, logger: DummyLogger | Logger
+        config: Annotated[EasyDict, CONFIG], db: Database, logger: AbstractLogger
     ) -> BinanceAPIManager:
         return BinanceAPIManager._common_factory(
             config,
@@ -195,7 +195,7 @@ class BinanceAPIManager:
     def create_manager_paper_trading(
         config: Annotated[EasyDict, CONFIG],
         db: Database,
-        logger: DummyLogger | Logger,
+        logger: AbstractLogger,
         initial_balances: dict[str, float],
     ) -> BinanceAPIManager:
         return BinanceAPIManager._common_factory(

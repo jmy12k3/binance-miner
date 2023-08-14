@@ -18,7 +18,7 @@ from typing_extensions import ParamSpec
 from unicorn_binance_websocket_api import BinanceWebSocketApiManager
 
 from .config import CONFIG
-from .logger import DummyLogger, Logger
+from .logger import AbstractLogger
 
 T = TypeVar("T")
 P = ParamSpec("P")
@@ -135,9 +135,7 @@ class DepthCache:
 
 
 class DepthCacheManager:
-    def __init__(
-        self, symbol: str, client: AsyncClient, logger: DummyLogger | Logger, limit: int = 100
-    ):
+    def __init__(self, symbol: str, client: AsyncClient, logger: AbstractLogger, limit: int = 100):
         self.id = uuid.uuid4()
         self.pending_signals_counter = 0
         self.pending_reinit = False
@@ -221,7 +219,7 @@ class AsyncListenerContext:
         self,
         buffer_names: list[str],
         cache: BinanceCache,
-        logger: DummyLogger | Logger,
+        logger: AbstractLogger,
         client: AsyncClient,
         depth_cache_managers: dict[str, DepthCacheManager],
     ):
@@ -490,7 +488,7 @@ class DepthListener(AsyncListener):
 class BinanceStreamManager:
     def __init__(
         self,
-        logger: DummyLogger | Logger,
+        logger: AbstractLogger,
         async_context: AsyncListenerContext,
         bwam: AsyncListenedBWAM,
         execution_thread: Thread,
@@ -572,7 +570,7 @@ class StreamManagerWorker(Thread):
         self,
         cache: BinanceCache,
         config: Annotated[EasyDict, CONFIG],
-        logger: DummyLogger | Logger,
+        logger: AbstractLogger,
         fut: Future,
     ):
         super().__init__()
@@ -647,7 +645,7 @@ class StreamManagerWorker(Thread):
 
     @staticmethod
     def create(
-        cache: BinanceCache, config: Annotated[EasyDict, CONFIG], logger: DummyLogger | Logger
+        cache: BinanceCache, config: Annotated[EasyDict, CONFIG], logger: AbstractLogger
     ) -> BinanceStreamManager:
         fut: Future = Future()
         execution_thread = StreamManagerWorker(cache, config, logger, fut)

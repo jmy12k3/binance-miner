@@ -54,9 +54,6 @@ class Logger(AbstractLogger):
         # Initialize notification handler
         self.NotificationHandler = NotificationHandler(enable_notifications)
 
-    def __getattr__(self, name):
-        return super().__getattr__(name)
-
     def close(self):
         for handler in self.Logger.handlers[:]:
             handler.close()
