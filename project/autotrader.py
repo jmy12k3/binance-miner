@@ -68,7 +68,7 @@ class AutoTrader(ABC):
                     time.sleep(1)
             return result
         self.logger.info("Couldn't buy, going back to scouting mode...")
-        return None
+        return
 
     # XXX: Improve logging semantics
     def update_trade_threshold(
@@ -330,7 +330,7 @@ class AutoTrader(ABC):
             bridge_balance <= self.manager.get_min_notional(coin.symbol, self.config.BRIDGE.symbol)
             for coin in coins
         ):
-            return None
+            return
         for coin in coins:
             current_coin_price = self.manager.get_ticker_price(
                 coin.symbol + self.config.BRIDGE.symbol
@@ -353,7 +353,7 @@ class AutoTrader(ABC):
                         self.db.set_current_coin(coin.symbol)
                         self.db.commit_ratios()
                         return coin
-        return None
+        return
 
     def update_values(self):
         now = datetime.now()

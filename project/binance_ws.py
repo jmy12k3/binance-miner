@@ -336,7 +336,7 @@ class AppendProxy:
         self.append_proxy_func(*args, **kwargs)
 
     def pop(self):
-        return None
+        return
 
 
 class AsyncListenedBWAM(BinanceWebSocketApiManager):

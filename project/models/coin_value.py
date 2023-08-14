@@ -1,6 +1,6 @@
 # mypy: disable-error-code="assignment, no-redef"
 import enum
-from datetime import datetime as dt
+from datetime import datetime as _datetime
 
 from sqlalchemy import Column, DateTime, Enum, Float, ForeignKey, Integer, String
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -35,19 +35,19 @@ class CoinValue(Base):
         usd_price: float,
         btc_price: float,
         interval: Interval = Interval.MINUTELY,
-        datetime: dt = None,
+        datetime: _datetime = None,
     ):
         self.coin = coin
         self.balance = balance
         self.usd_price = usd_price
         self.btc_price = btc_price
         self.interval = interval
-        self.datetime = datetime or dt.now()
+        self.datetime = datetime or _datetime.now()
 
     @hybrid_property
     def usd_value(self):
         if self.usd_price is None:
-            return None
+            return
         return self.balance * self.usd_price
 
     @usd_value.expression
@@ -57,7 +57,7 @@ class CoinValue(Base):
     @hybrid_property
     def btc_value(self):
         if self.btc_price is None:
-            return None
+            return
         return self.balance * self.btc_price
 
     @btc_value.expression

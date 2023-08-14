@@ -12,4 +12,4 @@ def get_strategy(name):
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
             return module.Strategy
-    return None
+    return

@@ -222,7 +222,7 @@ class BinanceAPIManager:
                 self.logger.warning(f"Failed to Buy/Sell. Retrying... (attempt {attempt}/20)")
                 self.logger.warning(traceback.format_exc())
             time.sleep(1)
-        return None
+        return
 
     # XXX: Improve logging semantics
     def _buy_alt(self, origin_coin: str, target_coin: str, buy_price: float):
