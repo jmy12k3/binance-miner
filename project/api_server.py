@@ -17,6 +17,7 @@ from .database import Database
 from .logger import Logger
 from .models import Coin, CoinValue, CurrentCoin, Pair, ScoutHistory, Trade
 
+# Initialize FastAPI
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -27,7 +28,7 @@ app.add_middleware(
 )
 sio = SocketManager(app)
 
-
+# Initialize database
 logger = Logger()
 db = Database(logger, CONFIG)
 
@@ -60,12 +61,35 @@ def filter_period(period: list[Period], query: Query, model) -> Query:
         return query.filter(model.datetime >= datetime.now() - relativedelta(months=1))
 
 
+@app.get("/api/v1/current_coin")
+def current_coin():
+    coin = db.get_current_coin()
+    return coin.info() if coin else None
+
+
+@app.get("/api/v1/coins")
+def coins():
+    session: Session
+    with db.db_session() as session:
+        _current_coin = session.merge(db.get_current_coin())
+        _coins: list[Coin] = session.query(Coin).all()
+        return [{**coin.info(), "is_current": coin == _current_coin} for coin in _coins]
+
+
+@app.get("/api/v1/pairs")
+def pairs():
+    session: Session
+    with db.db_session() as session:
+        all_pairs: list[Pair] = session.query(Pair).all()
+        return [pair.info() for pair in all_pairs]
+
+
 @app.get("/api/v1/value_history")
 def value_history(coin: str | None = None, period: list[Period] | None = None):
     session: Session
     with db.db_session() as session:
         query = session.query(CoinValue).order_by(CoinValue.coin_id.asc(), CoinValue.datetime.asc())
-        query = filter_period(period, query, CoinValue)  # type: ignore
+        query = filter_period(period, query, CoinValue)
         if coin:
             values: list[CoinValue] = query.filter(CoinValue.coin_id == coin).all()
             return [entry.info() for entry in values]
@@ -87,14 +111,14 @@ def total_value_history(period: list[Period] | None = None):
         return [{"datetime": tv[0], "btc": tv[1], "usd": tv[2]} for tv in total_values]
 
 
-@app.get("/api/v1/trade_history")
-def trade_history(period: list[Period] | None = None):
+@app.get("/api/v1/current_coin_history")
+def current_coin_history(period: list[Period] | None = None):
     session: Session
     with db.db_session() as session:
-        query = session.query(Trade).order_by(Trade.datetime.asc())
-        query = filter_period(period, query, Trade)
-        trades: list[Trade] = query.all()
-        return [trade.info() for trade in trades]
+        query = session.query(CurrentCoin)
+        query = filter_period(period, query, CurrentCoin)
+        current_coins: list[CurrentCoin] = query.all()
+        return [cc.info() for cc in current_coins]
 
 
 @app.get("/api/v1/scouting_history")
@@ -114,39 +138,16 @@ def scouting_history(period: list[Period] | None = None):
         return [scout.info() for scout in scouts]
 
 
-@app.get("/api/v1/current_coin")
-def current_coin(period: list[Period] | None = None):
-    coin = db.get_current_coin()
-    return coin.info() if coin else None
-
-
-@app.get("/api/v1/current_coin_history")
-def current_coin_history(period: list[Period] | None = None):
+@app.get("/api/v1/trade_history")
+def trade_history(period: list[Period] | None = None):
     session: Session
     with db.db_session() as session:
-        query = session.query(CurrentCoin)
-        query = filter_period(period, query, CurrentCoin)
-        current_coins: list[CurrentCoin] = query.all()
-        return [cc.info() for cc in current_coins]
-
-
-@app.get("/api/v1/coins")
-def coins(period: list[Period] | None = None):
-    session: Session
-    with db.db_session() as session:
-        _current_coin = session.merge(db.get_current_coin())
-        _coins: list[Coin] = session.query(Coin).all()
-        return [{**coin.info(), "is_current": coin == _current_coin} for coin in _coins]
-
-
-@app.get("/api/v1/pairs")
-def pairs(period: list[Period] | None = None):
-    session: Session
-    with db.db_session() as session:
-        all_pairs: list[Pair] = session.query(Pair).all()
-        return [pair.info() for pair in all_pairs]
+        query = session.query(Trade).order_by(Trade.datetime.asc())
+        query = filter_period(period, query, Trade)
+        trades: list[Trade] = query.all()
+        return [trade.info() for trade in trades]
 
 
 @sio.on("update", namespace="/backend")
-def on_update(msg: dict[Any, Any]):
+def on_update(msg: dict[str, Any]):
     sio.emit("update", msg, namespace="/frontend")
