@@ -27,7 +27,7 @@ class Database:
     URL = "sqlite:///data/crypto_trading.db"
 
     # URL for FastAPI deployed in Docker
-    API = "http://api:5000"
+    API = "http://fastapi:5000"
 
     def __init__(self, logger: Logger, config: Annotated[EasyDict, CONFIG]):
         self.logger = logger
