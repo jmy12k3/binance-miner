@@ -12,7 +12,7 @@ Buffett in your Pi!
 
 ## Style guidelines
 
-For the sake of better maintainencing the repository, please follow the style guideline
+For the sake of better maintainencing, please follow the style guideline
 
 ### Type hints
 
@@ -22,8 +22,10 @@ For the sake of better maintainencing the repository, please follow the style gu
     - e.g., ```dict[str, int]``` is always better than ```dict```, ```dict[str, Any]``` or ```dict[Any, str]```
 3. Add function annotation ```->``` if the type of return cannot be identified by IDE
 4. Always assign the default value directly, without type hint to a single-type parameter
-    - ✘ ```def my_function(my_param: int = 1): ...```
-    - ✔ ```def my_function(my_param=1): ...```
+    - Bad example
+      - ```def my_function(my_param: int = 1): ...```
+    - Good example
+      -  ```def my_function(my_param=1): ...```
     - In this case, ```my_param``` has a default value, and can only be ```int```, so we directly assign it instead of type-hinting
 
 ### Importing
