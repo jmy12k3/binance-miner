@@ -31,7 +31,7 @@ python -m project
 
 Check out [crypto-miner-dashboard](https://github.com/jmy12k3/crypto-miner-dashboard)
 
-## Style guidelines
+## Style guideline
 
 For the sake of better readability, please follow the style guideline
 
@@ -46,6 +46,34 @@ For the sake of better readability, please follow the style guideline
 
 4. Add function annotation if the type of return cannot be identified by IDE
 
+```python
+from collections.abc import Callable
+from typing import Annotate, Typevar
+from typing_extensions import ParamSpec
+
+from easydict import Easydict
+
+T = Typevar("T")
+P = ParamSpec("P")
+
+cannot_typehint: Easydict = Easydict({...: ...})
+
+# Rule 1
+def my_function(my_dict: Annotate[Easydict, cannot_typehint]): ...
+
+my_dict: dict = {"my_str_key", 1}
+
+# Rule 2
+def my_function(my_dict: dict[str, int]): ...
+
+# Rule 3
+def my_function(secret_of_universe=42): ...
+
+# Rule 4
+def my_function(fun: Callable[P, T], *args, **kwargs) -> Callable[P, T]:
+    return fun(*args, **kwargs)
+```
+
 ### Importing
 
 5. Always use ```import ...``` for the python standard library
@@ -58,9 +86,9 @@ For the sake of better readability, please follow the style guideline
 ### Disabling linters
 
 8. For ```# type: ignore``` and ```# noqa: ...```, this should only be used on niche **lines**
-   - disabling board exception linting (flake8)
+   - board exception (flake8)
    - wildcard imports (flake8)
-   - redundant errors when reusing variable name (mypy)
+   - reusing variable name (mypy)
    - the place where it is impossible to go wrong but mypy keeps yelling for ```assert``` (mypy)
 
 9. For ```@no_type_check```, this should only be used on **functions** with module conflicts
