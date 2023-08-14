@@ -2,7 +2,7 @@
 from datetime import datetime
 from enum import Enum
 from itertools import groupby
-from typing import Any, no_type_check
+from typing import Any
 
 from dateutil.relativedelta import relativedelta
 from fastapi import FastAPI
@@ -45,8 +45,7 @@ class Period(Enum):
 
 
 # https://fastapi.tiangolo.com/async/
-@no_type_check
-def filter_period(period: list[Period], query: Query, model) -> Query:
+def filter_period(period: list[Period] | None, query: Query, model) -> Query:
     if not period:
         return query
     if Period.SECOND in period:
@@ -59,6 +58,7 @@ def filter_period(period: list[Period], query: Query, model) -> Query:
         return query.filter(model.datetime >= datetime.now() - relativedelta(weeks=1))
     if Period.MONTH in period:
         return query.filter(model.datetime >= datetime.now() - relativedelta(months=1))
+    return query
 
 
 @app.get("/api/v1/current_coin")
