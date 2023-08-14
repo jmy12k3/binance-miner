@@ -21,7 +21,7 @@ class Logger:
     Logger = None
     NotificationHandler = None
 
-    def __init__(self, logging_service: str, enable_notifications: bool = False):
+    def __init__(self, logging_service: str, enable_notifications=False):
         self.Logger = logging.getLogger(logging_service)
         self.Logger.setLevel(logging.DEBUG)
         self.Logger.propagate = False
@@ -58,14 +58,14 @@ class Logger:
         if notification and self.NotificationHandler.enabled:
             self.NotificationHandler.send_notification(str(message))
 
-    def debug(self, message: str, notification: bool = False):
+    def debug(self, message: str, notification=False):
         self.log(message, logging.DEBUG, notification)
 
-    def info(self, message: str, notification: bool = True):
+    def info(self, message: str, notification=True):
         self.log(message, logging.INFO, notification)
 
-    def warning(self, message: str, notification: bool = True):
+    def warning(self, message: str, notification=True):
         self.log(message, logging.WARNING, notification)
 
-    def error(self, message: str, notification: bool = True):
+    def error(self, message: str, notification=True):
         self.log(message, logging.ERROR, notification)

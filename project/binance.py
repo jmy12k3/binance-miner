@@ -33,7 +33,7 @@ def float_as_decimal_str(num: float):
 
 class AbstractOrderBalanceManager(ABC):
     @abstractmethod
-    def get_currency_balance(self, currency_symbol: str, force: bool = False) -> float:
+    def get_currency_balance(self, currency_symbol: str, force=False) -> float:
         pass
 
     @abstractmethod
@@ -88,7 +88,7 @@ class PaperOrderBalanceManager(AbstractOrderBalanceManager):
         with open(self.PERSIST_FILE_PATH, "w") as json_file:
             json.dump({"balances": self.balances, "fake_order_id": self.fake_order_id}, json_file)
 
-    def get_currency_balance(self, currency_symbol: str, force: bool = False) -> float:
+    def get_currency_balance(self, currency_symbol: str, force=False) -> float:
         return self.balances.get(currency_symbol, 0.0)
 
     def create_order(self, **params):
@@ -131,7 +131,7 @@ class BinanceOrderBalanceManager(AbstractOrderBalanceManager):
         return self.binance_client.create_order(**params)
 
     # XXX: Improve logging semantics
-    def get_currency_balance(self, currency_symbol: str, force: bool = False):
+    def get_currency_balance(self, currency_symbol: str, force=False):
         with self.cache.open_balances() as cache_balances:
             balance = cache_balances.get(currency_symbol, None)
             if force or balance is None:
@@ -289,7 +289,7 @@ class BinanceAPIManager:
         write_trade_log()
         return order
 
-    def get_currency_balance(self, currency_symbol: str, force: bool = False):
+    def get_currency_balance(self, currency_symbol: str, force=False):
         return self.order_balance_manager.get_currency_balance(currency_symbol, force)
 
     def get_market_sell_price(self, symbol: str, amount: float):

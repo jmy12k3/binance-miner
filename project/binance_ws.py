@@ -101,7 +101,7 @@ class BinanceCache:
 
 
 class DepthCache:
-    def __init__(self, keep_limit: int = 200, max_size: int = 400):
+    def __init__(self, keep_limit=200, max_size=400):
         self.bids = SortedDict()
         self.asks = SortedDict()
         self.keep_limit = keep_limit
