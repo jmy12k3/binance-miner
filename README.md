@@ -47,9 +47,13 @@ For the sake of better maintainencing, please follow the style guideline
    - redundant errors when reusing variable name (mypy)
    - the place where it is impossible to go wrong but mypy keeps yelling for ```assert``` (mypy)
 
+
+
 > Function level
 
 9. For ```@no_type_check```, this should only be used on module conflicts
+
+
 
 > Global level
 
