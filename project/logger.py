@@ -58,14 +58,15 @@ class Logger(AbstractLogger):
             handler.close()
 
     def log(self, message: str, level: int, notification: bool):
-        if level == logging.DEBUG:
-            self.Logger.debug(message)
-        elif level == logging.INFO:
-            self.Logger.info(message)
-        elif level == logging.WARNING:
-            self.Logger.warning(message)
-        elif level == logging.ERROR:
-            self.Logger.error(message)
+        match level:
+            case logging.DEBUG:
+                self.Logger.debug(message)
+            case logging.INFO:
+                self.Logger.info(message)
+            case logging.WARNING:
+                self.Logger.warning(message)
+            case logging.ERROR:
+                self.Logger.error(message)
         if notification and self.NotificationHandler.enabled:
             self.NotificationHandler.send_notification(str(message))
 
