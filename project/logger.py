@@ -1,23 +1,32 @@
+# mypy: disable-error-code=union-attr
 import logging.handlers
 
 from .notifications import NotificationHandler
+
+
+class DummyLogger:
+    Logger = None
+
+    def __init__(self):
+        self.Logger = logging.getLogger(__name__)
+        self.Logger.addHandler(logging.NullHandler())
+        self.logger.propagate = False
+
+    def __getattr__(self, name):
+        return lambda *args, **kwargs: None
 
 
 class Logger:
     Logger = None
     NotificationHandler = None
 
-    def __init__(self, logging_service: str | None = None, enable_notifications: bool = False):
+    def __init__(self, logging_service: str, enable_notifications: bool = False):
         self.Logger = logging.getLogger(logging_service)
         self.Logger.setLevel(logging.DEBUG)
         self.Logger.propagate = False
         formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 
-        self.NotificationHandler = NotificationHandler(enable_notifications)
-
-        if not logging_service:
-            return
-
+        # Initialize rotating file handler
         fh = logging.handlers.RotatingFileHandler(
             f"logs/{logging_service}.log", maxBytes=1000000, backupCount=5
         )
@@ -25,18 +34,20 @@ class Logger:
         fh.setFormatter(formatter)
         self.Logger.addHandler(fh)
 
+        # Initialize console handler
         ch = logging.StreamHandler()
         ch.setLevel(logging.INFO)
         ch.setFormatter(formatter)
         self.Logger.addHandler(ch)
+
+        # Initialize notification handler
+        self.NotificationHandler = NotificationHandler(enable_notifications)
 
     def close(self):
         for handler in self.Logger.handlers[:]:
             handler.close()
 
     def log(self, message: str, level: int, notification: bool = True):
-        assert self.Logger and self.NotificationHandler
-
         if level == logging.DEBUG:
             self.Logger.debug(message)
         elif level == logging.INFO:
@@ -45,7 +56,6 @@ class Logger:
             self.Logger.warning(message)
         elif level == logging.ERROR:
             self.Logger.error(message)
-
         if notification and self.NotificationHandler.enabled:
             self.NotificationHandler.send_notification(str(message))
 
