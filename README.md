@@ -6,7 +6,7 @@ Buffett in your Pi!
 
 ## Setup
 
-### Docker deployment
+### Docker
 
 ```docker compose up```
 
