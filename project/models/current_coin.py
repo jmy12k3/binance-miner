@@ -1,3 +1,4 @@
+# mypy: disable-error-code=assignment
 from datetime import datetime
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
@@ -16,7 +17,7 @@ class CurrentCoin(Base):
 
     def __init__(self, coin: Coin):
         self.coin = coin
-        self.datetime = datetime.utcnow()  # type: ignore
+        self.datetime = datetime.utcnow()
 
     def info(self):
         return {"datetime": self.datetime.isoformat(), "coin": self.coin.info()}
