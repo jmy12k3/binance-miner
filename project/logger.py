@@ -1,31 +1,23 @@
 # mypy: disable-error-code=union-attr
 import logging.handlers
-from abc import ABC, ABCMeta, abstractmethod
+from abc import ABC
 from logging.handlers import RotatingFileHandler
 
 from .notifications import NotificationHandler
 
 
-class AbstractLogger(ABC, metaclass=ABCMeta):
+class AbstractLogger(ABC):
     Logger: logging.Logger | None = None
-
-    @abstractmethod
-    def __init__(self):
-        self.Logger.propagtate = False
-
-    @abstractmethod
-    def __getattr__(self, name):
-        return lambda *args, **kwargs: None
 
 
 class DummyLogger(AbstractLogger):
     def __init__(self):
         self.Logger = logging.getLogger(__name__)
         self.Logger.addHandler(logging.NullHandler())
-        super().__init__()
+        self.Logger.propagtate = False
 
     def __getattr__(self, name):
-        super().__getattr__(name)
+        return lambda *args, **kwargs: None
 
 
 class Logger(AbstractLogger):
@@ -34,7 +26,7 @@ class Logger(AbstractLogger):
     def __init__(self, logging_service: str, enable_notifications=False):
         self.Logger = logging.getLogger(logging_service)
         self.Logger.setLevel(logging.DEBUG)
-        super().__init__()
+        self.Logger.propagate = False
 
         # Initialize formatter
         formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
@@ -53,9 +45,6 @@ class Logger(AbstractLogger):
 
         # Initialize notification handler
         self.NotificationHandler = NotificationHandler(enable_notifications)
-
-    def __getattr__(self, name):
-        return getattr(self.Logger, name)
 
     def close(self):
         for handler in self.Logger.handlers[:]:
