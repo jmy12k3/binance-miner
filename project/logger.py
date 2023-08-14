@@ -1,30 +1,38 @@
 # mypy: disable-error-code=union-attr
 import logging.handlers
+from abc import ABC, ABCMeta, abstractmethod
 from logging.handlers import RotatingFileHandler
 
 from .notifications import NotificationHandler
 
 
-class DummyLogger:
-    Logger = None
+class AbstractLogger(ABC, metaclass=ABCMeta):
+    Logger: logging.Logger | None = None
 
+    @abstractmethod
+    def __init__(self):
+        self.Logger.propagtate = False
+
+
+class DummyLogger(AbstractLogger):
     def __init__(self):
         self.Logger = logging.getLogger(__name__)
         self.Logger.addHandler(logging.NullHandler())
-        self.Logger.propagate = False
+        super().__init__()
 
     def __getattr__(self, name):
         return lambda *args, **kwargs: None
 
 
-class Logger:
-    Logger = None
+class Logger(AbstractLogger):
     NotificationHandler = None
 
     def __init__(self, logging_service: str, enable_notifications=False):
         self.Logger = logging.getLogger(logging_service)
         self.Logger.setLevel(logging.DEBUG)
-        self.Logger.propagate = False
+        super().__init__()
+
+        # Initialize formatter
         formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 
         # Initialize file handler
