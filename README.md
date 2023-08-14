@@ -84,7 +84,7 @@ def my_function(fun: Callable[P, T], *args, **kwargs) -> Callable[P, T]:
 
 ### Disabling linters
 
-8. For ```# type: ignore``` and ```# noqa: ...```, this should only be used on niche <u>***lines***</u>
+8. For ```# type: ignore``` and ```# noqa: ...```, this should only be used on niche <font size="30">lines</font>
 
    - board exception (flake8)
 
@@ -93,9 +93,9 @@ def my_function(fun: Callable[P, T], *args, **kwargs) -> Callable[P, T]:
    - reusing variable name (mypy)
    - the place where it is impossible to go wrong but mypy keeps yelling for ```assert``` (mypy)
 
-9. For ```@no_type_check```, this should only be used on <u>***functions***</u> with module conflicts
+9. For ```@no_type_check```, this should only be used on <font size="30">functions</font> with module conflicts
 
-10. For ```# mypy: disable-error-code=...```, this should only be used when the error is popping out <u>***globally***</u>
+10. For ```# mypy: disable-error-code=...```, this should only be used when the error is popping out <font size="30">globally</font>
 
 ## End
 
