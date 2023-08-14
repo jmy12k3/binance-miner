@@ -39,25 +39,31 @@ For the sake of better maintainencing, please follow the style guideline
 
 ### Disabling linters
 
-> Line level
-
 8. For ```# type: ignore``` and ```# noqa: ...```, this should only be used on niche cases
    - disabling board exception linting (flake8)
    - wildcard imports (flake8)
    - redundant errors when reusing variable name (mypy)
    - the place where it is impossible to go wrong but mypy keeps yelling for ```assert``` (mypy)
 
+> Line level
+
+-----
 
 
-> Function level
 
 9. For ```@no_type_check```, this should only be used on module conflicts
 
+> Function level
 
+-----
+
+
+
+10. For ```# mypy: disable-error-code: ...```, this should only be used when the error is popping out globally
 
 > Global level
 
-10. For ```# mypy: disable-error-code: ...```, this should only be used when the error is popping out globally
+-----
 
 
 
