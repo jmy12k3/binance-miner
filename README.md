@@ -48,24 +48,10 @@ For the sake of better readability, please follow the style guideline
 ### Type hints
 
 1. Always add type hints on function parameters
+    - Use ```typing.Annotate``` if the specified class cannot be type-hinted
 2. Always add the most detailed type hints if possible
-3. Always assign the default value directly for parameters with single type
+3. Always assign the default value directly for single-typed parameters
 4. Add function annotation if the type of return cannot be identified by IDE
-
-Correct
-
-```python
-def my_function(my_param: bool | None = None, secret_of_universe=42): ...
-```
-
-Wrong
-
-```python
-# 1. style guidelines violated
-# 2. assigning a previously type-hinted parameter "bool" with the wrong type "NoneType"
-
-def my_function(my_param: bool = None, secret_of_universe: int = 42): ...
-```
 
 
 
