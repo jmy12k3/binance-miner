@@ -51,7 +51,7 @@ def main():
     signal.signal(signal.SIGTERM, exit_handler)
     atexit.register(exit_handler)
 
-    # Initialize manager
+    # Initiate manager
     try:
         _ = manager.get_account()
     except Exception as e:
