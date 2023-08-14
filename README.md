@@ -14,7 +14,7 @@ Buffett in your Pi!
 
 ### Dashboard
 
-Check out [https://github.com/jmy12k3/crypto-miner-dashboard](crypto-miner-dashboard)
+Check out [crypto-miner-dashboard](https://github.com/jmy12k3/crypto-miner-dashboard)
 
 
 
