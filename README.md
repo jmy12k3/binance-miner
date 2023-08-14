@@ -42,37 +42,31 @@ For the sake of better readability, please follow the style guideline
 
 2. Always add the most detailed type hints if possible
 
-3. Always assign the default value directly for parameters with one type only
+3. Always assign the default value directly for parameters with a single type only
 
 4. Add function annotation if the type of return cannot be identified by IDE
 
 ```python
 from collections.abc import Callable
-from typing import Annotate, Typevar
+from typing import Annotate, TypeVar
 from typing_extensions import ParamSpec
 
 from easydict import Easydict
 
-T = Typevar("T")
+T = TypeVar("T")
 P = ParamSpec("P")
 
 cannot_typehint: Easydict = Easydict({...: ...})
-
+my_dict: dict = {"the_answer_to_anything", 42}
 
 # Rule 1
 def my_function(my_dict: Annotate[Easydict, cannot_typehint]): ...
 
-
-my_dict: dict = {"my_str_key", 1}
-
-
 # Rule 2
 def my_function(my_dict: dict[str, int]): ...
 
-
 # Rule 3
-def my_function(secret_of_universe=42): ...
-
+def my_function(my_dict: dict[str, int], my_int=42): ...
 
 # Rule 4
 def my_function(fun: Callable[P, T], *args, **kwargs) -> Callable[P, T]:
