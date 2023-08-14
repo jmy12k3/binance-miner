@@ -199,7 +199,11 @@ class AutoTrader(ABC):
 
     # XXX: Improve logging semantics
     def _get_ratios(
-        self, coin: CoinStub, coin_sell_price, quote_amount, enable_scout_log: bool = True
+        self,
+        coin: CoinStub,
+        coin_sell_price: float,
+        quote_amount: float,
+        enable_scout_log: bool = True,
     ):
         ratio_dict: dict[tuple[int, int], float] = {}
         price_amounts: dict[str, tuple[float, float]] = {}
