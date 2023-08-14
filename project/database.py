@@ -24,15 +24,16 @@ LogScout = namedtuple(
 
 
 class Database:
-    DB = "sqlite:///data/crypto_trading.db"
+    URL = "sqlite:///data/crypto_trading.db"
+    API = "http://api:5000"
 
     def __init__(self, logger: Logger, config: Annotated[EasyDict, CONFIG]):
         self.logger = logger
         self.config = config
-        self.engine = create_engine(self.DB, future=True)
+        self.engine = create_engine(self.URL, future=True)
         self.session_factory = scoped_session(sessionmaker(self.engine))
+        self.sio = Client()
         self.ratios_manager: RatiosManager | None = None
-        self.socketio_client = Client()
 
     @contextmanager
     def db_session(self):
@@ -42,12 +43,12 @@ class Database:
         session.close()
 
     def _api_session(self):
-        if self.socketio_client.connected and self.socketio_client.namespaces:
+        if self.sio.connected and self.sio.namespaces:
             return True
         try:
-            if not self.socketio_client.connected:
-                self.socketio_client.connect("http://api:5000", namespaces=["/backend"])
-            while not self.socketio_client.connected or not self.socketio_client.namespaces:
+            if not self.sio.connected:
+                self.sio.connect(self.API, namespaces=["/backend"])
+            while not self.sio.connected or not self.sio.namespaces:
                 time.sleep(0.1)
             return True
         except SocketIOConnectionError:
@@ -64,9 +65,7 @@ class Database:
     def send_update(self, model):
         if not self._api_session():
             return
-        self.socketio_client.emit(
-            "update", {"table": model.__tablename__, "data": model.info()}, "/backend"
-        )
+        self.sio.emit("update", {"table": model.__tablename__, "data": model.info()}, "/backend")
 
     @no_type_check
     def set_coins(self, symbols: list[str]):
