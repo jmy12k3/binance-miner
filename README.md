@@ -42,7 +42,7 @@ For the sake of better readability, please follow the style guideline
 
 2. Always add the most detailed type hints if possible
 
-3. Always assign the default value directly for parameters with a single type only
+3. Always assign the default value directly for parameters only with a single type
 
 4. Add function annotation if the type of return cannot be identified by IDE
 
@@ -59,16 +59,16 @@ P = ParamSpec("P")
 cannot_typehint: Easydict = Easydict({...: ...})
 my_dict: dict = {"the_answer_to_anything", 42}
 
-# Rule 1
+# Rule 1 - Add type hints
 def my_function(my_dict: Annotate[Easydict, cannot_typehint]): ...
 
-# Rule 2
+# Rule 2 - Add type hints as detailed as possible
 def my_function(my_dict: dict[str, int]): ...
 
-# Rule 3
+# Rule 3 - Assign the default value directly for parameters with a single type
 def my_function(my_dict: dict[str, int], my_int=42): ...
 
-# Rule 4
+# Rule 4 - Add function annotation for unidentifiable returns
 def my_function(fun: Callable[P, T], *args, **kwargs) -> Callable[P, T]:
     return fun(*args, **kwargs)
 ```
