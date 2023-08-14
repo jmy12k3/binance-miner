@@ -6,7 +6,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from .models import Coin
 
 CONFIG_PATH = "config"
-
 ENV_PATH_NAME = os.path.join(CONFIG_PATH, ".env.production")
 WATCHLIST_PATH_NAME = os.path.join(CONFIG_PATH, "watchlist.txt")
 
@@ -32,8 +31,8 @@ settings = Settings()  # type: ignore
 
 WATCHLIST = [coin.strip() for coin in settings.WATCHLIST.split() if coin.strip()]
 if not WATCHLIST and os.path.exists(WATCHLIST_PATH_NAME):
-    with open(WATCHLIST_PATH_NAME) as file:
-        for line in file:
+    with open(WATCHLIST_PATH_NAME) as watchlist:
+        for line in watchlist:
             line = line.strip()
             if not line or line in WATCHLIST:
                 continue
