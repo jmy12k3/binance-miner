@@ -15,10 +15,8 @@ class Coin(Base):
     def __add__(self, other):
         if isinstance(other, str):
             return self.symbol + other
-
         if isinstance(other, __class__):
             return self.symbol + other.symbol
-
         raise TypeError(f"unsupported operand type(s) for +: 'Coin' and '{type(other)}'")
 
     def __repr__(self):
