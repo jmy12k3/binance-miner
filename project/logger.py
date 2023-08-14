@@ -10,7 +10,7 @@ class DummyLogger:
     def __init__(self):
         self.Logger = logging.getLogger(__name__)
         self.Logger.addHandler(logging.NullHandler())
-        self.logger.propagate = False
+        self.Logger.propagate = False
 
     def __getattr__(self, name):
         return lambda *args, **kwargs: None
@@ -47,7 +47,7 @@ class Logger:
         for handler in self.Logger.handlers[:]:
             handler.close()
 
-    def log(self, message: str, level: int, notification: bool = True):
+    def log(self, message: str, level: int, notification: bool):
         if level == logging.DEBUG:
             self.Logger.debug(message)
         elif level == logging.INFO:
