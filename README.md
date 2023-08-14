@@ -24,8 +24,8 @@ For the sake of better maintainencing, please follow the style guideline
 
 ### Type hints
 
-1. Always add type hint on function parameters
-    - Annotate if you cannot type hint that specific class
+1. Always add type hints on function parameters
+    - Add ```typing.Annotate``` if you cannot type hint that specific class
 2. Always add the most detailed type hints if possible
     - e.g., ```dict[str, int]``` is always better than ```dict```, ```dict[str, Any]``` or ```dict[Any, str]```
 3. Add function annotation ```->``` if the type of return cannot be identified by IDE
@@ -34,7 +34,6 @@ For the sake of better maintainencing, please follow the style guideline
       - ```def my_function(my_param: int = 1): ...```
     - Good example
       -  ```def my_function(my_param=1): ...```
-    - In this case, ```my_param``` has a default value, and can only be ```int```, so we directly assign it instead of type-hinting
 
 ### Importing
 
