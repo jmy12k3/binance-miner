@@ -7,8 +7,7 @@ from typing import Annotated, no_type_check
 
 from dateutil.relativedelta import relativedelta
 from easydict import EasyDict
-from socketio import Client
-from socketio.exceptions import ConnectionError as SocketIOConnectionError
+from socketio import Client, exceptions
 from sqlalchemy import bindparam, create_engine, func, insert, select, update
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
@@ -25,7 +24,7 @@ LogScout = namedtuple(
 
 class Database:
     URL = "sqlite:///data/crypto_trading.db"
-    API = "http://api:5000"
+    API = "http://0.0.0.0:5000"
 
     def __init__(self, logger: Logger, config: Annotated[EasyDict, CONFIG]):
         self.logger = logger
@@ -51,7 +50,7 @@ class Database:
             while not self.sio.connected or not self.sio.namespaces:
                 time.sleep(0.1)
             return True
-        except SocketIOConnectionError:
+        except exceptions.ConnectionError:
             return False
 
     def create_database(self):
