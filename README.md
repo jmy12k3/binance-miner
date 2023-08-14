@@ -4,9 +4,17 @@ Buffett in your Pi!
 
 
 
-## Deployment
+## Setup
 
-...
+### Docker deployment
+
+```docker compose up```
+
+
+
+### Dashboard
+
+Check out [https://github.com/jmy12k3/crypto-miner-dashboard](crypto-miner-dashboard)
 
 
 
@@ -39,37 +47,19 @@ For the sake of better maintainencing, please follow the style guideline
 
 ### Disabling linters
 
-8. For ```# type: ignore``` and ```# noqa: ...```, this should only be used on niche cases
+8. For ```# type: ignore``` and ```# noqa: ...```, this should only be used on niche **lines**
    - disabling board exception linting (flake8)
    - wildcard imports (flake8)
    - redundant errors when reusing variable name (mypy)
    - the place where it is impossible to go wrong but mypy keeps yelling for ```assert``` (mypy)
 
-> Line level
+9. For ```@no_type_check```, this should only be used on **functions** with module conflicts
 
------
-
-
-
-9. For ```@no_type_check```, this should only be used on module conflicts
-
-> Function level
-
------
+10. For ```# mypy: disable-error-code: ...```, this should only be used when the error is popping out **globally**
 
 
 
-10. For ```# mypy: disable-error-code: ...```, this should only be used when the error is popping out globally
-
-> Global level
-
------
-
-
-
-## Reserved watchlist
-
-> Coins with potential
+## End
 
 ```
 BAT
@@ -78,8 +68,6 @@ OM
 ONT
 QTUM
 ```
-
-> TODO: Find replacement of these coins
 
 ```
 FTT
