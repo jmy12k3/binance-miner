@@ -8,7 +8,13 @@ Buffett in your Pi!
 
 ### Docker
 
-```docker compose up```
+```shell
+git clone https://github.com/jmy12k3/crypto-miner.git
+cd crypto-miner/
+docker compose up -d
+```
+
+Remove ```-d``` for running in attached mode
 
 
 
