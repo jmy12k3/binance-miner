@@ -651,4 +651,3 @@ class StreamManagerWorker(Thread):
         execution_thread = StreamManagerWorker(cache, config, logger, fut)
         execution_thread.start()
         return fut.result()
-        return fut.result()
