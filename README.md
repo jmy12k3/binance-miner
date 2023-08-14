@@ -4,8 +4,6 @@ Buffett in your Pi!
 
 
 
-## Setup
-
 ### Docker
 
 ```shell
@@ -15,6 +13,21 @@ docker compose up -d
 ```
 
 Remove ```-d``` for running in attached mode
+
+
+
+### Conda
+
+Not recommended for deployment, only for development
+
+```
+git clone https://github.com/jmy12k3/crypto-miner.git
+cd crypto-miner/
+conda create --name crypto-miner python=3.10
+conda activate crypto-miner
+pip install -r requirements.txt
+python -m project
+```
 
 
 
