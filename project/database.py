@@ -23,8 +23,11 @@ LogScout = namedtuple(
 
 
 class Database:
+    # URL for SQLite database
     URL = "sqlite:///data/crypto_trading.db"
-    API = "http://0.0.0.0:5000"
+
+    # URL for API deployed in Docker
+    API = "http://api:5000"
 
     def __init__(self, logger: Logger, config: Annotated[EasyDict, CONFIG]):
         self.logger = logger
