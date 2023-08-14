@@ -14,8 +14,6 @@ docker compose up -d
 
 Remove ```-d``` for running in attached mode
 
-
-
 ### Conda
 
 Not recommended for deployment, only for development
@@ -29,31 +27,24 @@ pip install -r requirements.txt
 python -m project
 ```
 
-
-
 ### Dashboard
 
 Check out [crypto-miner-dashboard](https://github.com/jmy12k3/crypto-miner-dashboard)
-
-
-
-
 
 ## Style guidelines
 
 For the sake of better readability, please follow the style guideline
 
-
-
 ### Type hints
 
 1. Always add type hints on function parameters
     - Use ```typing.Annotate``` if the specified class cannot be type-hinted
+
 2. Always add the most detailed type hints if possible
+
 3. Always assign the default value directly for single-typed parameters
+
 4. Add function annotation if the type of return cannot be identified by IDE
-
-
 
 ### Importing
 
@@ -63,8 +54,6 @@ For the sake of better readability, please follow the style guideline
 6. Always use ```from ... import ...``` for third-party libraries
 
 7. Always use ```from ... import ...``` for local modules
-
-
 
 ### Disabling linters
 
@@ -77,10 +66,6 @@ For the sake of better readability, please follow the style guideline
 9. For ```@no_type_check```, this should only be used on **functions** with module conflicts
 
 10. For ```# mypy: disable-error-code: ...```, this should only be used when the error is popping out **globally**
-
-
-
-
 
 ## End
 
