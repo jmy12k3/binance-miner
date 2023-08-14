@@ -13,6 +13,10 @@ class AbstractLogger(ABC, metaclass=ABCMeta):
     def __init__(self):
         self.Logger.propagtate = False
 
+    @abstractmethod
+    def __getattr__(self, name):
+        return lambda *args, **kwargs: None
+
 
 class DummyLogger(AbstractLogger):
     def __init__(self):
@@ -21,7 +25,7 @@ class DummyLogger(AbstractLogger):
         super().__init__()
 
     def __getattr__(self, name):
-        return lambda *args, **kwargs: None
+        super().__getattr__(name)
 
 
 class Logger(AbstractLogger):
@@ -49,6 +53,9 @@ class Logger(AbstractLogger):
 
         # Initialize notification handler
         self.NotificationHandler = NotificationHandler(enable_notifications)
+
+    def __getattr__(self, name):
+        return super().__getattr__(name)
 
     def close(self):
         for handler in self.Logger.handlers[:]:
