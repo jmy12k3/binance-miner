@@ -406,5 +406,3 @@ class BinanceAPIManager:
 
     def sell_alt(self, origin_coin: str, target_coin: str, sell_price: float) -> BinanceOrder:
         return self._retry(self._sell_alt, origin_coin, target_coin, sell_price)
-        return self._retry(self._sell_alt, origin_coin, target_coin, sell_price)
-        return self._retry(self._sell_alt, origin_coin, target_coin, sell_price)
