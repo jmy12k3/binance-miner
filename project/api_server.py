@@ -149,5 +149,5 @@ def trade_history(period: list[Period] | None = None):
 
 
 @sio.on("update", namespace="/backend")
-def on_update(msg: dict[str, Any]):
+def on_update(msg: dict[str, str | dict[str, Any]]):
     sio.emit("update", msg, namespace="/frontend")
