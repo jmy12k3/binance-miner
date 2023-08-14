@@ -1,5 +1,6 @@
 # mypy: disable-error-code=union-attr
 import logging.handlers
+from logging.handlers import RotatingFileHandler
 
 from .notifications import NotificationHandler
 
@@ -26,10 +27,8 @@ class Logger:
         self.Logger.propagate = False
         formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 
-        # Initialize rotating file handler
-        fh = logging.handlers.RotatingFileHandler(
-            f"logs/{logging_service}.log", maxBytes=1000000, backupCount=5
-        )
+        # Initialize file handler
+        fh = RotatingFileHandler(f"logs/{logging_service}.log", maxBytes=1000000, backupCount=5)
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(formatter)
         self.Logger.addHandler(fh)
