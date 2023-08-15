@@ -27,17 +27,13 @@ class Logger(AbstractLogger):
         self.Logger = logging.getLogger(logging_service)
         self.Logger.setLevel(logging.DEBUG)
         self.Logger.propagate = False
-
-        # Initialize formatter
         formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 
-        # Initialize file handler
         fh = RotatingFileHandler(f"logs/{logging_service}.log", maxBytes=1000000, backupCount=5)
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(formatter)
         self.Logger.addHandler(fh)
 
-        # Initialize console handler
         ch = logging.StreamHandler()
         ch.setLevel(logging.INFO)
         ch.setFormatter(formatter)
