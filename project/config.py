@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     WATCHLIST: str = ""
     STRATEGY: str = "default"
     ENABLE_PAPER_TRADING: bool
-    PAPER_WALLET_BALANCE: float = 100
+    PAPER_WALLET_BALANCE: float = 10_000
 
 
 settings = Settings()  # type: ignore
