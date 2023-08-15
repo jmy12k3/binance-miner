@@ -41,7 +41,3 @@ class Logger(AbstractLogger):
 
     def __getattr__(self, name: str):
         return self.Logger.__getattribute__(name)
-
-    def critical(self, msg: str):
-        print(flush=True)
-        self.Logger.critical(msg)

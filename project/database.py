@@ -81,7 +81,7 @@ class Database:
                     coin.enabled = False
             for symbol in symbols:
                 coin = next((coin for coin in coins if coin.symbol == symbol), None)
-                if not coin:
+                if coin is None:
                     session.add(Coin(symbol))
                 else:
                     coin.enabled = True
@@ -98,7 +98,7 @@ class Database:
                             .filter(Pair.from_coin == from_coin, Pair.to_coin == to_coin)
                             .first()
                         )
-                        if not pair:
+                        if pair is None:
                             session.add(Pair(from_coin, to_coin))
         with self.db_session() as session:
             pairs = session.query(Pair).filter(Pair.enabled.is_(True)).all()
@@ -137,7 +137,7 @@ class Database:
         session: Session
         with self.db_session() as session:
             current_coin = session.query(CurrentCoin).order_by(CurrentCoin.datetime.desc()).first()
-            if not current_coin:
+            if current_coin is None:
                 return None
             coin = current_coin.coin
             session.expunge(coin)
