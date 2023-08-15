@@ -73,12 +73,12 @@ class PaperOrderBalanceManager(AbstractOrderBalanceManager):
             data = self._read_persist()
             if data is not None:
                 if "balances" in data:
-                    self.balances = data["balances"]
-                    self.fake_order_id = data["fake_order_id"]
+                    self.balances = data["balances"]  # type: ignore
+                    self.fake_order_id = data["fake_order_id"]  # type: ignore
                 else:
-                    self.balances = data
+                    self.balances = data  # type: ignore
 
-    def _read_persist(self) -> dict[str, Any] | None:
+    def _read_persist(self) -> dict[str, dict[str, float] | int] | None:
         if os.path.exists(self.PERSIST_FILE_PATH):
             with open(self.PERSIST_FILE_PATH) as json_file:
                 return json.load(json_file)

@@ -16,7 +16,7 @@ class SafeScheduler(Scheduler):
         try:
             super()._run_job(job)
         except Exception:
-            self.logger.error(f"An error occured\n\n{traceback.format_exc()}")
+            self.logger.error(f"\n\n{traceback.format_exc()}")
             job.last_run = datetime.now()
             if not self.rerun_immediately:
                 job._schedule_next_run()

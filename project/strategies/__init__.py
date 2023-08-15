@@ -12,7 +12,7 @@ P = ParamSpec("P")
 def get_strategy(name: str) -> Callable[P, T] | None:
     for dirpath, _, filenames in os.walk(os.path.dirname(__file__)):
         for strategy in filenames:
-            if not (strategy.startswith(name) and strategy.endswith(".py")):
+            if not (strategy.replace(name, "") == ".py" and strategy.endswith(".py")):
                 continue
             location = os.path.join(dirpath, strategy)
             spec = importlib.util.spec_from_file_location(name, location)
