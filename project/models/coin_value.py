@@ -35,7 +35,7 @@ class CoinValue(Base):
         usd_price: float,
         btc_price: float,
         interval: Interval = Interval.MINUTELY,
-        datetime: _datetime = None,
+        datetime: _datetime | None = None,
     ):
         self.coin = coin
         self.balance = balance
