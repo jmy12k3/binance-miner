@@ -11,7 +11,6 @@ from .logger import Logger
 from .scheduler import SafeScheduler
 from .strategies import get_strategy
 
-# Initialize timeout for clean-up and database initialization
 TIMEOUT = 10
 
 
