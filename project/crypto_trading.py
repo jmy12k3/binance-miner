@@ -15,10 +15,10 @@ TIMEOUT = 10
 
 
 def main():
-    # Initialize clean-up flag
+    # Initialize exit_handler flag
     exiting = False
 
-    # Initialize modules
+    # Initialize logger and database
     logger = Logger("crypto_trading")
     logger.info("Starting")
     db = Database(logger, CONFIG)
@@ -28,47 +28,48 @@ def main():
         manager = BinanceAPIManager.create_manager_paper_trading(
             CONFIG, db, logger, {CONFIG.BRIDGE.symbol: CONFIG.PAPER_WALLET_BALANCE}
         )
+        logger.info("Will be running in paper trading mode")
     else:
         manager = BinanceAPIManager.create_manager(CONFIG, db, logger)
+        logger.info("Will be running in live trading mode")
 
-    # Initialize clean-up worker
-    def timeout_exit(timeout: int):
+    # Initialize exit handler
+    def timeout_exit():
         thread = Thread(target=manager.close)
         thread.start()
-        thread.join(timeout)
+        thread.join(TIMEOUT)
 
-    # Initialize clean-up handler
     def exit_handler(*_):
         nonlocal exiting
         if exiting:
             return
         exiting = True
-        timeout_exit(TIMEOUT)
+        timeout_exit()
         os._exit(0)
 
     signal.signal(signal.SIGINT, exit_handler)
     signal.signal(signal.SIGTERM, exit_handler)
     atexit.register(exit_handler)
 
-    # Initiate manager
+    # Verify Binance API key
     try:
         _ = manager.get_account()
     except Exception as e:
-        logger.error(f"An error occured: {e}")
+        logger.error(e)
         return
 
-    # Initialize autotrader
+    # Get strategy
     strategy = get_strategy(CONFIG.STRATEGY)
     if not strategy:
-        logger.error(f"Invalid strategy: {CONFIG.STRATEGY}")
+        logger.error(f"Invalid strategy '{CONFIG.STRATEGY}'")
         return
     trader = strategy(logger, CONFIG, db, manager)
-    logger.info(f"Chosen strategy: {CONFIG.STRATEGY}")
-    logger.info(f"Paper trading: {CONFIG.ENABLE_PAPER_TRADING}")
+    logger.info(f"Using {CONFIG.STRATEGY} strategy")
 
-    # Initialize database
+    # Warmup database and initialize autotrader
     db.create_database()
     db.set_coins(CONFIG.WATCHLIST)
+    logger.info(f"Warming up database for {TIMEOUT} seconds")
     time.sleep(TIMEOUT)
     trader.initialize()
 
@@ -79,7 +80,7 @@ def main():
     schedule.every(1).minutes.do(db.prune_scout_history)
     schedule.every(1).hours.do(db.prune_value_history)
 
-    # Initiate scheduler loop
+    # Continue scheduling until exit_handler is called
     while not exiting:
         schedule.run_pending()
         time.sleep(1)
