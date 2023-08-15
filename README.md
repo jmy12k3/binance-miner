@@ -25,74 +25,58 @@ python -m project
 
 Check out [crypto-miner-dashboard](https://github.com/jmy12k3/crypto-miner-dashboard)
 
+
+
 ## Style guideline
 
 For the sake of better readability, please follow the style guideline
 
 ### Type hints
 
-1. Always add type hints on function parameters
-    - Use ```typing.Annotate``` if the specified class cannot be type-hinted
+1. Add function annotation if the type of return cannot be identified by IDE
 
-2. Always add the most detailed type hints if possible
+2. Always add type hints on function parameters
+   - Use ```typing.Annotate``` if the specified class cannot be type-hinted
 
-3. Always assign the default value directly for parameters with a single type
+3. Always add the most detailed type hints if possible
 
-4. Add function annotation if the type of return cannot be identified by IDE
-
-```python
-from collections.abc import Callable
-from typing import Annotate, TypeVar
-from typing_extensions import ParamSpec
-
-from easydict import Easydict
-
-T = TypeVar("T")
-P = ParamSpec("P")
-
-cannot_typehint: Easydict = Easydict({...: ...})
-
-# Add type hints as detailed as possible
-def my_function(my_dict: Annotate[Easydict, cannot_typehint]): ...
-
-# Assign the default value directly for parameters with a single type
-def my_function(my_int=42): ...
-
-# Add function annotation for unidentifiable return type
-def my_function(my_fun: Callable[P, T], *args, **kwargs) -> Callable[P, T]:
-    return my_fun(*args, **kwargs)
-```
+4. Always assign the default value directly for parameters with single type
 
 ### Importing
 
-5. Always use ```import ...``` for the python standard library
-   - Except when importing classes and decorators
+5. Use ```import ...```  when importing modules from the python standard library
+   - Use ```from ... import ``` when importing classes and decorators from the python standard library
 
 6. Always use ```from ... import ...``` for third-party libraries
 
-7. Always use ```from ... import ...``` for local modules
+7. Always use relative imports when importing local files from the same folder
+
+8. Always use absolute imports when importing local files from the different folder
 
 ### Disabling linters
 
-8. For ```# noqa: ... ``` and ```# type: ignore```, this should only be used on niche lines
+9. For ```# noqa: ... ``` and ```# type: ignore```, this should only be used on niche lines
 
    - board exception (flake8)
 
    - wildcard imports (flake8)
 
    - reusing variable name (mypy)
-   - the place where it is impossible to go wrong but mypy keeps yelling for ```assert``` (mypy)
 
-9. For ```@no_type_check```, this should only be used on functions with module conflicts
+   - the place where it is impossible to go wrong but mypy keeps yelling for an ```assert``` (mypy)
 
-10. For ```# mypy: disable-error-code=...```, this should only be used when unharmful errors are popping out globally
+10. For ```@no_type_check```, this should only be used on functions with module conflicts
+
+11. For ```# mypy: disable-error-code=...```, this should only be used when mypy keeps yelling to code that works
+
+
 
 ## End
 
 ```
 BAT
 ICX
-OM
+OMG
 ONT
 QTUM
 ```

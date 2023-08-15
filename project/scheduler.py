@@ -8,9 +8,9 @@ from schedule import Job, Scheduler
 # https://gist.github.com/mplewis/8483f1c24f2d6259aef6?permalink_comment_id=3703372#gistcomment-3703372
 class SafeScheduler(Scheduler):
     def __init__(self, logger: logging.Logger, rerun_immediately=True):
+        super().__init__()
         self.logger = logger
         self.rerun_immediately = rerun_immediately
-        super().__init__()
 
     def _run_job(self, job: Job):
         try:
