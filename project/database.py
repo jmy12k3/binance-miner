@@ -61,7 +61,7 @@ class Database:
         try:
             with self.db_session() as session:
                 session.execute("ALTER TABLE scout_history ADD COLUMN ratio_diff float;")
-        except:  # noqa: E722
+        except Exception:
             pass
 
     def send_update(self, model):
