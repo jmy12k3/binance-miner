@@ -3,14 +3,12 @@ import logging.handlers
 from abc import ABC, abstractmethod
 from logging.handlers import RotatingFileHandler
 
-from .notifications import NotificationHandler
-
 
 class AbstractLogger(ABC):
     Logger: logging.Logger | None = None
 
     @abstractmethod
-    def __getattr__(self, name):
+    def __getattr__(self, name: str):
         return lambda *args, **kwargs: None
 
 
@@ -18,16 +16,14 @@ class DummyLogger(AbstractLogger):
     def __init__(self):
         self.Logger = logging.getLogger(__name__)
         self.Logger.addHandler(logging.NullHandler())
-        self.Logger.propagtate = False
+        self.Logger.propagate = False
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str):
         super().__getattr__(name)
 
 
 class Logger(AbstractLogger):
-    NotificationHandler = None
-
-    def __init__(self, logging_service: str, enable_notifications=False):
+    def __init__(self, logging_service: str):
         self.Logger = logging.getLogger(logging_service)
         self.Logger.setLevel(logging.DEBUG)
         self.Logger.propagate = False
@@ -47,38 +43,9 @@ class Logger(AbstractLogger):
         ch.setFormatter(formatter)
         self.Logger.addHandler(ch)
 
-        # Initialize notification handler
-        self.NotificationHandler = NotificationHandler(enable_notifications)
+    def __getattr__(self, name: str):
+        return self.Logger.__getattribute__(name)
 
-    def __getattr__(self, name):
-        return self.__getattribute__(name)
-
-    def close(self):
-        for handler in self.Logger.handlers[:]:
-            handler.close()
-
-    def log(self, message: str, level: int, notification: bool):
-        match level:
-            case logging.DEBUG:
-                self.Logger.debug(message)
-            case logging.INFO:
-                self.Logger.info(message)
-            case logging.WARNING:
-                self.Logger.warning(message)
-            case logging.ERROR:
-                self.Logger.error(message)
-        if notification and self.NotificationHandler.enabled:
-            self.NotificationHandler.send_notification(str(message))
-
-    # Initialize convenience functions
-    def debug(self, message: str, notification=False):
-        self.log(message, logging.DEBUG, notification)
-
-    def info(self, message: str, notification=True):
-        self.log(message, logging.INFO, notification)
-
-    def warning(self, message: str, notification=True):
-        self.log(message, logging.WARNING, notification)
-
-    def error(self, message: str, notification=True):
-        self.log(message, logging.ERROR, notification)
+    def critical(self, msg: str):
+        print(flush=True)
+        self.Logger.critical(msg)
