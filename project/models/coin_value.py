@@ -46,7 +46,7 @@ class CoinValue(Base):
 
     @hybrid_property
     def usd_value(self):
-        if self.usd_price is None:
+        if not self.usd_price:
             return
         return self.balance * self.usd_price
 
@@ -56,7 +56,7 @@ class CoinValue(Base):
 
     @hybrid_property
     def btc_value(self):
-        if self.btc_price is None:
+        if not self.btc_price:
             return
         return self.balance * self.btc_price
 

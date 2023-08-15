@@ -41,7 +41,7 @@ if not WATCHLIST and os.path.exists(WATCHLIST_PATH_NAME):
 CONFIG: EasyDict = EasyDict(
     {
         "BRIDGE_SYMBOL": settings.BRIDGE_SYMBOL,
-        "BRIDGE": Coin(settings.BRIDGE_SYMBOL, False),
+        "BRIDGE": Coin(settings.BRIDGE_SYMBOL, enabled=False),
         "SCOUT_HISTORY_PRUNE_TIME": settings.SCOUT_HISTORY_PRUNE_TIME,
         "SCOUT_MULTIPLIER": settings.SCOUT_MULTIPLIER,
         "SCOUT_SLEEP_TIME": settings.SCOUT_SLEEP_TIME,

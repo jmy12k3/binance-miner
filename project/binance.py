@@ -249,7 +249,7 @@ class BinanceAPIManager:
 
         @heavy_call
         def write_trade_log():
-            trade_log = self.db.start_trade_log(origin_coin, target_coin, False)
+            trade_log = self.db.start_trade_log(origin_coin, target_coin, selling=False)
             trade_log.set_ordered(origin_balance, target_balance, order_quantity)
             trade_log.set_complete(order.cumulative_quote_qty)
 
@@ -282,7 +282,7 @@ class BinanceAPIManager:
 
         @heavy_call
         def write_trade_log():
-            trade_log = self.db.start_trade_log(origin_coin, target_coin, True)
+            trade_log = self.db.start_trade_log(origin_coin, target_coin, selling=True)
             trade_log.set_ordered(origin_balance, target_balance, order_quantity)
             trade_log.set_complete(order.cumulative_quote_qty)
 

@@ -223,8 +223,8 @@ class AutoTrader(ABC):
                 continue
             price_amounts[to_coin.symbol] = (optional_coin_buy_price, optional_coin_amount)
             coin_opt_coin_ratio = coin_sell_price / optional_coin_buy_price
-            from_fee = self.manager.get_fee(coin.symbol, self.config.BRIDGE.symbol, True)
-            to_fee = self.manager.get_fee(to_coin.symbol, self.config.BRIDGE.symbol, False)
+            from_fee = self.manager.get_fee(coin.symbol, self.config.BRIDGE.symbol, selling=True)
+            to_fee = self.manager.get_fee(to_coin.symbol, self.config.BRIDGE.symbol, selling=False)
             transaction_fee = from_fee + to_fee - from_fee * to_fee
             if self.config.USE_MARGIN:
                 ratio_dict[(coin.idx, to_coin.idx)] = (
