@@ -1,3 +1,4 @@
+# mypy: disable-error-code=assignment
 from sqlalchemy import Boolean, Column, String
 
 from .base import Base
@@ -8,7 +9,7 @@ class Coin(Base):
     symbol = Column(String, primary_key=True)
     enabled = Column(Boolean)
 
-    def __init__(self, symbol, enabled=True):
+    def __init__(self, symbol, enabled: bool = True):
         self.symbol = symbol
         self.enabled = enabled
 

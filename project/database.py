@@ -104,7 +104,7 @@ class Database:
             pairs = session.query(Pair).filter(Pair.enabled.is_(True)).all()
             self.ratios_manager = RatiosManager(pairs)
 
-    def get_coins(self, only_enabled=True) -> list[Coin]:
+    def get_coins(self, only_enabled: bool = True) -> list[Coin]:
         session: Session
         with self.db_session() as session:
             if only_enabled:

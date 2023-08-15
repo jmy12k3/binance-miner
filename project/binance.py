@@ -9,7 +9,7 @@ import traceback
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable
-from typing import Annotated, Any, TypeVar
+from typing import Annotated, TypeVar
 
 from binance.client import Client
 from binance.exceptions import BinanceAPIException, BinanceOrderException, BinanceRequestException
@@ -33,7 +33,7 @@ def float_as_decimal_str(num: float):
 
 class AbstractOrderBalanceManager(ABC):
     @abstractmethod
-    def get_currency_balance(self, currency_symbol: str, force=False) -> float:
+    def get_currency_balance(self, currency_symbol: str, force: bool = False) -> float:
         pass
 
     @abstractmethod
@@ -62,7 +62,7 @@ class PaperOrderBalanceManager(AbstractOrderBalanceManager):
         client: Client,
         cache: BinanceCache,
         initial_balances: dict[str, float],
-        read_persist=True,
+        read_persist: bool = True,
     ):
         self.balances = initial_balances
         self.bridge = bridge_symbol
@@ -88,7 +88,7 @@ class PaperOrderBalanceManager(AbstractOrderBalanceManager):
         with open(self.PERSIST_FILE_PATH, "w") as json_file:
             json.dump({"balances": self.balances, "fake_order_id": self.fake_order_id}, json_file)
 
-    def get_currency_balance(self, currency_symbol: str, force=False) -> float:
+    def get_currency_balance(self, currency_symbol: str, force: bool = False) -> float:
         return self.balances.get(currency_symbol, 0.0)
 
     def create_order(self, **params):
@@ -131,7 +131,7 @@ class BinanceOrderBalanceManager(AbstractOrderBalanceManager):
         return self.binance_client.create_order(**params)
 
     # XXX: Improve logging semantics
-    def get_currency_balance(self, currency_symbol: str, force=False):
+    def get_currency_balance(self, currency_symbol: str, force: bool = False):
         with self.cache.open_balances() as cache_balances:
             balance = cache_balances.get(currency_symbol, None)
             if force or balance is None:
@@ -289,7 +289,7 @@ class BinanceAPIManager:
         write_trade_log()
         return order
 
-    def get_currency_balance(self, currency_symbol: str, force=False):
+    def get_currency_balance(self, currency_symbol: str, force: bool = False):
         return self.order_balance_manager.get_currency_balance(currency_symbol, force)
 
     def get_market_sell_price(self, symbol: str, amount: float):

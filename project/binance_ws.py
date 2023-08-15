@@ -101,7 +101,7 @@ class BinanceCache:
 
 
 class DepthCache:
-    def __init__(self, keep_limit=200, max_size=400):
+    def __init__(self, keep_limit: int = 200, max_size: int = 400):
         self.bids = SortedDict()
         self.asks = SortedDict()
         self.keep_limit = keep_limit
@@ -135,7 +135,7 @@ class DepthCache:
 
 
 class DepthCacheManager:
-    def __init__(self, symbol: str, client: AsyncClient, logger: AbstractLogger, limit=100):
+    def __init__(self, symbol: str, client: AsyncClient, logger: AbstractLogger, limit: int = 100):
         self.id = uuid.uuid4()
         self.pending_signals_counter = 0
         self.pending_reinit = False
@@ -529,7 +529,7 @@ class AutoReplacingStream(LoopExecutor):
         api_key: str | bool = False,
         api_secret: str | bool = False,
         stream_buffer_name: str | bool = False,
-        restart_every=60 * 60,
+        restart_every: int = 60 * 60,
     ):
         self.context = context
         self.restart_every = restart_every
