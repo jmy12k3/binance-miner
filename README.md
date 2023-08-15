@@ -1,21 +1,3 @@
-# Crypto-miner
-
-⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣴⣶⣾⣿⣿⣿⣿⣷⣶⣦⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⣠⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⣄⠀⠀⠀⠀⠀
-⠀⠀⠀⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣄⠀⠀⠀
-⠀⠀⣴⣿⣿⣿⣿⣿⣿⣿⠟⠿⠿⡿⠀⢰⣿⠁⢈⣿⣿⣿⣿⣿⣿⣿⣿⣦⠀⠀
-⠀⣼⣿⣿⣿⣿⣿⣿⣿⣿⣤⣄⠀⠀⠀⠈⠉⠀⠸⠿⣿⣿⣿⣿⣿⣿⣿⣿⣧⠀
-⢰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡏⠀⠀⢠⣶⣶⣤⡀⠀⠈⢻⣿⣿⣿⣿⣿⣿⣿⡆
-⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠃⠀⠀⠼⣿⣿⡿⠃⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣷
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡟⠀⠀⢀⣀⣀⠀⠀⠀⠀⢴⣿⣿⣿⣿⣿⣿⣿⣿⣿
-⢿⣿⣿⣿⣿⣿⣿⣿⢿⣿⠁⠀⠀⣼⣿⣿⣿⣦⠀⠀⠈⢻⣿⣿⣿⣿⣿⣿⣿⡿
-⠸⣿⣿⣿⣿⣿⣿⣏⠀⠀⠀⠀⠀⠛⠛⠿⠟⠋⠀⠀⠀⣾⣿⣿⣿⣿⣿⣿⣿⠇
-⠀⢻⣿⣿⣿⣿⣿⣿⣿⣿⠇⠀⣤⡄⠀⣀⣀⣀⣀⣠⣾⣿⣿⣿⣿⣿⣿⣿⡟⠀
-⠀⠀⠻⣿⣿⣿⣿⣿⣿⣿⣄⣰⣿⠁⢀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠀⠀
-⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠋⠀⠀⠀
-⠀⠀⠀⠀⠀⠙⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠋⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⠻⠿⢿⣿⣿⣿⣿⡿⠿⠟⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀
-
 ## Setup
 
 ### Docker - deployment
@@ -54,7 +36,7 @@ For the sake of better readability, please follow the style guideline
 
 2. Always add the most detailed type hints if possible
 
-3. Always assign the default value directly for parameters only with a single type
+3. Always assign the default value directly for parameters with a single type
 
 4. Add function annotation if the type of return cannot be identified by IDE
 
@@ -69,20 +51,16 @@ T = TypeVar("T")
 P = ParamSpec("P")
 
 cannot_typehint: Easydict = Easydict({...: ...})
-my_dict: dict = {"the_answer_to_anything", 42}
 
-# Rule 1 - Add type hints
+# Add type hints as detailed as possible
 def my_function(my_dict: Annotate[Easydict, cannot_typehint]): ...
 
-# Rule 2 - Add type hints as detailed as possible
-def my_function(my_dict: dict[str, int]): ...
+# Assign the default value directly for parameters with a single type
+def my_function(my_int=42): ...
 
-# Rule 3 - Assign the default value directly for parameters only with a single type
-def my_function(my_dict: dict[str, int], my_int=42): ...
-
-# Rule 4 - Add function annotation for unidentifiable return type
-def my_function(fun: Callable[P, T], *args, **kwargs) -> Callable[P, T]:
-    return fun(*args, **kwargs)
+# Add function annotation for unidentifiable return type
+def my_function(my_fun: Callable[P, T], *args, **kwargs) -> Callable[P, T]:
+    return my_fun(*args, **kwargs)
 ```
 
 ### Importing
@@ -96,7 +74,7 @@ def my_function(fun: Callable[P, T], *args, **kwargs) -> Callable[P, T]:
 
 ### Disabling linters
 
-8. For ```# type: ignore``` and ```# noqa: ...```, this should only be used on niche lines
+8. For ```# noqa: ... ``` and ```# type: ignore```, this should only be used on niche lines
 
    - board exception (flake8)
 
@@ -107,7 +85,7 @@ def my_function(fun: Callable[P, T], *args, **kwargs) -> Callable[P, T]:
 
 9. For ```@no_type_check```, this should only be used on functions with module conflicts
 
-10. For ```# mypy: disable-error-code=...```, this should only be used when the error is popping out globally
+10. For ```# mypy: disable-error-code=...```, this should only be used when unharmful errors are popping out globally
 
 ## End
 
