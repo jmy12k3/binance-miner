@@ -3,7 +3,6 @@ import os
 import signal
 import time
 from threading import Thread
-from typing import Any
 
 from .binance import BinanceAPIManager
 from .config import CONFIG
@@ -40,12 +39,12 @@ def main():
         thread.start()
         thread.join(TIMEOUT)
 
-    def exit_handler(f_code=0, _: Any | None = None):
+    def exit_handler(*_):
         nonlocal exiting
         if not exiting:
             exiting = True
             timeout_exit()
-            os._exit(f_code)
+            os._exit(0)
 
     signal.signal(signal.SIGINT, exit_handler)
     signal.signal(signal.SIGTERM, exit_handler)
@@ -56,13 +55,13 @@ def main():
         _ = manager.get_account()
     except Exception as e:
         logger.error(e)
-        return exit_handler(1)
+        return
 
     # Get strategy
     strategy = get_strategy(CONFIG.STRATEGY)
     if not strategy:
         logger.error(f"Invalid strategy '{CONFIG.STRATEGY}'")
-        return exit_handler(1)
+        return
     trader = strategy(logger, CONFIG, db, manager)
     logger.info(f"Using {CONFIG.STRATEGY} strategy")
 
