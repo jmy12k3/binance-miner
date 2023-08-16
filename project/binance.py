@@ -171,9 +171,9 @@ class BinanceAPIManager:
 
     @staticmethod
     def _common_factory(
+        logger: AbstractLogger,
         config: Annotated[EasyDict, CONFIG],
         db: Database,
-        logger: AbstractLogger,
         ob_factory: Callable[[Client, BinanceCache], AbstractOrderBalanceManager],
     ) -> BinanceAPIManager:
         cache = BinanceCache()
@@ -182,26 +182,26 @@ class BinanceAPIManager:
 
     @staticmethod
     def create_manager(
-        config: Annotated[EasyDict, CONFIG], db: Database, logger: AbstractLogger
+        logger: AbstractLogger, config: Annotated[EasyDict, CONFIG], db: Database
     ) -> BinanceAPIManager:
         return BinanceAPIManager._common_factory(
+            logger,
             config,
             db,
-            logger,
             lambda client, cache: BinanceOrderBalanceManager(logger, client, cache),
         )
 
     @staticmethod
     def create_manager_paper_trading(
+        logger: AbstractLogger,
         config: Annotated[EasyDict, CONFIG],
         db: Database,
-        logger: AbstractLogger,
         initial_balances: dict[str, float],
     ) -> BinanceAPIManager:
         return BinanceAPIManager._common_factory(
+            logger,
             config,
             db,
-            logger,
             lambda client, cache: PaperOrderBalanceManager(
                 config.BRIDGE.symbol,
                 client,
@@ -214,7 +214,7 @@ class BinanceAPIManager:
         self.stream_manager = StreamManagerWorker.create(self.cache, self.config, self.logger)
 
     # XXX: Improve logging semantics
-    def _retry(self, func: Callable[P, T], *args, **kwargs):
+    def _retry(self, func: Callable[P, T], *args, **kwargs) -> T | None:
         for attempt in range(20):
             try:
                 return func(*args, **kwargs)
@@ -222,22 +222,17 @@ class BinanceAPIManager:
                 self.logger.warning(f"Failed to Buy/Sell. Retrying... (attempt {attempt}/20)")
                 self.logger.warning(traceback.format_exc())
             time.sleep(1)
-        return
+        return None
 
     # XXX: Improve logging semantics
     def _buy_alt(self, origin_coin: str, target_coin: str, buy_price: float):
-        origin_symbol = origin_coin
-        target_symbol = target_coin
-        origin_balance = self.get_currency_balance(origin_symbol)
-        target_balance = self.get_currency_balance(target_symbol)
-        from_coin_price = buy_price
-        order_quantity = self.buy_quantity(
-            origin_symbol, target_symbol, target_balance, from_coin_price
-        )
-        self.logger.info(f"Buying {order_quantity} <{origin_symbol}>")
+        origin_balance = self.get_currency_balance(origin_coin)
+        target_balance = self.get_currency_balance(target_coin)
+        order_quantity = self.buy_quantity(origin_coin, target_coin, target_balance, buy_price)
+        self.logger.info(f"Buying {order_quantity} <{origin_coin}>")
         order = self.order_balance_manager.make_order(
             side=Client.SIDE_BUY,
-            symbol=origin_symbol + target_symbol,
+            symbol=origin_coin + target_coin,
             quantity=order_quantity,
             quote_quantity=target_balance,
         )
@@ -245,7 +240,7 @@ class BinanceAPIManager:
         executed_qty = order.cumulative_filled_quantity
         if executed_qty > 0 and order.status == "FILLED":
             order_quantity = executed_qty
-        self.logger.info(f"Bought {origin_symbol}")
+        self.logger.info(f"Bought {origin_coin}")
 
         @heavy_call
         def write_trade_log():
@@ -258,27 +253,24 @@ class BinanceAPIManager:
 
     # XXX: Improve logging semantics
     def _sell_alt(self, origin_coin: str, target_coin: str, sell_price: float):
-        origin_symbol = origin_coin
-        target_symbol = target_coin
-        origin_balance = self.get_currency_balance(origin_symbol)
-        target_balance = self.get_currency_balance(target_symbol)
-        from_coin_price = sell_price
-        order_quantity = self.sell_quantity(origin_symbol, target_symbol, origin_balance)
-        self.logger.info(f"Selling {order_quantity} <{origin_symbol}>")
+        origin_balance = self.get_currency_balance(origin_coin)
+        target_balance = self.get_currency_balance(target_coin)
+        order_quantity = self.sell_quantity(origin_coin, target_coin, origin_balance)
+        self.logger.info(f"Selling {order_quantity} <{origin_coin}>")
         self.logger.info(f"Balance is {origin_balance}")
         order = self.order_balance_manager.make_order(
             side=Client.SIDE_SELL,
-            symbol=origin_symbol + target_symbol,
+            symbol=origin_coin + target_coin,
             quantity=order_quantity,
-            quote_quantity=from_coin_price * order_quantity,
+            quote_quantity=sell_price * order_quantity,
         )
         order = BinanceOrder(order)
-        new_balance = self.get_currency_balance(origin_symbol)
+        new_balance = self.get_currency_balance(origin_coin)
         while new_balance >= origin_balance:
             balances_changed = self.cache.balances_changed_event.wait(1.0)
             self.cache.balances_changed_event.clear()
-            new_balance = self.get_currency_balance(origin_symbol, force=not balances_changed)
-        self.logger.info(f"Sold {origin_symbol}")
+            new_balance = self.get_currency_balance(origin_coin, force=not balances_changed)
+        self.logger.info(f"Sold {origin_coin}")
 
         @heavy_call
         def write_trade_log():
@@ -301,8 +293,9 @@ class BinanceAPIManager:
     def get_market_sell_price_fill_quote(self, symbol: str, quote_amount: float):
         return self.stream_manager.get_market_sell_price_fill_quote(symbol, quote_amount)
 
+    # XXX: Specify type hint of return value
     @cached(cache=TTLCache(maxsize=1, ttl=43200))
-    def get_trade_fees(self) -> dict[str, float]:
+    def get_trade_fees(self):
         return {
             ticker["symbol"]: float(ticker["takerCommission"])
             for ticker in self.binance_client.get_trade_fee()
@@ -338,7 +331,8 @@ class BinanceAPIManager:
         if self.stream_manager:
             self.stream_manager.close()
 
-    def get_account(self) -> dict:
+    # XXX: Specify type hint of return value
+    def get_account(self):
         return self.binance_client.get_account()
 
     # XXX: Improve logging semantics
@@ -358,7 +352,8 @@ class BinanceAPIManager:
                 self.cache.non_existent_tickers.add(ticker_symbol)
         return price
 
-    def get_symbol_filter(self, origin_symbol: str, target_symbol: str, filter_type: str) -> dict:
+    # XXX: Specify type hint of return value
+    def get_symbol_filter(self, origin_symbol: str, target_symbol: str, filter_type: str):
         return next(
             _filter
             for _filter in self.binance_client.get_symbol_info(origin_symbol + target_symbol)[
@@ -401,8 +396,10 @@ class BinanceAPIManager:
         origin_tick = self.get_alt_tick(origin_symbol, target_symbol)
         return math.floor(origin_balance * 10**origin_tick) / float(10**origin_tick)
 
-    def buy_alt(self, origin_coin: str, target_coin: str, buy_price: float) -> BinanceOrder:
+    def buy_alt(self, origin_coin: str, target_coin: str, buy_price: float) -> BinanceOrder | None:
         return self._retry(self._buy_alt, origin_coin, target_coin, buy_price)
 
-    def sell_alt(self, origin_coin: str, target_coin: str, sell_price: float) -> BinanceOrder:
+    def sell_alt(
+        self, origin_coin: str, target_coin: str, sell_price: float
+    ) -> BinanceOrder | None:
         return self._retry(self._sell_alt, origin_coin, target_coin, sell_price)

@@ -154,8 +154,7 @@ class DepthCacheManager:
             return
         if data["first_update_id_in_event"] > self.last_update_id + 1:
             self.logger.debug(
-                f"OB: {self.symbol} reinit, update delta: "
-                f"{data['first_update_id_in_event'] - self.last_update_id}"
+                f"OB: {self.symbol} reinit, update delta: {data['first_update_id_in_event'] - self.last_update_id}"
             )
             await self.reinit()
             return

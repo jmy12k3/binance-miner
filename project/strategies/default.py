@@ -12,8 +12,7 @@ class Strategy(AutoTrader):
             )
             if coin_price is None:
                 self.logger.info(
-                    "Skipping scouting... "
-                    f"current coin {coin.symbol + self.config.BRIDGE.symbol} not found"
+                    f"Skipping scouting... current coin {coin.symbol + self.config.BRIDGE.symbol} not found"
                 )
                 continue
             min_notional = self.manager.get_min_notional(coin.symbol, self.config.BRIDGE.symbol)
