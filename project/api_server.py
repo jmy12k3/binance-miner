@@ -5,6 +5,7 @@ from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from fastapi_socketio import SocketManager
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -28,6 +29,11 @@ sio = SocketManager(app)
 # Initialize database
 logger = DummyLogger()
 db = Database(logger, CONFIG)
+
+
+@app.get("/")
+async def docs_redirect():
+    return RedirectResponse(url="/docs")
 
 
 @app.get("/api/v1/current_coin")
