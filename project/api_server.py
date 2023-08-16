@@ -1,16 +1,13 @@
 # mypy: disable-error-code=annotation-unchecked
 from datetime import datetime
-from enum import Enum
 from itertools import groupby
 from typing import Any
 
-from dateutil.relativedelta import relativedelta
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_socketio import SocketManager
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from sqlalchemy.orm.query import Query
 
 from .config import CONFIG
 from .database import Database
@@ -31,34 +28,6 @@ sio = SocketManager(app)
 # Initialize database
 logger = DummyLogger()
 db = Database(logger, CONFIG)
-
-
-class Period(Enum):
-    SECOND = "s"
-    HOUR = "h"
-    DAY = "d"
-    WEEK = "w"
-    MONTH = "m"
-
-    def __str__(self):
-        return self.value
-
-
-# https://fastapi.tiangolo.com/async/
-def filter_period(period: list[Period] | None, query: Query, model) -> Query:
-    if not period:
-        return query
-    if Period.SECOND in period:
-        return query.filter(model.datetime >= datetime.now() - relativedelta(seconds=1))
-    if Period.HOUR in period:
-        return query.filter(model.datetime >= datetime.now() - relativedelta(hours=1))
-    if Period.DAY in period:
-        return query.filter(model.datetime >= datetime.now() - relativedelta(days=1))
-    if Period.WEEK in period:
-        return query.filter(model.datetime >= datetime.now() - relativedelta(weeks=1))
-    if Period.MONTH in period:
-        return query.filter(model.datetime >= datetime.now() - relativedelta(months=1))
-    return query
 
 
 @app.get("/api/v1/current_coin")
@@ -85,11 +54,10 @@ def pairs():
 
 
 @app.get("/api/v1/value_history")
-def value_history(coin: str | None = None, period: list[Period] | None = None):
+def value_history(coin: str | None = None):
     session: Session
     with db.db_session() as session:
         query = session.query(CoinValue).order_by(CoinValue.coin_id.asc(), CoinValue.datetime.asc())
-        query = filter_period(period, query, CoinValue)
         if coin:
             values: list[CoinValue] = query.filter(CoinValue.coin_id == coin).all()
             return [entry.info() for entry in values]
@@ -98,7 +66,7 @@ def value_history(coin: str | None = None, period: list[Period] | None = None):
 
 
 @app.get("/api/v1/total_value_history")
-def total_value_history(period: list[Period] | None = None):
+def total_value_history():
     session: Session
     with db.db_session() as session:
         query = session.query(
@@ -106,23 +74,21 @@ def total_value_history(period: list[Period] | None = None):
             func.sum(CoinValue.btc_value),
             func.sum(CoinValue.usd_value),
         ).group_by(CoinValue.datetime)
-        query = filter_period(period, query, CoinValue)
         total_values: list[tuple[datetime, float, float]] = query.all()
         return [{"datetime": tv[0], "btc": tv[1], "usd": tv[2]} for tv in total_values]
 
 
 @app.get("/api/v1/current_coin_history")
-def current_coin_history(period: list[Period] | None = None):
+def current_coin_history():
     session: Session
     with db.db_session() as session:
         query = session.query(CurrentCoin)
-        query = filter_period(period, query, CurrentCoin)
         current_coins: list[CurrentCoin] = query.all()
         return [cc.info() for cc in current_coins]
 
 
 @app.get("/api/v1/scouting_history")
-def scouting_history(period: list[Period] | None = None):
+def scouting_history():
     _current_coin = db.get_current_coin()
     coin = _current_coin.symbol if _current_coin is not None else None
     session: Session
@@ -133,17 +99,15 @@ def scouting_history(period: list[Period] | None = None):
             .filter(Pair.from_coin_id == coin)
             .order_by(ScoutHistory.datetime.asc())
         )
-        query = filter_period(period, query, ScoutHistory)
         scouts: list[ScoutHistory] = query.all()
         return [scout.info() for scout in scouts]
 
 
 @app.get("/api/v1/trade_history")
-def trade_history(period: list[Period] | None = None):
+def trade_history():
     session: Session
     with db.db_session() as session:
         query = session.query(Trade).order_by(Trade.datetime.asc())
-        query = filter_period(period, query, Trade)
         trades: list[Trade] = query.all()
         return [trade.info() for trade in trades]
 

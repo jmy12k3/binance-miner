@@ -223,20 +223,17 @@ class Database:
         session: Session
         with self.db_session() as session:
             dt = datetime.now()
-            session.execute(
-                insert(ScoutHistory),
-                [
-                    {
-                        "pair_id": ls.pair_id,
-                        "ratio_diff": ls.ratio_diff,
-                        "target_ratio": ls.target_ratio,
-                        "current_coin_price": ls.coin_price,
-                        "other_coin_price": ls.optional_coin_price,
-                        "datetime": dt,
-                    }
-                    for ls in logs
-                ],
-            )
+            for ls in logs:
+                sh = {
+                    "pair_id": ls.pair_id,
+                    "ratio_diff": ls.ratio_diff,
+                    "target_ratio": ls.target_ratio,
+                    "current_coin_price": ls.coin_price,
+                    "other_coin_price": ls.optional_coin_price,
+                    "datetime": dt,
+                }
+                session.execute(insert(ScoutHistory), sh)
+                self.send_update(sh)
 
     @heavy_call
     def commit_ratios(self):
