@@ -1,5 +1,5 @@
 # mypy: disable-error-code=union-attr
-import logging.handlers
+import logging
 from abc import ABC, abstractmethod
 from logging.handlers import RotatingFileHandler
 
