@@ -11,9 +11,9 @@ from socketio import Client, exceptions
 from sqlalchemy import bindparam, create_engine, func, insert, select, update
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
+from . import models
 from .config import CONFIG
 from .logger import AbstractLogger
-from .models import *  # noqa: F403
 from .postpone import heavy_call
 from .ratios import CoinStub, RatiosManager
 
@@ -57,7 +57,7 @@ class Database:
             return False
 
     def create_database(self):
-        Base.metadata.create_all(self.engine)
+        models.Base.metadata.create_all(self.engine)
         try:
             with self.db_session() as session:
                 session.execute("ALTER TABLE scout_history ADD COLUMN ratio_diff float;")
@@ -75,82 +75,93 @@ class Database:
     def set_coins(self, symbols: list[str]):
         session: Session
         with self.db_session() as session:
-            coins: list[Coin] = session.query(Coin).all()
+            coins: list[models.Coin] = session.query(models.Coin).all()
             for coin in coins:
                 if coin.symbol not in symbols:
                     coin.enabled = False
             for symbol in symbols:
                 coin = next((coin for coin in coins if coin.symbol == symbol), None)
                 if coin is None:
-                    session.add(Coin(symbol))
+                    session.add(models.Coin(symbol))
                 else:
                     coin.enabled = True
         CoinStub.reset()
         with self.db_session() as session:
-            coins: list[Coin] = session.query(Coin).filter(Coin.enabled).order_by(Coin.symbol).all()
+            coins: list[models.Coin] = (
+                session.query(models.Coin)
+                .filter(models.Coin.enabled)
+                .order_by(models.Coin.symbol)
+                .all()
+            )
             for coin in coins:
                 CoinStub.create(coin.symbol)
             for from_coin in coins:
                 for to_coin in coins:
                     if from_coin != to_coin:
                         pair = (
-                            session.query(Pair)
-                            .filter(Pair.from_coin == from_coin, Pair.to_coin == to_coin)
+                            session.query(models.Pair)
+                            .filter(
+                                models.Pair.from_coin == from_coin, models.Pair.to_coin == to_coin
+                            )
                             .first()
                         )
                         if pair is None:
-                            session.add(Pair(from_coin, to_coin))
+                            session.add(models.Pair(from_coin, to_coin))
         with self.db_session() as session:
-            pairs = session.query(Pair).filter(Pair.enabled.is_(True)).all()
+            pairs = session.query(models.Pair).filter(models.Pair.enabled.is_(True)).all()
             self.ratios_manager = RatiosManager(pairs)
 
-    def get_coins(self, only_enabled: bool = True) -> list[Coin]:
+    def get_coins(self, only_enabled: bool = True) -> list[models.Coin]:
         session: Session
         with self.db_session() as session:
             if only_enabled:
-                coins = session.query(Coin).filter(Coin.enabled).all()
+                coins = session.query(models.Coin).filter(models.Coin.enabled).all()
             else:
-                coins = session.query(Coin).all()
+                coins = session.query(models.Coin).all()
             session.expunge_all()
             return coins
 
-    def get_coin(self, coin: Coin | str):
-        if isinstance(coin, Coin):
+    def get_coin(self, coin: models.Coin | str):
+        if isinstance(coin, models.Coin):
             return coin
         session: Session
         with self.db_session() as session:
-            coin = session.get(Coin, coin)  # type: ignore
+            coin = session.get(models.Coin, coin)  # type: ignore
             session.expunge(coin)
             return coin
 
-    def set_current_coin(self, coin: Coin | str):
+    def set_current_coin(self, coin: models.Coin | str):
         coin = self.get_coin(coin)
         session: Session
         with self.db_session() as session:
-            if isinstance(coin, Coin):
+            if isinstance(coin, models.Coin):
                 coin = session.merge(coin)
             cc = CurrentCoin(coin)  # type: ignore
             session.add(cc)
             self.send_update(cc)
 
-    def get_current_coin(self) -> Coin | None:
+    def get_current_coin(self) -> models.Coin | None:
         session: Session
         with self.db_session() as session:
-            current_coin = session.query(CurrentCoin).order_by(CurrentCoin.datetime.desc()).first()
+            current_coin = (
+                session.query(models.CurrentCoin)
+                .order_by(models.CurrentCoin.datetime.desc())
+                .first()
+            )
             if current_coin is None:
                 return None
             coin = current_coin.coin
             session.expunge(coin)
             return coin
 
-    def get_pair(self, from_coin: Coin | str, to_coin: Coin | str):
+    def get_pair(self, from_coin: models.Coin | str, to_coin: models.Coin | str):
         from_coin = self.get_coin(from_coin)
         to_coin = self.get_coin(to_coin)
         session: Session
         with self.db_session() as session:
-            pair: Pair | None = (
-                session.query(Pair)
-                .filter(Pair.from_coin == from_coin, Pair.to_coin == to_coin)
+            pair: models.Pair | None = (
+                session.query(models.Pair)
+                .filter(models.Pair.from_coin == from_coin, models.Pair.to_coin == to_coin)
                 .first()
             )
             session.expunge(pair)
@@ -160,27 +171,29 @@ class Database:
         time_diff = datetime.now() - relativedelta(hours=self.config.SCOUT_HISTORY_PRUNE_TIME)
         session: Session
         with self.db_session() as session:
-            session.query(ScoutHistory).filter(ScoutHistory.datetime < time_diff).delete()
+            session.query(models.ScoutHistory).filter(
+                models.ScoutHistory.datetime < time_diff
+            ).delete()
 
     def prune_value_history(self):
         def _datetime_id_query(dt_format):
-            dt_column = func.strftime(dt_format, CoinValue.datetime)
-            grouped = select(CoinValue, func.max(CoinValue.datetime), dt_column).group_by(
-                CoinValue.coin_id, CoinValue, dt_column
-            )
+            dt_column = func.strftime(dt_format, models.CoinValue.datetime)
+            grouped = select(
+                models.CoinValue, func.max(models.CoinValue.datetime), dt_column
+            ).group_by(models.CoinValue.coin_id, models.CoinValue, dt_column)
             return select(grouped.c.id.label("id")).select_from(grouped)
 
         def _update_query(datetime_query, interval):
             return (
-                update(CoinValue)
-                .where(CoinValue.id.in_(datetime_query))
+                update(models.CoinValue)
+                .where(models.CoinValue.id.in_(datetime_query))
                 .values(interval=interval)
                 .execution_options(synchronize_session="fetch")
             )
 
-        hourly_update_query = _update_query(_datetime_id_query("%H"), Interval.HOURLY)
-        weekly_update_query = _update_query(_datetime_id_query("%Y-%W"), Interval.WEEKLY)
-        daily_update_query = _update_query(_datetime_id_query("%Y-%j"), Interval.DAILY)
+        hourly_update_query = _update_query(_datetime_id_query("%H"), models.Interval.HOURLY)
+        weekly_update_query = _update_query(_datetime_id_query("%Y-%W"), models.Interval.WEEKLY)
+        daily_update_query = _update_query(_datetime_id_query("%Y-%j"), models.Interval.DAILY)
         session: Session
         with self.db_session() as session:
             session.execute(hourly_update_query)
@@ -188,23 +201,26 @@ class Database:
             session.execute(weekly_update_query)
             session.commit()
             time_diff = datetime.now() - relativedelta(days=1)
-            session.query(CoinValue).filter(
-                CoinValue.interval == Interval.MINUTELY, CoinValue.datetime < time_diff
+            session.query(models.CoinValue).filter(
+                models.CoinValue.interval == models.Interval.MINUTELY,
+                models.CoinValue.datetime < time_diff,
             ).delete()
             time_diff = datetime.now() - relativedelta(months=1)
-            session.query(CoinValue).filter(
-                CoinValue.interval == Interval.HOURLY, CoinValue.datetime < time_diff
+            session.query(models.CoinValue).filter(
+                models.CoinValue.interval == models.Interval.HOURLY,
+                models.CoinValue.datetime < time_diff,
             ).delete()
             time_diff = datetime.now() - relativedelta(years=1)
-            session.query(CoinValue).filter(
-                CoinValue.interval == Interval.DAILY, CoinValue.datetime < time_diff
+            session.query(models.CoinValue).filter(
+                models.CoinValue.interval == models.Interval.DAILY,
+                models.CoinValue.datetime < time_diff,
             ).delete()
 
-    def batch_update_coin_values(self, cv_batch: list[CoinValue]):
+    def batch_update_coin_values(self, cv_batch: list[models.CoinValue]):
         session: Session
         with self.db_session() as session:
             session.execute(
-                insert(CoinValue),
+                insert(models.CoinValue),
                 [
                     {
                         "coin_id": cv.coin.symbol,
@@ -232,7 +248,7 @@ class Database:
                     "other_coin_price": ls.optional_coin_price,
                     "datetime": dt,
                 }
-                session.execute(insert(ScoutHistory), sh)
+                session.execute(insert(models.ScoutHistory), sh)
                 self.send_update(sh)
 
     @heavy_call
@@ -240,7 +256,7 @@ class Database:
         dirty_cells = self.ratios_manager.get_dirty()
         if len(dirty_cells) == 0:
             return
-        pair_t = Pair.__table__
+        pair_t = models.Pair.__table__
         stmt = (
             pair_t.update()
             .where(pair_t.c.id == bindparam("pair_id"))
@@ -268,7 +284,7 @@ class TradeLog:
         self.db = db
         session: Session
         with self.db.db_session() as session:
-            self.trade = Trade(from_coin, to_coin, selling)
+            self.trade = models.Trade(from_coin, to_coin, selling)
             session.add(self.trade)
             session.flush()
             self.db.send_update(self.trade)
@@ -279,18 +295,18 @@ class TradeLog:
     ):
         session: Session
         with self.db.db_session() as session:
-            trade: Trade = session.merge(self.trade)
+            trade: models.Trade = session.merge(self.trade)
             trade.alt_starting_balance = alt_starting_balance
             trade.alt_trade_amount = alt_trade_amount
             trade.crypto_starting_balance = crypto_starting_balance
-            trade.state = TradeState.ORDERED
+            trade.state = models.TradeState.ORDERED
             self.db.send_update(trade)
 
     @no_type_check
     def set_complete(self, crypto_trade_amount: float):
         session: Session
         with self.db.db_session() as session:
-            trade: Trade = session.merge(self.trade)
+            trade: models.Trade = session.merge(self.trade)
             trade.crypto_trade_amount = crypto_trade_amount
-            trade.state = TradeState.COMPLETE
+            trade.state = models.TradeState.COMPLETE
             self.db.send_update(trade)
