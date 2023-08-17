@@ -136,7 +136,7 @@ class Database:
         with self.db_session() as session:
             if isinstance(coin, models.Coin):
                 coin = session.merge(coin)
-            cc = CurrentCoin(coin)  # type: ignore
+            cc = models.CurrentCoin(coin)  # type: ignore
             session.add(cc)
             self.send_update(cc)
 
