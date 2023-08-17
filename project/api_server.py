@@ -149,5 +149,5 @@ def trade_history():
 
 
 @sio.on("update", namespace="/backend")
-def on_update(msg: dict[str, str | dict[str, Any]]):
-    sio.emit("update", msg, namespace="/frontend")
+async def on_update(msg: dict[str, str | dict[str, Any]]):
+    await sio.emit("update", msg, namespace="/frontend")
