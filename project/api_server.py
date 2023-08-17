@@ -1,19 +1,22 @@
 # mypy: disable-error-code=annotation-unchecked
 from datetime import datetime
+from enum import Enum
 from itertools import groupby
 from typing import Any
 
+from dateutil.relativedelta import relativedelta
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi_socketio import SocketManager
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.query import Query
 
+from . import models
 from .config import CONFIG
 from .database import Database
 from .logger import DummyLogger
-from .models import Coin, CoinValue, CurrentCoin, Pair, ScoutHistory, Trade
 
 # Initialize FastAPI
 app = FastAPI()
@@ -29,6 +32,31 @@ sio = SocketManager(app)
 # Initialize database
 logger = DummyLogger()
 db = Database(logger, CONFIG)
+
+
+class Period(str, Enum):
+    SECOND = "s"
+    MINUTE = "m"
+    HOUR = "h"
+    DAY = "d"
+    WEEK = "w"
+    MONTH = "M"
+
+
+def filter_period(period: list[Period], query: Query, model: type[models.Base]) -> Query:
+    if Period.SECOND in period:
+        query = query.filter(model.datetime > datetime.now() - relativedelta(seconds=1))
+    if Period.MINUTE in period:
+        query = query.filter(model.datetime > datetime.now() - relativedelta(minutes=1))
+    if Period.HOUR in period:
+        query = query.filter(model.datetime > datetime.now() - relativedelta(hours=1))
+    if Period.DAY in period:
+        query = query.filter(model.datetime > datetime.now() - relativedelta(days=1))
+    if Period.WEEK in period:
+        query = query.filter(model.datetime > datetime.now() - relativedelta(weeks=1))
+    if Period.MONTH in period:
+        query = query.filter(model.datetime > datetime.now() - relativedelta(months=1))
+    return query
 
 
 @app.get("/")
@@ -47,7 +75,7 @@ def coins():
     session: Session
     with db.db_session() as session:
         _current_coin = session.merge(db.get_current_coin())
-        _coins: list[Coin] = session.query(Coin).all()
+        _coins: list[models.Coin] = session.query(models.Coin).all()
         return [{**coin.info(), "is_current": coin == _current_coin} for coin in _coins]
 
 
@@ -55,7 +83,7 @@ def coins():
 def pairs():
     session: Session
     with db.db_session() as session:
-        all_pairs: list[Pair] = session.query(Pair).all()
+        all_pairs: list[models.Pair] = session.query(models.Pair).all()
         return [pair.info() for pair in all_pairs]
 
 
@@ -63,9 +91,11 @@ def pairs():
 def value_history(coin: str | None = None):
     session: Session
     with db.db_session() as session:
-        query = session.query(CoinValue).order_by(CoinValue.coin_id.asc(), CoinValue.datetime.asc())
+        query = session.query(models.CoinValue).order_by(
+            models.CoinValue.coin_id.asc(), models.CoinValue.datetime.asc()
+        )
         if coin:
-            values: list[CoinValue] = query.filter(CoinValue.coin_id == coin).all()
+            values: list[models.CoinValue] = query.filter(models.CoinValue.coin_id == coin).all()
             return [entry.info() for entry in values]
         coin_values = groupby(query.all(), key=lambda cv: cv.coin)
         return {coin.symbol: [entry.info() for entry in history] for coin, history in coin_values}
@@ -76,10 +106,10 @@ def total_value_history():
     session: Session
     with db.db_session() as session:
         query = session.query(
-            CoinValue.datetime,
-            func.sum(CoinValue.btc_value),
-            func.sum(CoinValue.usd_value),
-        ).group_by(CoinValue.datetime)
+            models.CoinValue.datetime,
+            func.sum(models.CoinValue.btc_value),
+            func.sum(models.CoinValue.usd_value),
+        ).group_by(models.CoinValue.datetime)
         total_values: list[tuple[datetime, float, float]] = query.all()
         return [{"datetime": tv[0], "btc": tv[1], "usd": tv[2]} for tv in total_values]
 
@@ -88,8 +118,8 @@ def total_value_history():
 def current_coin_history():
     session: Session
     with db.db_session() as session:
-        query = session.query(CurrentCoin)
-        current_coins: list[CurrentCoin] = query.all()
+        query = session.query(models.CurrentCoin)
+        current_coins: list[models.CurrentCoin] = query.all()
         return [cc.info() for cc in current_coins]
 
 
@@ -100,12 +130,12 @@ def scouting_history():
     session: Session
     with db.db_session() as session:
         query = (
-            session.query(ScoutHistory)
-            .join(ScoutHistory.pair)
-            .filter(Pair.from_coin_id == coin)
-            .order_by(ScoutHistory.datetime.asc())
+            session.query(models.ScoutHistory)
+            .join(models.ScoutHistory.pair)
+            .filter(models.Pair.from_coin_id == coin)
+            .order_by(models.ScoutHistory.datetime.asc())
         )
-        scouts: list[ScoutHistory] = query.all()
+        scouts: list[models.ScoutHistory] = query.all()
         return [scout.info() for scout in scouts]
 
 
@@ -113,8 +143,8 @@ def scouting_history():
 def trade_history():
     session: Session
     with db.db_session() as session:
-        query = session.query(Trade).order_by(Trade.datetime.asc())
-        trades: list[Trade] = query.all()
+        query = session.query(models.Trade).order_by(models.Trade.datetime.asc())
+        trades: list[models.Trade] = query.all()
         return [trade.info() for trade in trades]
 
 
