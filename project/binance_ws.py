@@ -571,7 +571,7 @@ class StreamManagerWorker(Thread):
     async def arun(self):
         self.cache.attach_loop()
         client = await AsyncClient.create(
-            self.config.BINANCE_API_KEY, self.config.BINANCE_API_SECRET_KEY
+            self.config.BINANCE_API_KEY, self.config.BINANCE_API_SECRET_KEY, tld=self.config.TLD
         )
         depth_markets = [
             coin.lower() + self.config.BRIDGE.symbol.lower() for coin in self.config.WATCHLIST
@@ -588,7 +588,10 @@ class StreamManagerWorker(Thread):
             depth_cache_managers,
         )
         bwam = AsyncListenedBWAM(
-            async_context, output_default="UnicornFy", enable_stream_signal_buffer=True
+            async_context,
+            output_default="UnicornFy",
+            enable_stream_signal_buffer=True,
+            exchange=f"binance.{self.config.TLD}",
         )
         quotes = set(map(str.lower, [self.config.BRIDGE.symbol, "btc", "bnb"]))
         markets = [coin.lower() + quote for quote in quotes for coin in self.config.WATCHLIST]

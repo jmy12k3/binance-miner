@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     SCOUT_MARGIN: float = 0.8
     BINANCE_API_KEY: str
     BINANCE_API_SECRET_KEY: str
+    TLD: str = "com"
     WATCHLIST: str = ""
     STRATEGY: str = "default"
     ENABLE_PAPER_TRADING: bool
