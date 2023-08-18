@@ -43,7 +43,7 @@ class Period(str, Enum):
     MONTH = "M"
 
 
-def filter_period(period: list[Period], query: Query, model: type[models.Base]) -> Query:
+def filter_period(period: list[Period] | None, query: Query, model: type[models.Base]) -> Query:
     if Period.SECOND == period:
         query = query.filter(model.datetime > datetime.now() - relativedelta(seconds=1))
     if Period.MINUTE == period:
@@ -88,12 +88,13 @@ def pairs():
 
 
 @app.get("/api/v1/value_history")
-def value_history(coin: str | None = None):
+def value_history(period: list[Period] | None = None, coin: str | None = None):
     session: Session
     with db.db_session() as session:
         query = session.query(models.CoinValue).order_by(
             models.CoinValue.coin_id.asc(), models.CoinValue.datetime.asc()
         )
+        query = filter_period(period, query, models.CoinValue)
         if coin:
             values: list[models.CoinValue] = query.filter(models.CoinValue.coin_id == coin).all()
             return [entry.info() for entry in values]
@@ -102,7 +103,7 @@ def value_history(coin: str | None = None):
 
 
 @app.get("/api/v1/total_value_history")
-def total_value_history():
+def total_value_history(period: list[Period] | None = None):
     session: Session
     with db.db_session() as session:
         query = session.query(
@@ -110,21 +111,23 @@ def total_value_history():
             func.sum(models.CoinValue.btc_value),
             func.sum(models.CoinValue.usd_value),
         ).group_by(models.CoinValue.datetime)
+        query = filter_period(period, query, models.CoinValue)
         total_values: list[tuple[datetime, float, float]] = query.all()
         return [{"datetime": tv[0], "btc": tv[1], "usd": tv[2]} for tv in total_values]
 
 
 @app.get("/api/v1/current_coin_history")
-def current_coin_history():
+def current_coin_history(period: list[Period] | None = None):
     session: Session
     with db.db_session() as session:
         query = session.query(models.CurrentCoin)
+        query = filter_period(period, query, models.CurrentCoin)
         current_coins: list[models.CurrentCoin] = query.all()
         return [cc.info() for cc in current_coins]
 
 
 @app.get("/api/v1/scouting_history")
-def scouting_history():
+def scouting_history(period: list[Period] | None = None):
     _current_coin = db.get_current_coin()
     coin = _current_coin.symbol if _current_coin is not None else None
     session: Session
@@ -135,15 +138,17 @@ def scouting_history():
             .filter(models.Pair.from_coin_id == coin)
             .order_by(models.ScoutHistory.datetime.asc())
         )
+        query = filter_period(period, query, models.ScoutHistory)
         scouts: list[models.ScoutHistory] = query.all()
         return [scout.info() for scout in scouts]
 
 
 @app.get("/api/v1/trade_history")
-def trade_history():
+def trade_history(period: list[Period] | None = None):
     session: Session
     with db.db_session() as session:
         query = session.query(models.Trade).order_by(models.Trade.datetime.asc())
+        query = filter_period(period, query, models.Trade)
         trades: list[models.Trade] = query.all()
         return [trade.info() for trade in trades]
 
