@@ -42,7 +42,7 @@ def main():
         nonlocal exiting
         if not exiting:
             exiting = True
-            timeout_exit(10)  # Docker defaults to SIGKILL after 10 seconds
+            timeout_exit(10)  # Docker SIGTERM timeout is 10 seconds
             os._exit(0)
 
     # Hook exit_handler to SIGINT and SIGTERM
