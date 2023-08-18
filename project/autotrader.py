@@ -1,4 +1,4 @@
-# mypy: disable-error-code="annotation-unchecked, union-attr"
+# mypy: disable-error-code=annotation-unchecked
 import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
@@ -63,7 +63,7 @@ class AutoTrader(ABC):
         ratio_dict: dict[tuple[int, int], float] = {}
         price_amounts: dict[str, tuple[float, float]] = {}
         scout_logs = []
-        for to_idx, target_ratio in enumerate(self.db.ratios_manager.get_from_coin(coin.idx)):
+        for to_idx, target_ratio in enumerate(self.db.ratios_manager.get_from_coin(coin.idx)):  # type: ignore
             if coin.idx == to_idx:
                 continue
             to_coin = CoinStub.get_by_idx(to_idx)
@@ -95,7 +95,7 @@ class AutoTrader(ABC):
             if enable_scout_log:
                 scout_logs.append(
                     LogScout(
-                        self.db.ratios_manager.get_pair_id(coin.idx, to_idx),
+                        self.db.ratios_manager.get_pair_id(coin.idx, to_idx),  # type: ignore
                         ratio_dict[(coin.idx, to_coin.idx)],
                         target_ratio,
                         coin_sell_price,
@@ -143,7 +143,7 @@ class AutoTrader(ABC):
                         last_coin_amount,
                         last_coin_quote,
                     ):
-                        self.db.ratios_manager.rollback()
+                        self.db.ratios_manager.rollback()  # type: ignore
                         return
                 last_coin = new_best_coin
                 last_coin_buy_price, last_coin_amount = prices[last_coin.symbol]
@@ -241,7 +241,7 @@ class AutoTrader(ABC):
                     f"Update for coin {coin.symbol + self.config.BRIDGE.symbol} can't be performed, not enough orders in order book"
                 )
                 return False
-            self.db.ratios_manager.set(coin.idx, to_coin.idx, coin_price / to_coin_buy_price)
+            self.db.ratios_manager.set(coin.idx, to_coin.idx, coin_price / to_coin_buy_price)  # type: ignore
         if from_coin is not None:
             from_coin_buy_price, _ = self.manager.get_market_buy_price(
                 from_coin.symbol + self.config.BRIDGE.symbol, quote_amount
@@ -254,11 +254,11 @@ class AutoTrader(ABC):
                     f"Can't update reverse pair {to_coin.symbol}->{from_coin.symbol}, not enough orders in order book"
                 )
                 return False
-            self.db.ratios_manager.set(
+            self.db.ratios_manager.set(  # type: ignore
                 to_coin.idx,
                 from_coin.idx,
                 max(
-                    self.db.ratios_manager.get(to_coin.idx, from_coin.idx),
+                    self.db.ratios_manager.get(to_coin.idx, from_coin.idx),  # type: ignore
                     to_coin_sell_price / from_coin_buy_price,
                 ),
             )

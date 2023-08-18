@@ -1,4 +1,3 @@
-# mypy: disable-error-code=union-attr
 from __future__ import annotations
 
 import json
@@ -282,13 +281,13 @@ class BinanceAPIManager:
         return self.order_balance_manager.get_currency_balance(currency_symbol, force)
 
     def get_market_sell_price(self, symbol: str, amount: float):
-        return self.stream_manager.get_market_sell_price(symbol, amount)
+        return self.stream_manager.get_market_sell_price(symbol, amount)  # type: ignore
 
     def get_market_buy_price(self, symbol: str, quote_amount: float):
-        return self.stream_manager.get_market_buy_price(symbol, quote_amount)
+        return self.stream_manager.get_market_buy_price(symbol, quote_amount)  # type: ignore
 
     def get_market_sell_price_fill_quote(self, symbol: str, quote_amount: float):
-        return self.stream_manager.get_market_sell_price_fill_quote(symbol, quote_amount)
+        return self.stream_manager.get_market_sell_price_fill_quote(symbol, quote_amount)  # type: ignore
 
     @cached(cache=TTLCache(maxsize=1, ttl=43200))
     def get_trade_fees(self) -> dict[str, float]:
