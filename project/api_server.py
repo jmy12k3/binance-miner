@@ -8,7 +8,6 @@ from dateutil.relativedelta import relativedelta
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-from fastapi_socketio import SocketManager
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.query import Query
@@ -27,7 +26,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-sio = SocketManager(app)
 
 # Initialize database
 logger = DummyLogger("api_server")
@@ -152,8 +150,3 @@ def trade_history(period: Period | None = None):
         query = filter_period(period, query, models.Trade)
         trades: list[models.Trade] = query.all()
         return [trade.info() for trade in trades]
-
-
-@sio.on("update", namespace="/backend")
-async def on_update(msg: dict[str, str | models.Model]):
-    await sio.emit("update", msg, namespace="/frontend")

@@ -1,6 +1,5 @@
 cachetools==5.3.1
 fastapi==0.100.0
-fastapi-socketio==0.0.10
 gunicorn==21.2.0
 pydantic-settings==2.0.2
 python-binance==1.0.17
