@@ -146,7 +146,6 @@ class DepthCacheManager:
         self.logger = logger
 
     # XXX: Improve logging semantics
-
     async def _handle_data(self, data: dict[str, Any]):
         if data["final_update_id_in_event"] <= self.last_update_id:
             return
@@ -194,7 +193,6 @@ class DepthCacheManager:
         self.pending_reinit = False
 
     # XXX: Improve logging semantics
-
     async def process_signal(self, signal: dict[str, Any]):
         if signal["type"] == "CONNECT":
             self.logger.debug(f"OB: CONNECT arrived for symbol {self.symbol}")
@@ -405,7 +403,6 @@ class TickerListener(AsyncListener):
         super().__init__(BUFFER_NAME_MINITICKERS, async_context)
 
     # XXX: Improve logging semantics
-
     async def handle_data(self, data: dict[str, Any]):
         if "event_type" in data:
             if data["event_type"] == "24hrMiniTicker":
@@ -422,7 +419,6 @@ class UserDataListener(AsyncListener):
         super().__init__(BUFFER_NAME_USERDATA, async_context)
 
     # XXX: Improve logging semantics
-
     async def handle_data(self, data: dict[str, Any]):
         if "event_type" in data:
             event_type = data["event_type"]
@@ -446,7 +442,6 @@ class UserDataListener(AsyncListener):
             self.async_context.cache.balances_changed_event.set()
 
     # XXX: Improve logging semantics
-
     async def handle_signal(self, signal: dict[str, Any]):
         signal_type = signal["type"]
         if signal_type == "CONNECT":

@@ -1,13 +1,9 @@
 import importlib.util
 import os
-from collections.abc import Callable
-from typing import ParamSpec, TypeVar
-
-T = TypeVar("T")
-P = ParamSpec("P")
+from types import ModuleType
 
 
-def get_strategy(name: str) -> Callable[P, T] | None:
+def get_strategy(name: str) -> ModuleType | None:
     for dirpath, _, filenames in os.walk(os.path.dirname(__file__)):
         for strategy in filenames:
             if not (strategy.replace(name, "") == ".py" and strategy.endswith(".py")):
