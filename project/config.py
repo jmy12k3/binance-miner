@@ -1,19 +1,16 @@
 import os
 
-from easydict import EasyDict
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 
 from .models import Coin
 
 CONFIG_PATH = "config"
-ENV_PATH_NAME = os.path.join(CONFIG_PATH, ".env.production")
+ENV_PATH_NAME = os.path.join(CONFIG_PATH, "process.env")
 WATCHLIST_PATH_NAME = os.path.join(CONFIG_PATH, "watchlist.txt")
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=ENV_PATH_NAME, env_file_encoding="utf-8")
-
-    BRIDGE_SYMBOL: str
+    BRIDGE_SYMBOL: str = "USDT"
     SCOUT_HISTORY_PRUNE_TIME: float = 1
     SCOUT_MULTIPLIER: float = 5
     SCOUT_SLEEP_TIME: int = 1
@@ -27,7 +24,7 @@ class Settings(BaseSettings):
     PAPER_WALLET_BALANCE: float = 10_000
 
 
-settings = Settings()  # type: ignore
+settings = Settings(_env_file=ENV_PATH_NAME, _env_file_encoding="utf-8")  # type: ignore
 
 WATCHLIST = [coin.strip() for coin in settings.WATCHLIST.split() if coin.strip()]
 if not WATCHLIST and os.path.exists(WATCHLIST_PATH_NAME):
@@ -38,20 +35,11 @@ if not WATCHLIST and os.path.exists(WATCHLIST_PATH_NAME):
                 continue
             WATCHLIST.append(line)
 
-CONFIG: EasyDict = EasyDict(
-    {
-        "BRIDGE_SYMBOL": settings.BRIDGE_SYMBOL,
-        "BRIDGE": Coin(settings.BRIDGE_SYMBOL, enabled=False),
-        "SCOUT_HISTORY_PRUNE_TIME": settings.SCOUT_HISTORY_PRUNE_TIME,
-        "SCOUT_MULTIPLIER": settings.SCOUT_MULTIPLIER,
-        "SCOUT_SLEEP_TIME": settings.SCOUT_SLEEP_TIME,
-        "USE_MARGIN": settings.USE_MARGIN,
-        "SCOUT_MARGIN": settings.SCOUT_MARGIN,
-        "BINANCE_API_KEY": settings.BINANCE_API_KEY,
-        "BINANCE_API_SECRET_KEY": settings.BINANCE_API_SECRET_KEY,
-        "WATCHLIST": WATCHLIST,
-        "STRATEGY": settings.STRATEGY,
-        "ENABLE_PAPER_TRADING": settings.ENABLE_PAPER_TRADING,
-        "PAPER_WALLET_BALANCE": settings.PAPER_WALLET_BALANCE,
-    }
-)
+
+class Config:
+    def __init__(self):
+        self.BRIDGE = Coin(settings.BRIDGE_SYMBOL, enabled=False)
+        self.WATCHLIST = WATCHLIST
+
+    def __getattr__(self, name: str):
+        return getattr(settings, name)
