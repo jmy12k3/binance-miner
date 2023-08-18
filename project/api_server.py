@@ -18,7 +18,7 @@ from .config import Config
 from .database import Database
 from .logger import DummyLogger
 
-# Initialize FastAPI
+# Initialize FastAPI with CORS and SocketIO
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
