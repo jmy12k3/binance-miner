@@ -13,14 +13,16 @@ from .strategies import get_strategy
 
 
 def main():
-    # Instantiate logger, config, and database
+    # Initialize exit_handler flag
     exiting = False
+
+    # Initialize logger, config, and database
     logger = Logger("crypto_trading")
     logger.info("Starting")
     config = Config()
     db = Database(logger, config)
 
-    # Create manager
+    # Initialize manager
     if config.ENABLE_PAPER_TRADING:
         manager = BinanceAPIManager.create_manager_paper_trading(
             logger, config, db, {config.BRIDGE.symbol: config.PAPER_WALLET_BALANCE}
@@ -30,7 +32,7 @@ def main():
         manager = BinanceAPIManager.create_manager(logger, config, db)
         logger.info("Will be running in live trading mode")
 
-    # Create and hook exit handler
+    # Create exit_handler
     def timeout_exit(timeout: float | None = None):
         thread = Thread(target=manager.close)
         thread.start()
@@ -43,6 +45,7 @@ def main():
             timeout_exit(10)  # Docker defaults to SIGKILL after 10 seconds
             os._exit(0)
 
+    # Hook exit_handler to SIGINT and SIGTERM
     signal.signal(signal.SIGINT, exit_handler)
     signal.signal(signal.SIGTERM, exit_handler)
     atexit.register(exit_handler)
