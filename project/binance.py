@@ -127,7 +127,6 @@ class BinanceOrderBalanceManager(AbstractOrderBalanceManager):
         self.binance_client = binance_client
         self.cache = cache
 
-    # XXX: Improve logging semantics
     def get_currency_balance(self, currency_symbol: str, force: bool = False):
         with self.cache.open_balances() as cache_balances:
             balance = cache_balances.get(currency_symbol, None)
@@ -215,7 +214,6 @@ class BinanceAPIManager:
     def _setup_websockets(self):
         self.stream_manager = StreamManagerWorker.create(self.cache, self.config, self.logger)
 
-    # XXX: Improve logging semantics
     def _retry(self, func: Callable[P, T], *args, **kwargs) -> T | None:
         for attempt in range(20):
             try:
@@ -226,7 +224,6 @@ class BinanceAPIManager:
             time.sleep(1)
         return None
 
-    # XXX: Improve logging semantics
     def _buy_alt(self, origin_coin: str, target_coin: str, buy_price: float):
         origin_balance = self.get_currency_balance(origin_coin)
         target_balance = self.get_currency_balance(target_coin)
@@ -253,7 +250,6 @@ class BinanceAPIManager:
         write_trade_log()
         return order
 
-    # XXX: Improve logging semantics
     def _sell_alt(self, origin_coin: str, target_coin: str, sell_price: float):
         origin_balance = self.get_currency_balance(origin_coin)
         target_balance = self.get_currency_balance(target_coin)
@@ -337,7 +333,6 @@ class BinanceAPIManager:
     def get_account(self) -> Response:
         return self.binance_client.get_account()
 
-    # XXX: Improve logging semantics
     def get_ticker_price(self, ticker_symbol: str):
         price = self.cache.ticker_values.get(ticker_symbol, None)
         if price is None and ticker_symbol not in self.cache.non_existent_tickers:

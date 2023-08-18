@@ -145,7 +145,6 @@ class DepthCacheManager:
         self.last_update_id = -1
         self.logger = logger
 
-    # XXX: Improve logging semantics
     async def _handle_data(self, data: dict[str, Any]):
         if data["final_update_id_in_event"] <= self.last_update_id:
             return
@@ -176,7 +175,6 @@ class DepthCacheManager:
         for ask in msg["asks"]:
             self.depth_cache.add_ask(ask)
 
-    # XXX: Improve logging semantics
     async def reinit(self):
         self.pending_reinit = True
         self.depth_cache.clear()
@@ -192,7 +190,6 @@ class DepthCacheManager:
         self.last_update_id = res["lastUpdateId"]
         self.pending_reinit = False
 
-    # XXX: Improve logging semantics
     async def process_signal(self, signal: dict[str, Any]):
         if signal["type"] == "CONNECT":
             self.logger.debug(f"OB: CONNECT arrived for symbol {self.symbol}")
@@ -307,7 +304,6 @@ class AsyncListenerContext:
         buffer_name = self.resolver(stream_id)  # type: ignore
         asyncio.run_coroutine_threadsafe(self.queues[buffer_name].put(signal_data), self.loop)
 
-    # XXX: Improve logging semantics
     async def shutdown(self):
         self.logger.debug("prepare graceful loop shutdown")
         self.stopped = True
@@ -370,7 +366,6 @@ class AsyncListener(LoopExecutor):
     def is_stream_signal(obj: dict[str, Any]):
         return "type" in obj
 
-    # XXX: Improve logging semantics
     async def run_loop(self):
         while True:
             data = await self.async_context.queues[self.buffer_name].get()
@@ -402,7 +397,6 @@ class TickerListener(AsyncListener):
     def __init__(self, async_context: AsyncListenerContext):
         super().__init__(BUFFER_NAME_MINITICKERS, async_context)
 
-    # XXX: Improve logging semantics
     async def handle_data(self, data: dict[str, Any]):
         if "event_type" in data:
             if data["event_type"] == "24hrMiniTicker":
@@ -423,7 +417,6 @@ class UserDataListener(AsyncListener):
             balances.clear()
             self.async_context.cache.balances_changed_event.set()
 
-    # XXX: Improve logging semantics
     async def handle_data(self, data: dict[str, Any]):
         if "event_type" in data:
             event_type = data["event_type"]
@@ -441,7 +434,6 @@ class UserDataListener(AsyncListener):
                         balances[bal["asset"]] = float(bal["free"])
                     self.async_context.cache.balances_changed_event.set()
 
-    # XXX: Improve logging semantics
     async def handle_signal(self, signal: dict[str, Any]):
         signal_type = signal["type"]
         if signal_type == "CONNECT":

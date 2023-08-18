@@ -3,7 +3,6 @@ from project.ratios import CoinStub
 
 
 class Strategy(AutoTrader):
-    # XXX: Improve logging semantics
     def scout(self):
         for coin in CoinStub.get_all():
             current_coin_balance = self.manager.get_currency_balance(coin.symbol)

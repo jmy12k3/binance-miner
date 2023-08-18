@@ -52,7 +52,6 @@ class AutoTrader(ABC):
             time.sleep(1)
         return max_quote_amount
 
-    # XXX: Improve logging semantics
     def _get_ratios(
         self,
         coin: CoinStub,
@@ -106,7 +105,6 @@ class AutoTrader(ABC):
             self.db.batch_log_scout(scout_logs)
         return ratio_dict, price_amounts
 
-    # XXX: Improve logging semantics
     @postpone_heavy_calls
     def _jump_to_best_coin(
         self, coin: CoinStub, coin_sell_price: float, quote_amount: float, coin_amount: float
@@ -182,7 +180,6 @@ class AutoTrader(ABC):
     def initialize(self):
         self.initialize_trade_thresholds()
 
-    # XXX: Improve logging semantics
     def transaction_through_bridge(
         self, from_coin: CoinStub, to_coin: CoinStub, sell_price: float, buy_price: float
     ):
@@ -216,7 +213,6 @@ class AutoTrader(ABC):
         self.logger.info("Couldn't buy, going back to scouting mode...")
         return
 
-    # XXX: Improve logging semantics
     def update_trade_threshold(
         self,
         to_coin: CoinStub,
@@ -264,8 +260,7 @@ class AutoTrader(ABC):
             )
         return True
 
-    # XXX: C901
-    # XXX: Improve logging semantics
+    # FIXME: C901
     def initialize_trade_thresholds(self):
         ratios_manager = self.db.ratios_manager
         max_quote_amount = self._max_value_in_wallet()
@@ -313,7 +308,6 @@ class AutoTrader(ABC):
                     )
         self.db.commit_ratios()
 
-    # XXX: Improve logging semantics
     @postpone_heavy_calls
     def bridge_scout(self):
         bridge_balance = self.manager.get_currency_balance(self.config.BRIDGE.symbol)
