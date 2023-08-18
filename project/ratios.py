@@ -1,3 +1,4 @@
+# https://docs.sqlalchemy.org/en/20/orm/extensions/mypy.html
 # mypy: disable-error-code=call-overload
 from __future__ import annotations
 
