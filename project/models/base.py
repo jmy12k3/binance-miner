@@ -15,7 +15,7 @@ class Model(Protocol):
         ...
 
 
-class DTModel(Model):
+class DatetimeModel(Model):
     datetime: datetime
 
 

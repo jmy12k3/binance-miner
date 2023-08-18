@@ -42,7 +42,7 @@ class Period(str, Enum):
     MONTH = "M"
 
 
-def filter_period(period: Period | None, query: Query, model: type[models.DTModel]) -> Query:
+def filter_period(period: Period | None, query: Query, model: type[models.DatetimeModel]) -> Query:
     if Period.SECOND == period:
         query = query.filter(model.datetime > datetime.now() - relativedelta(seconds=1))
     if Period.MINUTE == period:
