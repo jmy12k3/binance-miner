@@ -8,15 +8,14 @@ from concurrent.futures import Future
 from contextlib import asynccontextmanager, contextmanager, suppress
 from threading import Event, Lock, Thread
 from types import TracebackType
-from typing import Annotated, ParamSpec, TypeVar
+from typing import ParamSpec, TypeVar
 
 from binance import AsyncClient
 from binance.exceptions import BinanceAPIException
-from easydict import EasyDict
 from sortedcontainers import SortedDict
 from unicorn_binance_websocket_api import BinanceWebSocketApiManager
 
-from .config import CONFIG
+from .config import Config
 from .logger import AbstractLogger
 
 T = TypeVar("T")
@@ -567,7 +566,7 @@ class StreamManagerWorker(Thread):
     def __init__(
         self,
         cache: BinanceCache,
-        config: Annotated[EasyDict, CONFIG],
+        config: Config,
         logger: AbstractLogger,
         fut: Future,
     ):
@@ -642,9 +641,7 @@ class StreamManagerWorker(Thread):
             asyncio.run(self.arun())
 
     @staticmethod
-    def create(
-        cache: BinanceCache, config: Annotated[EasyDict, CONFIG], logger: AbstractLogger
-    ) -> BinanceStreamManager:
+    def create(cache: BinanceCache, config: Config, logger: AbstractLogger) -> BinanceStreamManager:
         fut: Future = Future()
         execution_thread = StreamManagerWorker(cache, config, logger, fut)
         execution_thread.start()

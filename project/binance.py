@@ -9,15 +9,14 @@ import traceback
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable
-from typing import Annotated, ParamSpec, TypeVar
+from typing import ParamSpec, TypeVar
 
 from binance.client import Client
 from binance.exceptions import BinanceAPIException, BinanceOrderException, BinanceRequestException
 from cachetools import TTLCache, cached
-from easydict import EasyDict
 
 from .binance_ws import BinanceCache, BinanceOrder, BinanceStreamManager, StreamManagerWorker
-from .config import CONFIG
+from .config import Config
 from .database import Database
 from .logger import AbstractLogger
 from .postpone import heavy_call
@@ -154,7 +153,7 @@ class BinanceAPIManager:
         self,
         client: Client,
         cache: BinanceCache,
-        config: Annotated[EasyDict, CONFIG],
+        config: Config,
         db: Database,
         logger: AbstractLogger,
         order_balance_manager: AbstractOrderBalanceManager,
@@ -171,7 +170,7 @@ class BinanceAPIManager:
     @staticmethod
     def _common_factory(
         logger: AbstractLogger,
-        config: Annotated[EasyDict, CONFIG],
+        config: Config,
         db: Database,
         ob_factory: Callable[[Client, BinanceCache], AbstractOrderBalanceManager],
     ) -> BinanceAPIManager:
@@ -180,9 +179,7 @@ class BinanceAPIManager:
         return BinanceAPIManager(client, cache, config, db, logger, ob_factory(client, cache))
 
     @staticmethod
-    def create_manager(
-        logger: AbstractLogger, config: Annotated[EasyDict, CONFIG], db: Database
-    ) -> BinanceAPIManager:
+    def create_manager(logger: AbstractLogger, config: Config, db: Database) -> BinanceAPIManager:
         return BinanceAPIManager._common_factory(
             logger,
             config,
@@ -193,7 +190,7 @@ class BinanceAPIManager:
     @staticmethod
     def create_manager_paper_trading(
         logger: AbstractLogger,
-        config: Annotated[EasyDict, CONFIG],
+        config: Config,
         db: Database,
         initial_balances: dict[str, float],
     ) -> BinanceAPIManager:

@@ -3,13 +3,11 @@ import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from datetime import datetime
-from typing import Annotated
 
-from easydict import EasyDict
 from sqlalchemy.orm import Session
 
 from .binance import BinanceAPIManager
-from .config import CONFIG
+from .config import Config
 from .database import Database, LogScout
 from .logger import AbstractLogger
 from .models import CoinValue, Pair
@@ -21,7 +19,7 @@ class AutoTrader(ABC):
     def __init__(
         self,
         logger: AbstractLogger,
-        config: Annotated[EasyDict, CONFIG],
+        config: Config,
         database: Database,
         binance_manager: BinanceAPIManager,
     ):

@@ -3,16 +3,15 @@ import time
 from collections import namedtuple
 from contextlib import contextmanager
 from datetime import datetime
-from typing import Annotated, no_type_check
+from typing import no_type_check
 
 from dateutil.relativedelta import relativedelta
-from easydict import EasyDict
 from socketio import Client, exceptions
 from sqlalchemy import bindparam, create_engine, func, insert, select, update
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
 from . import models
-from .config import CONFIG
+from .config import Config
 from .logger import AbstractLogger
 from .postpone import heavy_call
 from .ratios import CoinStub, RatiosManager
@@ -24,15 +23,15 @@ LogScout = namedtuple(
 
 class Database:
     # URL for SQLite database
-    URL = "sqlite:///data/crypto_trading.db"
+    DB = "sqlite:///data/crypto_trading.db"
 
     # URL for API server deployed in Docker
     API = "http://api:5000"
 
-    def __init__(self, logger: AbstractLogger, config: Annotated[EasyDict, CONFIG]):
+    def __init__(self, logger: AbstractLogger, config: Config):
         self.logger = logger
         self.config = config
-        self.engine = create_engine(self.URL, future=True)
+        self.engine = create_engine(self.DB, future=True)
         self.session_factory = scoped_session(sessionmaker(self.engine))
         self.socketio_client = Client()
         self.ratios_manager: RatiosManager | None = None
