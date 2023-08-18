@@ -1,4 +1,5 @@
-# mypy: disable-error-code=annotation-unchecked
+# https://github.com/python/mypy/issues/5570
+# mypy: disable-error-code="annotation-unchecked, arg-type"
 from datetime import datetime
 from enum import Enum
 from itertools import groupby
@@ -29,7 +30,7 @@ app.add_middleware(
 sio = SocketManager(app)
 
 # Initialize database
-logger = DummyLogger()
+logger = DummyLogger("api_server")
 config = Config()
 db = Database(logger, config)
 
@@ -43,7 +44,7 @@ class Period(str, Enum):
     MONTH = "M"
 
 
-def filter_period(period: list[Period] | None, query: Query, model: type[models.Base]) -> Query:
+def filter_period(period: Period | None, query: Query, model: type[models.DatetimeModel]) -> Query:
     if Period.SECOND == period:
         query = query.filter(model.datetime > datetime.now() - relativedelta(seconds=1))
     if Period.MINUTE == period:
@@ -59,8 +60,8 @@ def filter_period(period: list[Period] | None, query: Query, model: type[models.
     return query
 
 
-@app.get("/")
-async def docs_redirect():
+@app.get("/", include_in_schema=False)
+async def redirect_to_docs():
     return RedirectResponse(url="/docs")
 
 
@@ -88,7 +89,7 @@ def pairs():
 
 
 @app.get("/api/v1/value_history")
-def value_history(period: list[Period] | None = None, coin: str | None = None):
+def value_history(period: Period | None = None, coin: str | None = None):
     session: Session
     with db.db_session() as session:
         query = session.query(models.CoinValue).order_by(
@@ -103,7 +104,7 @@ def value_history(period: list[Period] | None = None, coin: str | None = None):
 
 
 @app.get("/api/v1/total_value_history")
-def total_value_history(period: list[Period] | None = None):
+def total_value_history(period: Period | None = None):
     session: Session
     with db.db_session() as session:
         query = session.query(
@@ -117,7 +118,7 @@ def total_value_history(period: list[Period] | None = None):
 
 
 @app.get("/api/v1/current_coin_history")
-def current_coin_history(period: list[Period] | None = None):
+def current_coin_history(period: Period | None = None):
     session: Session
     with db.db_session() as session:
         query = session.query(models.CurrentCoin)
@@ -127,7 +128,7 @@ def current_coin_history(period: list[Period] | None = None):
 
 
 @app.get("/api/v1/scouting_history")
-def scouting_history(period: list[Period] | None = None):
+def scouting_history(period: Period | None = None):
     _current_coin = db.get_current_coin()
     coin = _current_coin.symbol if _current_coin is not None else None
     session: Session
@@ -144,7 +145,7 @@ def scouting_history(period: list[Period] | None = None):
 
 
 @app.get("/api/v1/trade_history")
-def trade_history(period: list[Period] | None = None):
+def trade_history(period: Period | None = None):
     session: Session
     with db.db_session() as session:
         query = session.query(models.Trade).order_by(models.Trade.datetime.asc())
@@ -154,5 +155,5 @@ def trade_history(period: list[Period] | None = None):
 
 
 @sio.on("update", namespace="/backend")
-async def on_update(msg: dict[str, models.Info]):
+async def on_update(msg: dict[str, str | models.Model]):
     await sio.emit("update", msg, namespace="/frontend")
