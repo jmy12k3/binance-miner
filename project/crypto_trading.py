@@ -11,8 +11,6 @@ from .logger import Logger
 from .scheduler import SafeScheduler
 from .strategies import get_strategy
 
-TIMEOUT = 10
-
 
 def main():
     # Instantiate logger, config, and database
@@ -69,7 +67,8 @@ def main():
 
     # Warmup database
     db.set_coins(config.WATCHLIST)
-    time.sleep(TIMEOUT)
+    logger.info("Sleeping for 10 seconds to let order book to fill up")
+    time.sleep(10)
     trader.initialize()
 
     # Initialize scheduler
