@@ -28,90 +28,9 @@ class AutoTrader(ABC):
         self.db = database
         self.manager = binance_manager
 
-    def initialize(self):
-        self.initialize_trade_thresholds()
-
-    # XXX: Improve logging semantics
-    def transaction_through_bridge(
-        self, from_coin: CoinStub, to_coin: CoinStub, sell_price: float, buy_price: float
-    ):
-        to_coin_original_amount = self.manager.get_currency_balance(to_coin.symbol)
-        if self.manager.sell_alt(from_coin.symbol, self.config.BRIDGE.symbol, sell_price) is None:
-            self.logger.error(
-                f"Market sell failed, from_coin: {from_coin.symbol}, to_coin: {to_coin.symbol}, sell_price: {sell_price}"
-            )
-        result = self.manager.buy_alt(to_coin.symbol, self.config.BRIDGE.symbol, buy_price)
-        if result is not None:
-            self.db.set_current_coin(to_coin.symbol)
-            price = result.price
-            if abs(price) < 1e-15:
-                price = result.cumulative_quote_qty / result.cumulative_filled_quantity
-            update_successful = False
-            while not update_successful:
-                to_coin_amount = self.manager.get_currency_balance(to_coin.symbol)
-                while to_coin_original_amount >= to_coin_amount:
-                    balances_changed = self.manager.cache.balances_changed_event.wait(1.0)
-                    self.manager.cache.balances_changed_event.clear()
-                    to_coin_amount = self.manager.get_currency_balance(
-                        to_coin.symbol, force=(not balances_changed)
-                    )
-                update_successful = self.update_trade_threshold(
-                    to_coin, from_coin, price, to_coin_amount, result.cumulative_quote_qty
-                )
-                if not update_successful:
-                    self.logger.info("Update of ratios failed, retry in 1s")
-                    time.sleep(1)
-            return result
-        self.logger.info("Couldn't buy, going back to scouting mode...")
-        return
-
-    # XXX: Improve logging semantics
-    def update_trade_threshold(
-        self,
-        to_coin: CoinStub,
-        from_coin: CoinStub | None,
-        to_coin_buy_price: float,
-        to_coin_amount: float,
-        quote_amount: float,
-    ):
-        if to_coin_buy_price is None:
-            self.logger.info(
-                f"Skipping update... current coin {to_coin.symbol + self.config.BRIDGE.symbol} not found"
-            )
-            return False
-        for coin in CoinStub.get_all():
-            if coin is to_coin:
-                continue
-            coin_price, _ = self.manager.get_market_sell_price_fill_quote(
-                coin.symbol + self.config.BRIDGE.symbol, quote_amount
-            )
-            if coin_price is None:
-                self.logger.info(
-                    f"Update for coin {coin.symbol + self.config.BRIDGE.symbol} can't be performed, not enough orders in order book"
-                )
-                return False
-            self.db.ratios_manager.set(coin.idx, to_coin.idx, coin_price / to_coin_buy_price)
-        if from_coin is not None:
-            from_coin_buy_price, _ = self.manager.get_market_buy_price(
-                from_coin.symbol + self.config.BRIDGE.symbol, quote_amount
-            )
-            to_coin_sell_price, _ = self.manager.get_market_sell_price(
-                to_coin.symbol + self.config.BRIDGE.symbol, to_coin_amount
-            )
-            if from_coin_buy_price is None or to_coin_sell_price is None:
-                self.logger.info(
-                    f"Can't update reverse pair {to_coin.symbol}->{from_coin.symbol}, not enough orders in order book"
-                )
-                return False
-            self.db.ratios_manager.set(
-                to_coin.idx,
-                from_coin.idx,
-                max(
-                    self.db.ratios_manager.get(to_coin.idx, from_coin.idx),
-                    to_coin_sell_price / from_coin_buy_price,
-                ),
-            )
-        return True
+    @abstractmethod
+    def scout(self):
+        ...
 
     def _max_value_in_wallet(self):
         balances = {
@@ -132,59 +51,6 @@ class AutoTrader(ABC):
                 break
             time.sleep(1)
         return max_quote_amount
-
-    # XXX: C901
-    # XXX: Improve logging semantics
-    def initialize_trade_thresholds(self):
-        ratios_manager = self.db.ratios_manager
-        max_quote_amount = self._max_value_in_wallet()
-        session: Session
-        with self.db.db_session() as session:
-            pairs = session.query(Pair).filter(Pair.ratio.is_(None)).all()
-            grouped_pairs = defaultdict(list)
-            for pair in pairs:
-                if pair.from_coin.enabled and pair.to_coin.enabled:
-                    grouped_pairs[pair.from_coin.symbol].append(pair)
-            for from_coin_symbol, group in grouped_pairs.items():
-                from_coin_idx = CoinStub.get_by_symbol(from_coin_symbol).idx
-                self.logger.info(
-                    f"Initializing {from_coin_symbol} vs [{', '.join([p.to_coin.symbol for p in group])}]"
-                )
-                for pair in group:
-                    for _ in range(10):
-                        from_coin_price, _ = self.manager.get_market_sell_price_fill_quote(
-                            from_coin_symbol + self.config.BRIDGE.symbol, max_quote_amount
-                        )
-                        if from_coin_price is not None:
-                            break
-                        time.sleep(1)
-                    if from_coin_price is None:
-                        self.logger.info(
-                            f"Skipping initializing {pair.from_coin + self.config.BRIDGE}, symbol not found"
-                        )
-                        continue
-                    for _ in range(10):
-                        to_coin_price, _ = self.manager.get_market_buy_price(
-                            pair.to_coin.symbol + self.config.BRIDGE.symbol, max_quote_amount
-                        )
-                        if to_coin_price is not None:
-                            break
-                        time.sleep(10)
-                    if to_coin_price is None:
-                        self.logger.info(
-                            f"Skipping initializing {pair.to_coin + self.config.BRIDGE}, symbol not found"
-                        )
-                        continue
-                    ratios_manager.set(
-                        from_coin_idx,
-                        CoinStub.get_by_symbol(pair.to_coin.symbol).idx,
-                        from_coin_price / to_coin_price,
-                    )
-        self.db.commit_ratios()
-
-    @abstractmethod
-    def scout(self):
-        ...
 
     # XXX: Improve logging semantics
     def _get_ratios(
@@ -312,6 +178,140 @@ class AutoTrader(ABC):
             else:
                 self.update_trade_threshold(coin, None, coin_sell_price, 0, quote_amount)
                 self.logger.info(f"Eliminated jump loop from {coin.symbol} to {coin.symbol}")
+
+    def initialize(self):
+        self.initialize_trade_thresholds()
+
+    # XXX: Improve logging semantics
+    def transaction_through_bridge(
+        self, from_coin: CoinStub, to_coin: CoinStub, sell_price: float, buy_price: float
+    ):
+        to_coin_original_amount = self.manager.get_currency_balance(to_coin.symbol)
+        if self.manager.sell_alt(from_coin.symbol, self.config.BRIDGE.symbol, sell_price) is None:
+            self.logger.error(
+                f"Market sell failed, from_coin: {from_coin.symbol}, to_coin: {to_coin.symbol}, sell_price: {sell_price}"
+            )
+        result = self.manager.buy_alt(to_coin.symbol, self.config.BRIDGE.symbol, buy_price)
+        if result is not None:
+            self.db.set_current_coin(to_coin.symbol)
+            price = result.price
+            if abs(price) < 1e-15:
+                price = result.cumulative_quote_qty / result.cumulative_filled_quantity
+            update_successful = False
+            while not update_successful:
+                to_coin_amount = self.manager.get_currency_balance(to_coin.symbol)
+                while to_coin_original_amount >= to_coin_amount:
+                    balances_changed = self.manager.cache.balances_changed_event.wait(1.0)
+                    self.manager.cache.balances_changed_event.clear()
+                    to_coin_amount = self.manager.get_currency_balance(
+                        to_coin.symbol, force=(not balances_changed)
+                    )
+                update_successful = self.update_trade_threshold(
+                    to_coin, from_coin, price, to_coin_amount, result.cumulative_quote_qty
+                )
+                if not update_successful:
+                    self.logger.info("Update of ratios failed, retry in 1s")
+                    time.sleep(1)
+            return result
+        self.logger.info("Couldn't buy, going back to scouting mode...")
+        return
+
+    # XXX: Improve logging semantics
+    def update_trade_threshold(
+        self,
+        to_coin: CoinStub,
+        from_coin: CoinStub | None,
+        to_coin_buy_price: float,
+        to_coin_amount: float,
+        quote_amount: float,
+    ):
+        if to_coin_buy_price is None:
+            self.logger.info(
+                f"Skipping update... current coin {to_coin.symbol + self.config.BRIDGE.symbol} not found"
+            )
+            return False
+        for coin in CoinStub.get_all():
+            if coin is to_coin:
+                continue
+            coin_price, _ = self.manager.get_market_sell_price_fill_quote(
+                coin.symbol + self.config.BRIDGE.symbol, quote_amount
+            )
+            if coin_price is None:
+                self.logger.info(
+                    f"Update for coin {coin.symbol + self.config.BRIDGE.symbol} can't be performed, not enough orders in order book"
+                )
+                return False
+            self.db.ratios_manager.set(coin.idx, to_coin.idx, coin_price / to_coin_buy_price)
+        if from_coin is not None:
+            from_coin_buy_price, _ = self.manager.get_market_buy_price(
+                from_coin.symbol + self.config.BRIDGE.symbol, quote_amount
+            )
+            to_coin_sell_price, _ = self.manager.get_market_sell_price(
+                to_coin.symbol + self.config.BRIDGE.symbol, to_coin_amount
+            )
+            if from_coin_buy_price is None or to_coin_sell_price is None:
+                self.logger.info(
+                    f"Can't update reverse pair {to_coin.symbol}->{from_coin.symbol}, not enough orders in order book"
+                )
+                return False
+            self.db.ratios_manager.set(
+                to_coin.idx,
+                from_coin.idx,
+                max(
+                    self.db.ratios_manager.get(to_coin.idx, from_coin.idx),
+                    to_coin_sell_price / from_coin_buy_price,
+                ),
+            )
+        return True
+
+    # XXX: C901
+    # XXX: Improve logging semantics
+    def initialize_trade_thresholds(self):
+        ratios_manager = self.db.ratios_manager
+        max_quote_amount = self._max_value_in_wallet()
+        session: Session
+        with self.db.db_session() as session:
+            pairs = session.query(Pair).filter(Pair.ratio.is_(None)).all()
+            grouped_pairs = defaultdict(list)
+            for pair in pairs:
+                if pair.from_coin.enabled and pair.to_coin.enabled:
+                    grouped_pairs[pair.from_coin.symbol].append(pair)
+            for from_coin_symbol, group in grouped_pairs.items():
+                from_coin_idx = CoinStub.get_by_symbol(from_coin_symbol).idx
+                self.logger.info(
+                    f"Initializing {from_coin_symbol} vs [{', '.join([p.to_coin.symbol for p in group])}]"
+                )
+                for pair in group:
+                    for _ in range(10):
+                        from_coin_price, _ = self.manager.get_market_sell_price_fill_quote(
+                            from_coin_symbol + self.config.BRIDGE.symbol, max_quote_amount
+                        )
+                        if from_coin_price is not None:
+                            break
+                        time.sleep(1)
+                    if from_coin_price is None:
+                        self.logger.info(
+                            f"Skipping initializing {pair.from_coin + self.config.BRIDGE}, symbol not found"
+                        )
+                        continue
+                    for _ in range(10):
+                        to_coin_price, _ = self.manager.get_market_buy_price(
+                            pair.to_coin.symbol + self.config.BRIDGE.symbol, max_quote_amount
+                        )
+                        if to_coin_price is not None:
+                            break
+                        time.sleep(10)
+                    if to_coin_price is None:
+                        self.logger.info(
+                            f"Skipping initializing {pair.to_coin + self.config.BRIDGE}, symbol not found"
+                        )
+                        continue
+                    ratios_manager.set(
+                        from_coin_idx,
+                        CoinStub.get_by_symbol(pair.to_coin.symbol).idx,
+                        from_coin_price / to_coin_price,
+                    )
+        self.db.commit_ratios()
 
     # XXX: Improve logging semantics
     @postpone_heavy_calls

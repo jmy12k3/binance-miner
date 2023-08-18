@@ -370,12 +370,6 @@ class AsyncListener(LoopExecutor):
     def is_stream_signal(obj: dict[str, Any]):
         return "type" in obj
 
-    async def handle_signal(self, signal: dict[str, Any]):
-        ...
-
-    async def handle_data(self, data: dict[str, Any]):
-        ...
-
     # XXX: Improve logging semantics
     async def run_loop(self):
         while True:
@@ -396,6 +390,12 @@ class AsyncListener(LoopExecutor):
                 await self.handle_signal(data)
             else:
                 await self.handle_data(data)
+
+    async def handle_signal(self, signal: dict[str, Any]):
+        ...
+
+    async def handle_data(self, data: dict[str, Any]):
+        ...
 
 
 class TickerListener(AsyncListener):
@@ -418,6 +418,11 @@ class UserDataListener(AsyncListener):
     def __init__(self, async_context: AsyncListenerContext):
         super().__init__(BUFFER_NAME_USERDATA, async_context)
 
+    async def _invalidate_balances(self):
+        async with self.async_context.cache.open_balances_async() as balances:
+            balances.clear()
+            self.async_context.cache.balances_changed_event.set()
+
     # XXX: Improve logging semantics
     async def handle_data(self, data: dict[str, Any]):
         if "event_type" in data:
@@ -435,11 +440,6 @@ class UserDataListener(AsyncListener):
                     for bal in data["balances"]:
                         balances[bal["asset"]] = float(bal["free"])
                     self.async_context.cache.balances_changed_event.set()
-
-    async def _invalidate_balances(self):
-        async with self.async_context.cache.open_balances_async() as balances:
-            balances.clear()
-            self.async_context.cache.balances_changed_event.set()
 
     # XXX: Improve logging semantics
     async def handle_signal(self, signal: dict[str, Any]):

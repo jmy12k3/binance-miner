@@ -126,9 +126,6 @@ class BinanceOrderBalanceManager(AbstractOrderBalanceManager):
         self.binance_client = binance_client
         self.cache = cache
 
-    def create_order(self, **params):
-        return self.binance_client.create_order(**params)
-
     # XXX: Improve logging semantics
     def get_currency_balance(self, currency_symbol: str, force: bool = False):
         with self.cache.open_balances() as cache_balances:
@@ -147,6 +144,9 @@ class BinanceOrderBalanceManager(AbstractOrderBalanceManager):
                     return 0.0
                 return cache_balances.get(currency_symbol, 0.0)
             return balance
+
+    def create_order(self, **params):
+        return self.binance_client.create_order(**params)
 
 
 class BinanceAPIManager:
