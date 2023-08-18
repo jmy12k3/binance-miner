@@ -34,7 +34,7 @@ def main():
     def timeout_exit():
         thread = Thread(target=manager.close)
         thread.start()
-        thread.join(10)
+        thread.join(10)  # Docker defaults to SIGKILL after 10 seconds
 
     def exit_handler(*_):
         nonlocal exiting
@@ -68,7 +68,7 @@ def main():
     # Warmup database
     db.set_coins(config.WATCHLIST)
     logger.info("Sleeping for 10 seconds to let order book to fill up")
-    time.sleep(10)
+    time.sleep(10)  # 10 seconds is just a arbitrary number
     trader.initialize()
 
     # Initialize scheduler
