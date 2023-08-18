@@ -343,7 +343,7 @@ class AutoTrader(ABC):
 
     def update_values(self):
         now = datetime.now()
-        coins = self.db.get_coins(False)
+        coins = self.db.get_coins(only_enabled=False)
         cv_batch = []
         for coin in coins:
             balance = self.manager.get_currency_balance(coin.symbol)
