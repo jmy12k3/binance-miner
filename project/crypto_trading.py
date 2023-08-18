@@ -57,6 +57,7 @@ def main():
     # Get strategy
     strategy = get_strategy(config.STRATEGY)
     if not strategy:
+        logger.info(f"Invalid strategy: {config.STRATEGY}")
         return
     trader = strategy(logger, config, db, manager)
     logger.info(f"Chosen strategy: {config.STRATEGY}")
