@@ -15,14 +15,14 @@ TIMEOUT = 10
 
 
 def main():
-    # Initialize base modules (logger, config, and database)
+    # Instantiate logger, config, and database
     exiting = False
     logger = Logger("crypto_trading")
     logger.info("Starting")
     config = Config()
     db = Database(logger, config)
 
-    # Initialize manager
+    # Create manager
     if config.ENABLE_PAPER_TRADING:
         manager = BinanceAPIManager.create_manager_paper_trading(
             logger, config, db, {config.BRIDGE.symbol: config.PAPER_WALLET_BALANCE}
@@ -32,7 +32,7 @@ def main():
         manager = BinanceAPIManager.create_manager(logger, config, db)
         logger.info("Will be running in live trading mode")
 
-    # Initialize exit handler
+    # Create and hook exit handler
     def timeout_exit():
         thread = Thread(target=manager.close)
         thread.start()
@@ -56,7 +56,7 @@ def main():
         logger.error(e)
         return
 
-    # Initialize strategy
+    # Get strategy
     strategy = get_strategy(config.STRATEGY)
     if not strategy:
         return
