@@ -8,13 +8,12 @@ from concurrent.futures import Future
 from contextlib import asynccontextmanager, contextmanager, suppress
 from threading import Event, Lock, Thread
 from types import TracebackType
-from typing import Annotated, TypeVar
+from typing import Annotated, ParamSpec, TypeVar
 
 from binance import AsyncClient
 from binance.exceptions import BinanceAPIException
 from easydict import EasyDict
 from sortedcontainers import SortedDict
-from typing_extensions import ParamSpec
 from unicorn_binance_websocket_api import BinanceWebSocketApiManager
 
 from .config import CONFIG

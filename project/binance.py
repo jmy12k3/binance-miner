@@ -9,13 +9,12 @@ import traceback
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable
-from typing import Annotated, TypeVar
+from typing import Annotated, ParamSpec, TypeVar
 
 from binance.client import Client
 from binance.exceptions import BinanceAPIException, BinanceOrderException, BinanceRequestException
 from cachetools import TTLCache, cached
 from easydict import EasyDict
-from typing_extensions import ParamSpec
 
 from .binance_ws import BinanceCache, BinanceOrder, BinanceStreamManager, StreamManagerWorker
 from .config import CONFIG

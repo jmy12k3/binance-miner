@@ -1,9 +1,7 @@
 import importlib.util
 import os
 from collections.abc import Callable
-from typing import TypeVar
-
-from typing_extensions import ParamSpec
+from typing import ParamSpec, TypeVar
 
 T = TypeVar("T")
 P = ParamSpec("P")
