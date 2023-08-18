@@ -1,9 +1,9 @@
-# mypy: disable-error-code=annotation-unchecked
+# https://github.com/python/mypy/issues/5570
+# mypy: disable-error-code="annotation-unchecked, arg-type, assignment"
 import time
 from collections import namedtuple
 from contextlib import contextmanager
 from datetime import datetime
-from typing import no_type_check
 
 from dateutil.relativedelta import relativedelta
 from socketio import Client, exceptions
@@ -26,7 +26,7 @@ class Database:
     DB = "sqlite:///data/crypto_trading.db"
 
     # URL for API server deployed in Docker
-    API = "http://api:5000"
+    API = "http://localhost:5000"
 
     def __init__(self, logger: AbstractLogger, config: Config):
         self.logger = logger
@@ -55,7 +55,6 @@ class Database:
         except exceptions.ConnectionError:
             return False
 
-    @no_type_check
     def set_coins(self, symbols: list[str]):
         session: Session
         with self.db_session() as session:
@@ -71,7 +70,7 @@ class Database:
                     coin.enabled = True
         CoinStub.reset()
         with self.db_session() as session:
-            coins: list[models.Coin] = (
+            coins: list[models.Coin] = (  # type: ignore
                 session.query(models.Coin)
                 .filter(models.Coin.enabled)
                 .order_by(models.Coin.symbol)
@@ -229,8 +228,10 @@ class Database:
         return TradeLog(self, from_coin, to_coin, selling)
 
     def send_update(self, model):
+        self.logger.info("ATTEMPTING TO UPDATE")
         if not self._api_session():
             return
+        self.logger.info("SENDING")
         self.socketio_client.emit(
             "update", {"table": model.__tablename__, "data": model.info()}, "/backend"
         )
@@ -288,7 +289,6 @@ class TradeLog:
             session.flush()
             self.db.send_update(self.trade)
 
-    @no_type_check
     def set_ordered(
         self, alt_starting_balance: float, crypto_starting_balance: float, alt_trade_amount: float
     ):
@@ -301,7 +301,6 @@ class TradeLog:
             trade.state = models.TradeState.ORDERED
             self.db.send_update(trade)
 
-    @no_type_check
     def set_complete(self, crypto_trade_amount: float):
         session: Session
         with self.db.db_session() as session:
