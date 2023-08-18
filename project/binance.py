@@ -14,6 +14,7 @@ from typing import ParamSpec, TypeVar
 from binance.client import Client
 from binance.exceptions import BinanceAPIException, BinanceOrderException, BinanceRequestException
 from cachetools import TTLCache, cached
+from requests import Response
 
 from .binance_ws import BinanceCache, BinanceOrder, BinanceStreamManager, StreamManagerWorker
 from .config import Config
@@ -289,9 +290,8 @@ class BinanceAPIManager:
     def get_market_sell_price_fill_quote(self, symbol: str, quote_amount: float):
         return self.stream_manager.get_market_sell_price_fill_quote(symbol, quote_amount)
 
-    # XXX: Specify type hint of return value
     @cached(cache=TTLCache(maxsize=1, ttl=43200))
-    def get_trade_fees(self):
+    def get_trade_fees(self) -> dict[str, float]:
         return {
             ticker["symbol"]: float(ticker["takerCommission"])
             for ticker in self.binance_client.get_trade_fee()
@@ -327,8 +327,7 @@ class BinanceAPIManager:
         if self.stream_manager:
             self.stream_manager.close()
 
-    # XXX: Specify type hint of return value
-    def get_account(self):
+    def get_account(self) -> Response:
         return self.binance_client.get_account()
 
     # XXX: Improve logging semantics
@@ -348,8 +347,7 @@ class BinanceAPIManager:
                 self.cache.non_existent_tickers.add(ticker_symbol)
         return price
 
-    # XXX: Specify type hint of return value
-    def get_symbol_filter(self, origin_symbol: str, target_symbol: str, filter_type: str):
+    def get_symbol_filter(self, origin_symbol: str, target_symbol: str, filter_type: str) -> dict:
         return next(
             _filter
             for _filter in self.binance_client.get_symbol_info(origin_symbol + target_symbol)[
