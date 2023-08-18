@@ -1,3 +1,4 @@
+# https://docs.sqlalchemy.org/en/20/orm/extensions/mypy.html
 # mypy: disable-error-code=assignment
 from sqlalchemy import Column, Float, ForeignKey, Integer, String, func, or_, select
 from sqlalchemy.orm import MappedSQLExpression, column_property, relationship

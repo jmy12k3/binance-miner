@@ -1,3 +1,4 @@
+# https://docs.sqlalchemy.org/en/20/orm/extensions/mypy.html
 # mypy: disable-error-code=assignment
 import enum
 from datetime import datetime
