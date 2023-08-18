@@ -25,8 +25,8 @@ class Database:
     # URL for SQLite database
     DB = "sqlite:///data/crypto_trading.db"
 
-    # URL for API server deployed in Docker
-    API = "http://localhost:5000"
+    # URL for FastAPI deployed in Docker
+    API = "http://api:5000"
 
     def __init__(self, logger: AbstractLogger, config: Config):
         self.logger = logger
@@ -231,11 +231,9 @@ class Database:
     def start_trade_log(self, from_coin: str, to_coin: str, selling: bool):
         return TradeLog(self, from_coin, to_coin, selling)
 
-    def send_update(self, model):
-        self.logger.info("ATTEMPTING TO UPDATE")
+    def send_update(self, model: models.Model):
         if not self._api_session():
             return
-        self.logger.info("SENDING")
         self.socketio_client.emit(
             "update", {"table": model.__tablename__, "data": model.info()}, "/backend"
         )

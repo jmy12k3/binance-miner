@@ -9,11 +9,13 @@ class Base:
 
 
 class Model(Protocol):
+    __tablename__: str
+
     def info(self):
         ...
 
 
-class DatetimeModel(Model):
+class DTModel(Model):
     datetime: datetime
 
 
