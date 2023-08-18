@@ -7,7 +7,7 @@ from .models import Coin
 CONFIG_PATH = "config"
 ENV_PATH_NAME = os.path.join(CONFIG_PATH, "process.env")
 
-# TODO: Consider fully remove watchlist.txt and use WATCHLIST env variable only
+# XXX: Consider fully remove watchlist.txt and use WATCHLIST env variable only
 WATCHLIST_PATH_NAME = os.path.join(CONFIG_PATH, "watchlist.txt")
 
 
@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
 settings = Settings(_env_file=ENV_PATH_NAME, _env_file_encoding="utf-8")  # type: ignore
 
-# TODO: Consider fully remove watchlist.txt and use WATCHLIST env variable only
+# XXX: Consider fully remove watchlist.txt and use WATCHLIST env variable only
 WATCHLIST = [coin.strip() for coin in settings.WATCHLIST.split() if coin.strip()]
 if not WATCHLIST and os.path.exists(WATCHLIST_PATH_NAME):
     with open(WATCHLIST_PATH_NAME) as watchlist:
@@ -43,7 +43,7 @@ class Config:
     def __init__(self):
         self.BRIDGE = Coin(settings.BRIDGE_SYMBOL, enabled=False)
 
-        # TODO: Consider fully remove watchlist.txt and use WATCHLIST env variable only
+        # XXX: Consider fully remove watchlist.txt and use WATCHLIST env variable only
         self.WATCHLIST = WATCHLIST
 
     def __getattr__(self, name: str):
