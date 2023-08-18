@@ -1,8 +1,15 @@
+from typing import Protocol
+
 from sqlalchemy.orm import declarative_base
 
 
-class cls:
+class Base:
     __allow_unmapped__ = True
 
 
-Base = declarative_base(cls=cls)
+class Info(Protocol):
+    def info(self):
+        ...
+
+
+Base = declarative_base(cls=Base)  # type: ignore

@@ -2,7 +2,6 @@
 from datetime import datetime
 from enum import Enum
 from itertools import groupby
-from typing import Any
 
 from dateutil.relativedelta import relativedelta
 from fastapi import FastAPI
@@ -14,7 +13,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.query import Query
 
 from . import models
-from .config import CONFIG
+from .config import Config
 from .database import Database
 from .logger import DummyLogger
 
@@ -31,7 +30,8 @@ sio = SocketManager(app)
 
 # Initialize database
 logger = DummyLogger()
-db = Database(logger, CONFIG)
+config = Config()
+db = Database(logger, config)
 
 
 class Period(str, Enum):
@@ -149,5 +149,5 @@ def trade_history():
 
 
 @sio.on("update", namespace="/backend")
-async def on_update(msg: dict[str, str | dict[str, Any]]):
+async def on_update(msg: dict[str, str | dict[str, models.Info]]):
     await sio.emit("update", msg, namespace="/frontend")
