@@ -176,7 +176,7 @@ class BinanceAPIManager:
         ob_factory: Callable[[Client, BinanceCache], AbstractOrderBalanceManager],
     ) -> BinanceAPIManager:
         cache = BinanceCache()
-        client = Client(config.BINANCE_API_KEY, config.BINANCE_API_SECRET_KEY)
+        client = Client(config.BINANCE_API_KEY, config.BINANCE_API_SECRET_KEY, tld=config.TLD)
         return BinanceAPIManager(client, cache, config, db, logger, ob_factory(client, cache))
 
     @staticmethod
@@ -302,6 +302,8 @@ class BinanceAPIManager:
         return self.binance_client.get_bnb_burn_spot_margin()["spotBNBBurn"]
 
     def get_fee(self, origin_coin: str, target_coin: str, selling: bool):
+        if self.config != "com":
+            return 0.001
         base_fee = self.get_trade_fees()[origin_coin + target_coin]
         if not self.get_using_bnb_for_fees():
             return base_fee
