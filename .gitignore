@@ -37,7 +37,7 @@
 .sqlite3
 .tox/
 .venv
-.vscode/*
+.vscode/
 .webassets-cache
 /site
 ENV/
