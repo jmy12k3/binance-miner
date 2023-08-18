@@ -1,11 +1,7 @@
-apprise==1.4.5
 cachetools==5.3.1
-easydict==1.10
 fastapi==0.100.0
 fastapi-socketio==0.0.10
 gunicorn==21.2.0
-prompt-toolkit==3.0.36
-pydantic==2.0.3
 pydantic-settings==2.0.2
 python-binance==1.0.17
 python-socketio[client]==5.8.0
@@ -16,6 +12,4 @@ sqlitedict==2.1.0
 unicorn-binance-websocket-api==1.46.1
 unicorn-fy==0.12.2
 uvicorn==0.23.0
-questionary==2.0.0
 websockets==10.4
-yaspin==2.5.0
