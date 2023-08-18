@@ -55,21 +55,6 @@ class Database:
         except exceptions.ConnectionError:
             return False
 
-    def create_database(self):
-        models.Base.metadata.create_all(self.engine)
-        try:
-            with self.db_session() as session:
-                session.execute("ALTER TABLE scout_history ADD COLUMN ratio_diff float;")
-        except Exception:
-            pass
-
-    def send_update(self, model):
-        if not self._api_session():
-            return
-        self.socketio_client.emit(
-            "update", {"table": model.__tablename__, "data": model.info()}, "/backend"
-        )
-
     @no_type_check
     def set_coins(self, symbols: list[str]):
         session: Session
@@ -166,6 +151,23 @@ class Database:
             session.expunge(pair)
             return pair
 
+    @heavy_call
+    def batch_log_scout(self, logs: list[LogScout]):
+        session: Session
+        with self.db_session() as session:
+            dt = datetime.now()
+            for ls in logs:
+                sh = {
+                    "pair_id": ls.pair_id,
+                    "ratio_diff": ls.ratio_diff,
+                    "target_ratio": ls.target_ratio,
+                    "current_coin_price": ls.coin_price,
+                    "other_coin_price": ls.optional_coin_price,
+                    "datetime": dt,
+                }
+                session.execute(insert(models.ScoutHistory), sh)
+                self.send_update(sh)
+
     def prune_scout_history(self):
         time_diff = datetime.now() - relativedelta(hours=self.config.SCOUT_HISTORY_PRUNE_TIME)
         session: Session
@@ -215,40 +217,23 @@ class Database:
                 models.CoinValue.datetime < time_diff,
             ).delete()
 
-    def batch_update_coin_values(self, cv_batch: list[models.CoinValue]):
-        session: Session
-        with self.db_session() as session:
-            session.execute(
-                insert(models.CoinValue),
-                [
-                    {
-                        "coin_id": cv.coin.symbol,
-                        "balance": cv.balance,
-                        "usd_price": cv.usd_price,
-                        "btc_price": cv.btc_price,
-                        "interval": cv.interval,
-                        "datetime": cv.datetime,
-                    }
-                    for cv in cv_batch
-                ],
-            )
+    def create_database(self):
+        models.Base.metadata.create_all(self.engine)
+        try:
+            with self.db_session() as session:
+                session.execute("ALTER TABLE scout_history ADD COLUMN ratio_diff float;")
+        except Exception:
+            pass
 
-    @heavy_call
-    def batch_log_scout(self, logs: list[LogScout]):
-        session: Session
-        with self.db_session() as session:
-            dt = datetime.now()
-            for ls in logs:
-                sh = {
-                    "pair_id": ls.pair_id,
-                    "ratio_diff": ls.ratio_diff,
-                    "target_ratio": ls.target_ratio,
-                    "current_coin_price": ls.coin_price,
-                    "other_coin_price": ls.optional_coin_price,
-                    "datetime": dt,
-                }
-                session.execute(insert(models.ScoutHistory), sh)
-                self.send_update(sh)
+    def start_trade_log(self, from_coin: str, to_coin: str, selling: bool):
+        return TradeLog(self, from_coin, to_coin, selling)
+
+    def send_update(self, model):
+        if not self._api_session():
+            return
+        self.socketio_client.emit(
+            "update", {"table": model.__tablename__, "data": model.info()}, "/backend"
+        )
 
     @heavy_call
     def commit_ratios(self):
@@ -274,8 +259,23 @@ class Database:
             )
         self.ratios_manager.commit()
 
-    def start_trade_log(self, from_coin: str, to_coin: str, selling: bool):
-        return TradeLog(self, from_coin, to_coin, selling)
+    def batch_update_coin_values(self, cv_batch: list[models.CoinValue]):
+        session: Session
+        with self.db_session() as session:
+            session.execute(
+                insert(models.CoinValue),
+                [
+                    {
+                        "coin_id": cv.coin.symbol,
+                        "balance": cv.balance,
+                        "usd_price": cv.usd_price,
+                        "btc_price": cv.btc_price,
+                        "interval": cv.interval,
+                        "datetime": cv.datetime,
+                    }
+                    for cv in cv_batch
+                ],
+            )
 
 
 class TradeLog:
