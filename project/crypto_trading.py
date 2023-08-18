@@ -5,7 +5,7 @@ import time
 from threading import Thread
 
 from .binance import BinanceAPIManager
-from .config import CONFIG
+from .config import Config
 from .database import Database
 from .logger import Logger
 from .scheduler import SafeScheduler
@@ -15,29 +15,28 @@ TIMEOUT = 10
 
 
 def main():
-    # Initialize exit_handler flag
+    # Initialize base modules (logger, config, and database)
     exiting = False
-
-    # Initialize logger and database
     logger = Logger("crypto_trading")
     logger.info("Starting")
-    db = Database(logger, CONFIG)
+    config = Config()
+    db = Database(logger, config)
 
     # Initialize manager
-    if CONFIG.ENABLE_PAPER_TRADING:
+    if config.ENABLE_PAPER_TRADING:
         manager = BinanceAPIManager.create_manager_paper_trading(
-            CONFIG, db, logger, {CONFIG.BRIDGE.symbol: CONFIG.PAPER_WALLET_BALANCE}
+            logger, config, db, {config.BRIDGE.symbol: config.PAPER_WALLET_BALANCE}
         )
         logger.info("Will be running in paper trading mode")
     else:
-        manager = BinanceAPIManager.create_manager(CONFIG, db, logger)
+        manager = BinanceAPIManager.create_manager(logger, config, db)
         logger.info("Will be running in live trading mode")
 
     # Initialize exit handler
     def timeout_exit():
         thread = Thread(target=manager.close)
         thread.start()
-        thread.join(TIMEOUT)
+        thread.join(10)
 
     def exit_handler(*_):
         nonlocal exiting
@@ -50,36 +49,37 @@ def main():
     signal.signal(signal.SIGTERM, exit_handler)
     atexit.register(exit_handler)
 
-    # Verify Binance API key
+    # Validate Binance API keys
     try:
         _ = manager.get_account()
     except Exception as e:
         logger.error(e)
         return
 
-    # Get strategy
-    strategy = get_strategy(CONFIG.STRATEGY)
+    # Initialize strategy
+    strategy = get_strategy(config.STRATEGY)
     if not strategy:
-        logger.error(f"Invalid strategy '{CONFIG.STRATEGY}'")
         return
-    trader = strategy(logger, CONFIG, db, manager)
-    logger.info(f"Using {CONFIG.STRATEGY} strategy")
+    trader = strategy(logger, config, db, manager)
+    logger.info(f"Chosen strategy: {config.STRATEGY}")
 
-    # Warmup database and initialize autotrader
+    # Create database
+    logger.info("Creating database schema if it doesn't already exist")
     db.create_database()
-    db.set_coins(CONFIG.WATCHLIST)
-    logger.info(f"Warming up database for {TIMEOUT} seconds")
+
+    # Warmup database
+    db.set_coins(config.WATCHLIST)
     time.sleep(TIMEOUT)
     trader.initialize()
 
     # Initialize scheduler
     schedule = SafeScheduler(logger)
-    schedule.every(CONFIG.SCOUT_SLEEP_TIME).seconds.do(trader.scout)
+    schedule.every(config.SCOUT_SLEEP_TIME).seconds.do(trader.scout)
     schedule.every(1).minutes.do(trader.update_values)
     schedule.every(1).minutes.do(db.prune_scout_history)
     schedule.every(1).hours.do(db.prune_value_history)
 
-    # Running schedules until exit_handler is called
+    # Initiate scheduler loop
     while not exiting:
         schedule.run_pending()
         time.sleep(1)
