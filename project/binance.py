@@ -8,7 +8,7 @@ import traceback
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable
-from typing import ParamSpec, TypeVar
+from typing import ParamSpec, TypedDict, TypeVar
 
 from binance.client import Client
 from binance.exceptions import BinanceAPIException, BinanceOrderException, BinanceRequestException
@@ -21,34 +21,36 @@ from .database import Database
 from .logger import AbstractLogger
 from .postpone import heavy_call
 
-T = TypeVar("T")
-P = ParamSpec("P")
 
-
-def float_as_decimal_str(num: float):
-    return f"{num:0.08f}".rstrip("0").rstrip(".")
+class PaperWallet(TypedDict):
+    balances: dict[str, float]
+    fake_order_id: int
 
 
 class AbstractOrderBalanceManager(ABC):
+    @staticmethod
+    def float_as_decimal_str(num: float):
+        return f"{num:0.08f}".rstrip("0").rstrip(".")
+
     @abstractmethod
     def get_currency_balance(self, currency_symbol: str, force: bool = False) -> float:
         ...
 
     @abstractmethod
-    def create_order(self, **params) -> dict:
+    def create_order(self, **kwargs) -> dict:
         ...
 
     def make_order(self, side: str, symbol: str, quantity: float, quote_quantity: float):
-        params = {
+        kwargs = {
             "symbol": symbol,
             "side": side,
-            "quantity": float_as_decimal_str(quantity),
+            "quantity": self.float_as_decimal_str(quantity),
             "type": Client.ORDER_TYPE_MARKET,
         }
         if side == Client.SIDE_BUY:
-            del params["quantity"]
-            params["quoteOrderQty"] = float_as_decimal_str(quote_quantity)
-        return self.create_order(**params)
+            del kwargs["quantity"]
+            kwargs["quoteOrderQty"] = self.float_as_decimal_str(quote_quantity)
+        return self.create_order(**kwargs)
 
 
 class PaperOrderBalanceManager(AbstractOrderBalanceManager):
@@ -71,12 +73,12 @@ class PaperOrderBalanceManager(AbstractOrderBalanceManager):
             data = self._read_persist()
             if data is not None:
                 if "balances" in data:
-                    self.balances = data["balances"]  # type: ignore
-                    self.fake_order_id = data["fake_order_id"]  # type: ignore
+                    self.balances = data["balances"]
+                    self.fake_order_id = data["fake_order_id"]
                 else:
-                    self.balances = data  # type: ignore
+                    self.balances = data
 
-    def _read_persist(self) -> dict[str, dict[str, float] | int] | None:
+    def _read_persist(self) -> PaperWallet | None:
         if os.path.exists(self.PERSIST_FILE_PATH):
             with open(self.PERSIST_FILE_PATH) as json_file:
                 return json.load(json_file)
@@ -89,7 +91,7 @@ class PaperOrderBalanceManager(AbstractOrderBalanceManager):
     def get_currency_balance(self, currency_symbol: str, force: bool = False) -> float:
         return self.balances.get(currency_symbol, 0.0)
 
-    def create_order(self, **params):
+    def create_order(self, **kwargs):
         return {}
 
     def make_order(self, side: str, symbol: str, quantity: float, quote_quantity: float):
@@ -144,8 +146,12 @@ class BinanceOrderBalanceManager(AbstractOrderBalanceManager):
                 return cache_balances.get(currency_symbol, 0.0)
             return balance
 
-    def create_order(self, **params):
-        return self.binance_client.create_order(**params)
+    def create_order(self, **kwargs):
+        return self.binance_client.create_order(**kwargs)
+
+
+T = TypeVar("T")
+P = ParamSpec("P")
 
 
 class BinanceAPIManager:
