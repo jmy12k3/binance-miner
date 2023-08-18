@@ -31,16 +31,16 @@ def main():
         logger.info("Will be running in live trading mode")
 
     # Create and hook exit handler
-    def timeout_exit():
+    def timeout_exit(timeout: float | None = None):
         thread = Thread(target=manager.close)
         thread.start()
-        thread.join(10)  # Docker defaults to SIGKILL after 10 seconds
+        thread.join(timeout)
 
     def exit_handler(*_):
         nonlocal exiting
         if not exiting:
             exiting = True
-            timeout_exit()
+            timeout_exit(10)  # Docker defaults to SIGKILL after 10 seconds
             os._exit(0)
 
     signal.signal(signal.SIGINT, exit_handler)
