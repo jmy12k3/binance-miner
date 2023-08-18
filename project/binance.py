@@ -32,11 +32,11 @@ def float_as_decimal_str(num: float):
 class AbstractOrderBalanceManager(ABC):
     @abstractmethod
     def get_currency_balance(self, currency_symbol: str, force: bool = False) -> float:
-        pass
+        ...
 
     @abstractmethod
     def create_order(self, **params) -> dict:
-        pass
+        ...
 
     def make_order(self, side: str, symbol: str, quantity: float, quote_quantity: float):
         params = {
