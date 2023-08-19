@@ -8,7 +8,7 @@ import traceback
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable
-from typing import ParamSpec, TypedDict, TypeVar
+from typing import TypedDict, TypeVar
 
 from binance.client import Client
 from binance.exceptions import BinanceAPIException, BinanceOrderException, BinanceRequestException
@@ -22,7 +22,6 @@ from .logger import AbstractLogger
 from .postpone import heavy_call
 
 T = TypeVar("T")
-P = ParamSpec("P")
 
 
 class PaperWallet(TypedDict):
@@ -213,7 +212,7 @@ class BinanceAPIManager:
     def _setup_websockets(self):
         self.stream_manager = StreamManagerWorker.create(self.cache, self.config, self.logger)
 
-    def _retry(self, func: Callable[P, T], *args, **kwargs) -> T | None:
+    def _retry(self, func: Callable[..., T], *args, **kwargs) -> T | None:
         for attempt in range(20):
             try:
                 return func(*args, **kwargs)
