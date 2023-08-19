@@ -35,7 +35,3 @@ exclude = [
 line-length = 100
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 target-version = "py311"
-
-[tool.ruff.per-file-ignores]
-"./project/database.py" = ["F405"]
-"./project/database_warmup.py" = ["E711", "W605"]
