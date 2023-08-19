@@ -17,7 +17,7 @@ cd ./crypto-miner
 mv ./config/.env.local.example ./config/.env.local
 ```
 
-3. Configurating the bot to your preference
+3. Configurating ```.env.local``` and ```watchlist.txt```
 
 4. Build and run your bot
 
