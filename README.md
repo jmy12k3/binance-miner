@@ -10,16 +10,16 @@ Forked from [edeng23/binance-trade/bot](https://github.com/edeng23/binance-trade
 git clone https://github.com/jmy12k3/crypto-miner.git
 ```
 
-2. Renaming the example config to your config
+2. Renaming the example env file to your env file
 
 ```shell
 cd ./crypto-miner
 mv ./config/.env.local.example ./config/.env.local
 ```
 
-3. Configurating ```.env.local``` and ```watchlist.txt```
+And edit both the env file and watchlist to your preference
 
-4. Build and run your bot
+3. Build and run your bot
 
 ```
 docker compose up
