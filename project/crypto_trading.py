@@ -32,7 +32,7 @@ def main():
         manager = BinanceAPIManager.create_manager(logger, config, db)
         logger.info("Will be running in live trading mode")
 
-    # Create exit_handler
+    # Initialize exit_handler
     def timeout_exit(timeout: float | None = None):
         thread = Thread(target=manager.close)
         thread.start()
@@ -45,7 +45,6 @@ def main():
             timeout_exit(10)  # Docker SIGTERM timeout is 10 seconds
             os._exit(0)
 
-    # Hook exit_handler to SIGINT and SIGTERM
     signal.signal(signal.SIGINT, exit_handler)
     signal.signal(signal.SIGTERM, exit_handler)
     atexit.register(exit_handler)
@@ -57,7 +56,7 @@ def main():
         logger.error(e)
         return
 
-    # Get strategy
+    # Get autotrader strategy
     strategy = get_strategy(config.STRATEGY)
     if not strategy:
         logger.info(f"Invalid strategy: {config.STRATEGY}")
@@ -69,7 +68,7 @@ def main():
     logger.info("Creating database schema if it doesn't already exist")
     db.create_database()
 
-    # Warmup database
+    # Warmup database and initialize autotrader
     db.set_coins(config.WATCHLIST)
     logger.info("Sleeping for 10 seconds to let order book to fill up")
     time.sleep(10)  # 10 seconds is just a arbitrary number
