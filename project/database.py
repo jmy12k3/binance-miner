@@ -1,10 +1,12 @@
 # https://github.com/python/mypy/issues/5570
 # mypy: disable-error-code="annotation-unchecked, arg-type, assignment"
+import time
 from collections import namedtuple
 from contextlib import contextmanager
 from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
+from socketio import Client, exceptions
 from sqlalchemy import bindparam, create_engine, func, insert, select, update
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
@@ -20,13 +22,18 @@ LogScout = namedtuple(
 
 
 class Database:
+    # URL for SQLite database
     DB = "sqlite:///data/crypto_trading.db"
+
+    # URL for FastAPI deployed in Docker
+    API = "http://api:5000"
 
     def __init__(self, logger: AbstractLogger, config: Config):
         self.logger = logger
         self.config = config
         self.engine = create_engine(self.DB, future=True)
         self.session_factory = scoped_session(sessionmaker(self.engine))
+        self.socketio_client = Client()
         self.ratios_manager: RatiosManager | None = None
 
     @contextmanager
@@ -35,6 +42,20 @@ class Database:
         yield session
         session.commit()
         session.close()
+
+    def _api_session(self):
+        if self.socketio_client.connected and self.socketio_client.namespaces:
+            return True
+        try:
+            if not self.socketio_client.connected:
+                self.socketio_client.connect(
+                    self.API, socketio_path="/ws/socket.io", namespaces=["/backend"]
+                )
+            while not self.socketio_client.connected or not self.socketio_client.namespaces:
+                time.sleep(0.1)
+            return True
+        except exceptions.ConnectionError:
+            return False
 
     def set_coins(self, symbols: list[str]):
         session: Session
@@ -102,6 +123,7 @@ class Database:
                 coin = session.merge(coin)
             cc = models.CurrentCoin(coin)  # type: ignore
             session.add(cc)
+            self.send_update(cc)
 
     def get_current_coin(self) -> models.Coin | None:
         session: Session
@@ -130,6 +152,7 @@ class Database:
             session.expunge(pair)
             return pair
 
+    # FIXME: self.send_update
     @heavy_call
     def batch_log_scout(self, logs: list[LogScout]):
         session: Session
@@ -210,6 +233,13 @@ class Database:
     def start_trade_log(self, from_coin: str, to_coin: str, selling: bool):
         return TradeLog(self, from_coin, to_coin, selling)
 
+    def send_update(self, model: models.Model):
+        if not self._api_session():
+            return
+        self.socketio_client.emit(
+            "update", {"table": model.__tablename__, "data": model.info()}, "/backend"
+        )
+
     @heavy_call
     def commit_ratios(self):
         dirty_cells = self.ratios_manager.get_dirty()
@@ -261,6 +291,7 @@ class TradeLog:
             self.trade = models.Trade(from_coin, to_coin, selling)
             session.add(self.trade)
             session.flush()
+            self.db.send_update(self.trade)
 
     def set_ordered(
         self, alt_starting_balance: float, crypto_starting_balance: float, alt_trade_amount: float
@@ -272,6 +303,7 @@ class TradeLog:
             trade.alt_trade_amount = alt_trade_amount
             trade.crypto_starting_balance = crypto_starting_balance
             trade.state = models.TradeState.ORDERED
+            self.db.send_update(trade)
 
     def set_complete(self, crypto_trade_amount: float):
         session: Session
@@ -279,3 +311,4 @@ class TradeLog:
             trade: models.Trade = session.merge(self.trade)
             trade.crypto_trade_amount = crypto_trade_amount
             trade.state = models.TradeState.COMPLETE
+            self.db.send_update(trade)
