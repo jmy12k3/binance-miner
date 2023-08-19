@@ -152,7 +152,7 @@ class Database:
             session.expunge(pair)
             return pair
 
-    # FIXME: self.send_update
+    # FIXME: Add self.send_update on call
     @heavy_call
     def batch_log_scout(self, logs: list[LogScout]):
         session: Session
