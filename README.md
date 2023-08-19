@@ -26,11 +26,6 @@ mv .env.local.example .env.local
 
 3. Configurating your env file and watchlist
 
-```shell
-nano .env.local
-nano watchlist.txt
-```
-
 4. Building and running your bot
 
 ```shell
