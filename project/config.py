@@ -1,3 +1,5 @@
+# https://github.com/pydantic/pydantic/issues/3072
+# mypy: disable-error-code=call-arg
 import os
 
 from pydantic_settings import BaseSettings
@@ -27,7 +29,7 @@ class Settings(BaseSettings):
     PAPER_WALLET_BALANCE: float = 10_000
 
 
-settings = Settings(_env_file=ENV_PATH_NAME, _env_file_encoding="utf-8")  # type: ignore
+settings = Settings(_env_file=ENV_PATH_NAME, _env_file_encoding="utf-8")
 
 # XXX: Consider fully remove watchlist.txt and use WATCHLIST env variable only
 WATCHLIST = [coin.strip() for coin in settings.WATCHLIST.split() if coin.strip()]
