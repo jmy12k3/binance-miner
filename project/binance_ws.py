@@ -61,7 +61,7 @@ class ThreadSafeAsyncLock:
 
 
 class BinanceOrder:
-    def __init__(self, report: dict[str, str | int] | defaultdict):
+    def __init__(self, report: dict[str, Any] | defaultdict):
         self.symbol = report["symbol"]
         self.side = report["side"]
         self.order_type = report["type"]
