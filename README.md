@@ -37,7 +37,7 @@ nano watchlist.txt
 docker compose up
 ```
 
-> To run in detached mode, add flag -d
+> Tips: add the flag --detach to run Docker in detached mode
 
 ## Disclaimer
 
