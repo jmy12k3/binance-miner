@@ -108,7 +108,7 @@ class Database:
             return coin
         session: Session
         with self.db_session() as session:
-            coin = session.get(models.Coin, coin)  # type: ignore
+            coin = session.get(models.Coin, coin)
             session.expunge(coin)
             return coin
 
@@ -118,7 +118,7 @@ class Database:
         with self.db_session() as session:
             if isinstance(coin, models.Coin):
                 coin = session.merge(coin)
-            cc = models.CurrentCoin(coin)  # type: ignore
+            cc = models.CurrentCoin(coin)
             session.add(cc)
             self.send_update(cc)
 
