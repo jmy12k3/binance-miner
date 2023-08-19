@@ -69,7 +69,7 @@ class Database:
                     coin.enabled = True
         CoinStub.reset()
         with self.db_session() as session:
-            coins: list[models.Coin] = (  # type: ignore
+            coins = (
                 session.query(models.Coin)
                 .filter(models.Coin.enabled)
                 .order_by(models.Coin.symbol)
