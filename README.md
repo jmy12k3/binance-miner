@@ -15,6 +15,34 @@ FTT
 SRM
 ```
 
+## Setup
+
+1. Clone this repository to your local
+
+```shell
+git clone https://github.com/jmy12k3/crypto-miner.git
+```
+
+2. Renaming the example config to your config
+
+```shell
+cd ./crypto-miner
+mv ./config/.env.local.example ./config/.env.local
+```
+
+3. Configurating the bot to your preference
+
+```shell
+nano ./config/.env.local
+nano ./config/watchlist.txt
+```
+
+4. Build and run your bot
+
+```
+docker compose up
+```
+
 ## Disclaimer
 
 This project is for informational purposes only. You should not construe any such information or other material as legal, tax, investment, financial, or other advice. Nothing contained here constitutes a solicitation, recommendation, endorsement, or offer by me or any third party service provider to buy or sell any securities or other financial instruments in this or in any other jurisdiction in which such solicitation or offer would be unlawful under the securities laws of such jurisdiction.
