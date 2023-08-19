@@ -1,6 +1,6 @@
 # Crypto-miner
 
-Forked from [edeng23/binance-trade/bot](https://github.com/edeng23/binance-trade-bot/tree/master)
+Forked from [edeng23/binance-trade-bot](https://github.com/edeng23/binance-trade-bot/tree/master)
 
 ## Setup
 
