@@ -152,20 +152,26 @@ class Database:
             session.expunge(pair)
             return pair
 
+    # FIXME: self.send_update
     @heavy_call
     def batch_log_scout(self, logs: list[LogScout]):
         session: Session
         with self.db_session() as session:
-            for ls in logs:
-                sh = models.ScoutHistory(
-                    ls.pair_id,
-                    ls.ratio_diff,
-                    ls.target_ratio,
-                    ls.coin_price,
-                    ls.optional_coin_price,
-                )
-                session.add(sh)
-                self.send_update(sh)
+            dt = datetime.now()
+            session.execute(
+                insert(models.ScoutHistory),
+                [
+                    {
+                        "pair_id": ls.pair_id,
+                        "ratio_diff": ls.ratio_diff,
+                        "target_ratio": ls.target_ratio,
+                        "current_coin_price": ls.coin_price,
+                        "other_coin_price": ls.optional_coin_price,
+                        "datetime": dt,
+                    }
+                    for ls in logs
+                ],
+            )
 
     def prune_scout_history(self):
         time_diff = datetime.now() - relativedelta(hours=self.config.SCOUT_HISTORY_PRUNE_TIME)
