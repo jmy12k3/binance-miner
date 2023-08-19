@@ -260,7 +260,7 @@ class AutoTrader(ABC):
             )
         return True
 
-    # FIXME: flake8 C901
+    # FIXME: Ruff(C901)
     def initialize_trade_thresholds(self):
         ratios_manager = self.db.ratios_manager
         max_quote_amount = self._max_value_in_wallet()
