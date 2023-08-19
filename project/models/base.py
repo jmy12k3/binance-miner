@@ -4,19 +4,16 @@ from typing import Protocol
 from sqlalchemy.orm import declarative_base
 
 
-class Base:
+class DeclarativeBase:
     __allow_unmapped__ = True
 
 
 class Model(Protocol):
     __tablename__: str
+    datetime: datetime
 
     def info(self):
         ...
 
 
-class DatetimeModel(Model):
-    datetime: datetime
-
-
-Base = declarative_base(cls=Base)  # type: ignore
+Base = declarative_base(cls=DeclarativeBase)

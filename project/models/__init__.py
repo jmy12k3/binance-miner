@@ -1,4 +1,4 @@
-from .base import Base, DatetimeModel, Model
+from .base import Base, Model
 from .coin import Coin
 from .coin_value import CoinValue, Interval
 from .current_coin import CurrentCoin
@@ -9,7 +9,6 @@ from .trade import Trade, TradeState
 __all__ = [
     "Base",
     "Model",
-    "DatetimeModel",
     "Coin",
     "CoinValue",
     "CurrentCoin",
