@@ -2,19 +2,6 @@
 
 Forked from [edeng23/binance-trade/bot](https://github.com/edeng23/binance-trade-bot/tree/master)
 
-```
-BAT
-ICX
-OMG
-ONT
-QTUM
-```
-
-```
-FTT
-SRM
-```
-
 ## Setup
 
 1. Clone this repository to your local
@@ -31,11 +18,6 @@ mv ./config/.env.local.example ./config/.env.local
 ```
 
 3. Configurating the bot to your preference
-
-```shell
-nano ./config/.env.local
-nano ./config/watchlist.txt
-```
 
 4. Build and run your bot
 
