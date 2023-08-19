@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings
 from .models import Coin
 
 CONFIG_PATH = "config"
-ENV_PATH_NAME = os.path.join(CONFIG_PATH, "process.env")
+ENV_PATH_NAME = os.path.join(CONFIG_PATH, ".env.local")
 
 # XXX: Consider fully remove watchlist.txt and use WATCHLIST env variable only
 WATCHLIST_PATH_NAME = os.path.join(CONFIG_PATH, "watchlist.txt")
