@@ -21,7 +21,7 @@ And edit both the env file and watchlist to your preference
 
 3. Build and run your bot
 
-```
+```shell
 docker compose up
 ```
 
