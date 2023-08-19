@@ -22,11 +22,7 @@ LogScout = namedtuple(
 
 
 class Database:
-    # URL for SQLite database
     DB = "sqlite:///data/crypto_trading.db"
-
-    # URL for FastAPI deployed in Docker
-    API = "http://api:5000"
 
     def __init__(self, logger: AbstractLogger, config: Config):
         self.logger = logger
@@ -43,13 +39,14 @@ class Database:
         session.commit()
         session.close()
 
+    # XXX: Consider not to hardcode the API URL
     def _api_session(self):
         if self.socketio_client.connected and self.socketio_client.namespaces:
             return True
         try:
             if not self.socketio_client.connected:
                 self.socketio_client.connect(
-                    self.API, socketio_path="/ws/socket.io", namespaces=["/backend"]
+                    "http://api:5000", socketio_path="/ws/socket.io", namespaces=["/backend"]
                 )
             while not self.socketio_client.connected or not self.socketio_client.namespaces:
                 time.sleep(0.1)
