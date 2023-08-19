@@ -1,4 +1,4 @@
-# mypy: disable-error-code=annotation-unchecked
+# mypy: disable-error-code="annotation-unchecked, index"
 import asyncio
 import uuid
 from abc import ABC, abstractmethod
@@ -234,11 +234,11 @@ class AsyncListenerContext:
     def resolve_stream_id(self, stream_id: uuid.UUID) -> str:
         return self.resolver(stream_id)  # type: ignore
 
-    def add_stream_data(self, stream_data: Future, stream_buffer_name: str | bool = False):
+    def add_stream_data(self, stream_data: Future, stream_buffer_name: bool | str = False):
         if self.stopped:
             return
         asyncio.run_coroutine_threadsafe(
-            self.queues[stream_buffer_name].put(stream_data), self.loop  # type: ignore
+            self.queues[stream_buffer_name].put(stream_data), self.loop
         )
 
     async def get_market_sell_price_fill_quote(self, symbol: str, quote: float):

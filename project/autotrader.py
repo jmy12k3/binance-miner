@@ -102,7 +102,7 @@ class AutoTrader(ABC):
                     )
                 )
         if scout_logs:
-            self.db.batch_log_scout(scout_logs)
+            self.db.batch_log_scout(scout_logs)  # type: ignore
         return ratio_dict, price_amounts
 
     @postpone_heavy_calls
@@ -149,7 +149,7 @@ class AutoTrader(ABC):
                 is_initial_coin = False
             else:
                 can_walk_deeper = False
-        self.db.commit_ratios()
+        self.db.commit_ratios()  # type: ignore
         if not is_initial_coin:
             if len(jump_chain) > 2:
                 self.logger.info(f"Squashed jump chain: {jump_chain}")
