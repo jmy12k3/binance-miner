@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     TLD: str = "com"
     WATCHLIST: str = ""
     STRATEGY: str = "default"
-    ENABLE_PAPER_TRADING: bool
+    ENABLE_PAPER_TRADING: bool = True
     PAPER_WALLET_BALANCE: float = 10_000
 
 
