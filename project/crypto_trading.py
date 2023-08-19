@@ -42,7 +42,7 @@ def main():
         nonlocal exiting
         if not exiting:
             exiting = True
-            timeout_exit(10)  # Docker SIGTERM timeout is 10 seconds
+            timeout_exit(10)
             os._exit(0)
 
     signal.signal(signal.SIGINT, exit_handler)
