@@ -21,6 +21,9 @@ from .database import Database
 from .logger import AbstractLogger
 from .postpone import heavy_call
 
+T = TypeVar("T")
+P = ParamSpec("P")
+
 
 class PaperWallet(TypedDict):
     balances: dict[str, float]
@@ -147,10 +150,6 @@ class BinanceOrderBalanceManager(AbstractOrderBalanceManager):
 
     def create_order(self, **kwargs):
         return self.binance_client.create_order(**kwargs)
-
-
-T = TypeVar("T")
-P = ParamSpec("P")
 
 
 class BinanceAPIManager:
