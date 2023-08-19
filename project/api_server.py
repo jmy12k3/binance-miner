@@ -62,7 +62,7 @@ def filter_period(period: Period | None, query: Query, model: type[models.Dateti
 
 
 @app.get("/", include_in_schema=False)
-async def redirect_to_docs():
+def redirect_to_docs():
     return RedirectResponse(url="/docs")
 
 
@@ -156,5 +156,5 @@ def pairs():
 
 
 @sio.on("update", namespace="/backend")
-async def on_update(sid: str, msg: Any):
-    await sio.emit("update", msg, namespace="/frontend")
+def on_update(sid: str, msg: Any):
+    sio.emit("update", msg, namespace="/frontend")
