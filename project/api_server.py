@@ -156,5 +156,5 @@ def pairs():
 
 
 @sio.on("update", namespace="/backend")
-async def on_update(sid: str, msg: dict[str, Any]):
+async def on_update(sid: str, msg: Any):
     await sio.emit("update", msg, namespace="/frontend")
