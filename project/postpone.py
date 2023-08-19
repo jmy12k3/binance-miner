@@ -13,7 +13,7 @@ should_postpone = ContextVar("should_postpone", default=False)
 postponed_calls = ContextVar("postponed_calls", default=_default_list())
 
 
-def heavy_call(func: Callable[..., T]) -> Callable[..., T]:
+def heavy_call(func: Callable[..., T]) -> Callable[..., T] | None:
     def wrap(*args, **kwargs):
         if should_postpone.get():
             postponed_calls.get().append((func, args, kwargs))
@@ -23,7 +23,7 @@ def heavy_call(func: Callable[..., T]) -> Callable[..., T]:
     return wrap
 
 
-def postpone_heavy_calls(func: Callable[..., T]) -> Callable[..., T]:
+def postpone_heavy_calls(func: Callable[..., T]) -> Callable[..., T] | None:
     def wrap(*args, **kwargs):
         if should_postpone.get():
             func(*args, **kwargs)
