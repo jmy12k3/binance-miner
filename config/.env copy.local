@@ -1,0 +1,7 @@
+# Binance API key
+BINANCE_API_KEY=your_api_key
+BINANCE_API_SECRET=your_api_secret
+
+# Paper trading
+ENABLE_PAPER_TRADING=your_enable_paper_trading
+PAPER_WALLET_BALANCE=your_paper_wallet_balance
