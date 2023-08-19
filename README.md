@@ -29,6 +29,7 @@ mv .env.local.example .env.local
 4. "Up" your bot
 
 ```shell
+cd ..
 docker compose up
 ```
 
