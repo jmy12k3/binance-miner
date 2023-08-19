@@ -38,7 +38,7 @@ def main():
         thread.start()
         thread.join(timeout)
 
-    def exit_handler(*_):
+    def exit_handler(signum: signal.Signals, frame: object):
         nonlocal exiting
         if not exiting:
             exiting = True
