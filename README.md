@@ -24,7 +24,7 @@ cd ./crypto-miner/config
 mv .env.local.example .env.local
 ```
 
-3. Configurating the env file and watchlist
+3. Configurating your env file and watchlist
 
 ```shell
 nano .env.local
@@ -36,6 +36,8 @@ nano watchlist.txt
 ```shell
 docker compose up
 ```
+
+> To run in detached mode, add flag -d
 
 ## Disclaimer
 
