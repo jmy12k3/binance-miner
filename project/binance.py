@@ -1,3 +1,4 @@
+# mypy: disable-error-code=misc
 from __future__ import annotations
 
 import json
@@ -287,7 +288,9 @@ class BinanceAPIManager:
         return self.stream_manager.get_market_buy_price(symbol, quote_amount)  # type: ignore
 
     def get_market_sell_price_fill_quote(self, symbol: str, quote_amount: float):
-        return self.stream_manager.get_market_sell_price_fill_quote(symbol, quote_amount)  # type: ignore
+        return self.stream_manager.get_market_sell_price_fill_quote(  # type: ignore
+            symbol, quote_amount
+        )
 
     @cached(cache=TTLCache(maxsize=1, ttl=43200))
     def get_trade_fees(self) -> dict[str, float]:
