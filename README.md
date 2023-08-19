@@ -26,7 +26,7 @@ mv .env.local.example .env.local
 
 3. Configurate your env file and watchlist
 
-4. "Up" your bot
+4. Run your bot
 
 ```shell
 cd ..
