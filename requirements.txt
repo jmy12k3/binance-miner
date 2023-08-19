@@ -1,6 +1,6 @@
 cachetools==5.3.1
 fastapi==0.101.1
-fastapi_socketio==0.0.10
+fastapi-socketio==0.0.10
 pydantic-settings==2.0.3
 python-binance==1.0.19
 python-socketio[client]==5.8.0
