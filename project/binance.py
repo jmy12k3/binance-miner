@@ -9,7 +9,7 @@ import traceback
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable
-from typing import TypedDict, TypeVar
+from typing import Any, TypedDict, TypeVar
 
 from binance.client import Client
 from binance.exceptions import BinanceAPIException, BinanceOrderException, BinanceRequestException
@@ -348,7 +348,9 @@ class BinanceAPIManager:
                 self.cache.non_existent_tickers.add(ticker_symbol)
         return price
 
-    def get_symbol_filter(self, origin_symbol: str, target_symbol: str, filter_type: str) -> dict:
+    def get_symbol_filter(
+        self, origin_symbol: str, target_symbol: str, filter_type: str
+    ) -> dict[str, Any]:
         return next(
             _filter
             for _filter in self.binance_client.get_symbol_info(origin_symbol + target_symbol)[
