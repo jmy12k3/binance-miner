@@ -32,3 +32,7 @@ This project is for informational purposes only. You should not construe any suc
 If you plan to use real money, USE AT YOUR OWN RISK.
 
 Under no circumstances will I be held responsible or liable in any way for any claims, damages, losses, expenses, costs, or liabilities whatsoever, including, without limitation, any direct or indirect damages for loss of profits.
+
+<p align="center">
+    <img src="https://d5ttlem47o98b.cloudfront.net/s3fs-public/styles/banner/public/2022-09/44-3.jpg?itok=i6y77keo">
+</p>
