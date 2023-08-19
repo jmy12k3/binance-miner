@@ -1,6 +1,6 @@
 import contextvars
 
-from .crypto_trading import main
+from .crypto_mining import main
 
 if __name__ == "__main__":
     ctx = contextvars.copy_context()

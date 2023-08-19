@@ -17,7 +17,7 @@ def main():
     exiting = False
 
     # Initialize logger, config, and database
-    logger = Logger("crypto_trading")
+    logger = Logger("crypto_mining")
     logger.info("Starting")
     config = Config()
     db = Database(logger, config)

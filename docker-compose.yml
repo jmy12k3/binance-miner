@@ -12,7 +12,7 @@ x-build: &build
 services:
   backend:
     <<: *build
-    container_name: crypto_trading
+    container_name: crypto_mining
     environment:
       - PYTHONUNBUFFERED=1
     command: python -m crypto_miner
@@ -21,7 +21,7 @@ services:
     <<: *build
     depends_on:
       - backend
-    container_name: crypto_trading_api
+    container_name: crypto_mining_api
     ports:
       - 5000:5000
     command: >
