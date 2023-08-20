@@ -47,17 +47,17 @@ class Period(str, Enum):
 
 def filter_period(period: Period | None, query: Query, model: type[models.Model]) -> Query:
     if Period.SECOND == period:
-        query = query.filter(model.datetime > datetime.now() - relativedelta(seconds=1))
+        query = query.filter(model.dt > datetime.now() - relativedelta(seconds=1))
     if Period.MINUTE == period:
-        query = query.filter(model.datetime > datetime.now() - relativedelta(minutes=1))
+        query = query.filter(model.dt > datetime.now() - relativedelta(minutes=1))
     if Period.HOUR == period:
-        query = query.filter(model.datetime > datetime.now() - relativedelta(hours=1))
+        query = query.filter(model.dt > datetime.now() - relativedelta(hours=1))
     if Period.DAY == period:
-        query = query.filter(model.datetime > datetime.now() - relativedelta(days=1))
+        query = query.filter(model.dt > datetime.now() - relativedelta(days=1))
     if Period.WEEK == period:
-        query = query.filter(model.datetime > datetime.now() - relativedelta(weeks=1))
+        query = query.filter(model.dt > datetime.now() - relativedelta(weeks=1))
     if Period.MONTH == period:
-        query = query.filter(model.datetime > datetime.now() - relativedelta(months=1))
+        query = query.filter(model.dt > datetime.now() - relativedelta(months=1))
     return query
 
 
