@@ -174,7 +174,13 @@ class AutoTrader(ABC):
                     f"Slippage: {expected_bought_quantity_no_fees/result.cumulative_filled_quantity - 1:0.06%}"
                 )
             else:
-                self.update_trade_threshold(coin, None, coin_sell_price, 0, quote_amount)
+                self.update_trade_threshold(
+                    to_coin=coin,
+                    from_coin=None,
+                    to_coin_buy_price=coin_sell_price,
+                    to_coin_amount=0,
+                    quote_amount=quote_amount,
+                )
                 self.logger.info(f"Eliminated jump loop from {coin.symbol} to {coin.symbol}")
 
     def initialize(self):
@@ -186,7 +192,7 @@ class AutoTrader(ABC):
         to_coin_original_amount = self.manager.get_currency_balance(to_coin.symbol)
         if self.manager.sell_alt(from_coin.symbol, self.config.BRIDGE.symbol, sell_price) is None:
             self.logger.error(
-                f"Market sell failed, from_coin: {from_coin.symbol}, to_coin: {to_coin.symbol}, sell_price: {sell_price}"
+                f"Market sell failed, from_coin: {from_coin.symbol}, to_coin: {to_coin.symbol}, sell_price: {sell_price}"  # XXX
             )
         result = self.manager.buy_alt(to_coin.symbol, self.config.BRIDGE.symbol, buy_price)
         if result is not None:
@@ -207,7 +213,7 @@ class AutoTrader(ABC):
                     to_coin, from_coin, price, to_coin_amount, result.cumulative_quote_qty
                 )
                 if not update_successful:
-                    self.logger.info("Update of ratios failed, retry in 1s")
+                    self.logger.info("Update of ratios failed, retry in 1s")  # XXX
                     time.sleep(1)
             return result
         self.logger.info("Couldn't buy, going back to scouting mode...")
@@ -234,7 +240,7 @@ class AutoTrader(ABC):
             )
             if coin_price is None:
                 self.logger.info(
-                    f"Update for coin {coin.symbol + self.config.BRIDGE.symbol} can't be performed, not enough orders in order book"
+                    f"Update for coin {coin.symbol + self.config.BRIDGE.symbol} can't be performed, not enough orders in order book"  # XXX
                 )
                 return False
             self.db.ratios_manager.set(coin.idx, to_coin.idx, coin_price / to_coin_buy_price)  # type: ignore
@@ -247,7 +253,7 @@ class AutoTrader(ABC):
             )
             if from_coin_buy_price is None or to_coin_sell_price is None:
                 self.logger.info(
-                    f"Can't update reverse pair {to_coin.symbol}->{from_coin.symbol}, not enough orders in order book"
+                    f"Can't update reverse pair {to_coin.symbol}->{from_coin.symbol}, not enough orders in order book"  # XXX
                 )
                 return False
             self.db.ratios_manager.set(  # type: ignore

@@ -37,7 +37,7 @@ class ThreadSafeAsyncLock:
         self.__enter__()
 
     def release(self):
-        self.__exit__(None, None, None)
+        self.__exit__(exc_type=None, exc_val=None, exc_tb=None)
 
     def __enter__(self):
         self._init_lock.__enter__()
