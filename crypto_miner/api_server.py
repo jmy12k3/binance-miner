@@ -1,4 +1,4 @@
-# https://github.com/python/mypy/issues/5570
+# https://docs.sqlalchemy.org/en/20/orm/extensions/mypy.html
 # mypy: disable-error-code="annotation-unchecked, arg-type"
 from datetime import datetime
 from enum import Enum
