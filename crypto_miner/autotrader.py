@@ -356,7 +356,7 @@ class AutoTrader(ABC):
                 continue
             usd_value = self.manager.get_ticker_price(coin + self.config.BRIDGE.symbol)
             btc_value = self.manager.get_ticker_price(coin + "BTC")
-            cv = CoinValue(coin, balance, usd_value, btc_value, datetime=now)
+            cv = CoinValue(coin, balance, usd_value, btc_value, now)
             cv_batch.append(cv)
         self.db.batch_update_coin_values(cv_batch)
         self.db.batch_update_coin_values(cv_batch)
