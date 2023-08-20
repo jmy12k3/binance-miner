@@ -62,7 +62,7 @@ class AutoTrader(ABC):
         ratio_dict: dict[tuple[int, int], float] = {}
         price_amounts: dict[str, tuple[float, float]] = {}
         scout_logs = []
-        for to_idx, target_ratio in enumerate(self.db.ratios_manager.get_from_coin(coin.idx)):  # type: ignore
+        for to_idx, target_ratio in enumerate(self.db.ratios_manager.get_from_coin(coin.idx)):
             if coin.idx == to_idx:
                 continue
             to_coin = CoinStub.get_by_idx(to_idx)
@@ -94,7 +94,7 @@ class AutoTrader(ABC):
             if enable_scout_log:
                 scout_logs.append(
                     LogScout(
-                        self.db.ratios_manager.get_pair_id(coin.idx, to_idx),  # type: ignore
+                        self.db.ratios_manager.get_pair_id(coin.idx, to_idx),
                         ratio_dict[(coin.idx, to_coin.idx)],
                         target_ratio,
                         coin_sell_price,
@@ -102,7 +102,7 @@ class AutoTrader(ABC):
                     )
                 )
         if scout_logs:
-            self.db.batch_log_scout(scout_logs)  # type: ignore
+            self.db.batch_log_scout(scout_logs)
         return ratio_dict, price_amounts
 
     @postpone_heavy_calls
@@ -141,7 +141,7 @@ class AutoTrader(ABC):
                         last_coin_amount,
                         last_coin_quote,
                     ):
-                        self.db.ratios_manager.rollback()  # type: ignore
+                        self.db.ratios_manager.rollback()
                         return
                 last_coin = new_best_coin
                 last_coin_buy_price, last_coin_amount = prices[last_coin.symbol]
@@ -149,7 +149,7 @@ class AutoTrader(ABC):
                 is_initial_coin = False
             else:
                 can_walk_deeper = False
-        self.db.commit_ratios()  # type: ignore
+        self.db.commit_ratios()
         if not is_initial_coin:
             if len(jump_chain) > 2:
                 self.logger.info(f"Squashed jump chain: {jump_chain}")
@@ -243,7 +243,7 @@ class AutoTrader(ABC):
                     f"Update for coin {coin.symbol + self.config.BRIDGE.symbol} can't be performed, not enough orders in order book"
                 )  # XXX
                 return False
-            self.db.ratios_manager.set(coin.idx, to_coin.idx, coin_price / to_coin_buy_price)  # type: ignore
+            self.db.ratios_manager.set(coin.idx, to_coin.idx, coin_price / to_coin_buy_price)
         if from_coin is not None:
             from_coin_buy_price, _ = self.manager.get_market_buy_price(
                 from_coin.symbol + self.config.BRIDGE.symbol, quote_amount
@@ -256,11 +256,11 @@ class AutoTrader(ABC):
                     f"Can't update reverse pair {to_coin.symbol}->{from_coin.symbol}, not enough orders in order book"
                 )  # XXX
                 return False
-            self.db.ratios_manager.set(  # type: ignore
+            self.db.ratios_manager.set(
                 to_coin.idx,
                 from_coin.idx,
                 max(
-                    self.db.ratios_manager.get(to_coin.idx, from_coin.idx),  # type: ignore
+                    self.db.ratios_manager.get(to_coin.idx, from_coin.idx),
                     to_coin_sell_price / from_coin_buy_price,
                 ),
             )

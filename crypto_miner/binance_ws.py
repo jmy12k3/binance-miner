@@ -121,8 +121,8 @@ class DepthCache:
         elif len(self.asks) >= self.max_size:
             self.asks = SortedDict({k: self.asks[k] for k in self.asks.keys()[: self.keep_limit]})
 
-    def get_bids(self) -> list[list[float]]:
-        return reversed(self.bids.items())  # type: ignore
+    def get_bids(self) -> reversed[list[list[float]]]:
+        return reversed(self.bids.items())
 
     def get_asks(self) -> list[list[float]]:
         return self.asks.items()
@@ -232,7 +232,7 @@ class AsyncListenerContext:
         self.replace_signals["DISCONNECT"].add(old_stream_id)
 
     def resolve_stream_id(self, stream_id: uuid.UUID) -> str:
-        return self.resolver(stream_id)  # type: ignore
+        return self.resolver(stream_id)
 
     def add_stream_data(self, stream_data: Future, stream_buffer_name: bool | str = False):
         if self.stopped:
@@ -301,7 +301,7 @@ class AsyncListenerContext:
         if self.stopped:
             return
         stream_id = signal_data["stream_id"]
-        buffer_name = self.resolver(stream_id)  # type: ignore
+        buffer_name = self.resolver(stream_id)
         asyncio.run_coroutine_threadsafe(self.queues[buffer_name].put(signal_data), self.loop)
 
     async def shutdown(self):

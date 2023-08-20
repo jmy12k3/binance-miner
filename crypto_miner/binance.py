@@ -245,7 +245,7 @@ class BinanceAPIManager:
             trade_log.set_ordered(origin_balance, target_balance, order_quantity)
             trade_log.set_complete(order.cumulative_quote_qty)
 
-        write_trade_log()  # type: ignore
+        write_trade_log()
         return order
 
     def _sell_alt(self, origin_coin: str, target_coin: str, sell_price: float):
@@ -274,20 +274,20 @@ class BinanceAPIManager:
             trade_log.set_ordered(origin_balance, target_balance, order_quantity)
             trade_log.set_complete(order.cumulative_quote_qty)
 
-        write_trade_log()  # type: ignore
+        write_trade_log()
         return order
 
     def get_currency_balance(self, currency_symbol: str, force: bool = False):
         return self.order_balance_manager.get_currency_balance(currency_symbol, force)
 
     def get_market_sell_price(self, symbol: str, amount: float):
-        return self.stream_manager.get_market_sell_price(symbol, amount)  # type: ignore
+        return self.stream_manager.get_market_sell_price(symbol, amount)
 
     def get_market_buy_price(self, symbol: str, quote_amount: float):
-        return self.stream_manager.get_market_buy_price(symbol, quote_amount)  # type: ignore
+        return self.stream_manager.get_market_buy_price(symbol, quote_amount)
 
     def get_market_sell_price_fill_quote(self, symbol: str, quote_amount: float):
-        return self.stream_manager.get_market_sell_price_fill_quote(symbol, quote_amount)  # type: ignore
+        return self.stream_manager.get_market_sell_price_fill_quote(symbol, quote_amount)
 
     @cached(cache=TTLCache(maxsize=1, ttl=43200))
     def get_trade_fees(self) -> dict[str, float]:
