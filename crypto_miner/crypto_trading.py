@@ -25,8 +25,10 @@ def main():
         manager = BinanceAPIManager.create_manager_paper_trading(
             logger, config, db, {config.BRIDGE.symbol: config.PAPER_WALLET_BALANCE}
         )
+        logger.info("Will be running in paper trading mode")
     else:
         manager = BinanceAPIManager.create_manager(logger, config, db)
+        logger.info("Will be running in live trading mode")
 
     # Initialize exit_handler
     def timeout_exit(timeout: float | None = None):
