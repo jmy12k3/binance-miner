@@ -2,8 +2,7 @@ FROM python:3.11 as builder
 
 WORKDIR /install
 
-RUN apt-get update && apt-get install -y rustc
-ENV RUSTFLAGS "-C lto=n"
+RUN apt-get update && apt-get install -y rustc && apt-get install -y libssl-dev
 
 COPY requirements.txt /requirements.txt
 RUN pip install --prefix=/install -r /requirements.txt
