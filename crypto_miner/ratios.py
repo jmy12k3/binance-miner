@@ -34,7 +34,7 @@ class CoinStub:
 
     @classmethod
     def get_by_symbol(cls: type[CoinStub], symbol: str) -> CoinStub:
-        return cls._instances_by_symbol.get(symbol, None)  # type: ignore
+        return cls._instances_by_symbol.get(symbol, None)
 
     @classmethod
     def reset(cls: type[CoinStub]):
@@ -88,7 +88,7 @@ class RatiosManager:
         return self._dirty.keys()
 
     def get_pair_id(self, from_coin_idx: int, to_coin_idx: int) -> int:
-        return self._ids[from_coin_idx * self.n + to_coin_idx]  # type: ignore
+        return self._ids[from_coin_idx * self.n + to_coin_idx]
 
     def rollback(self):
         for cell, old_value in self._dirty.items():

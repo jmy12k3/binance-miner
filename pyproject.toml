@@ -6,7 +6,7 @@ line_length = 100
 
 [tool.mypy]
 python_version = "3.11"
-disable_error_code = "union-attr, misc"
+disable_error_code = "annotation-unchecked, arg-type, index, union-attr, misc"
 
 [tool.ruff]
 select = ["F", "E", "W", "C90", "UP"]

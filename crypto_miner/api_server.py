@@ -1,5 +1,5 @@
 # https://docs.sqlalchemy.org/en/20/orm/extensions/mypy.html
-# mypy: disable-error-code="annotation-unchecked, arg-type"
+# mypy: disable-error-code=arg-type
 from datetime import datetime
 from enum import Enum
 from itertools import groupby
