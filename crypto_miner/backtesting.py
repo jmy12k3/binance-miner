@@ -1,4 +1,3 @@
-# mypy: disable-error-code="operator, union-attr"
 import traceback
 from collections import defaultdict
 from collections.abc import Callable
