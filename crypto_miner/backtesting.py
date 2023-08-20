@@ -240,12 +240,12 @@ def backtest(
     end_date = end_date or datetime.today()
     start_balances = start_balances or {config.BRIDGE.symbol: config.PAPER_WALLET_BALANCE}
 
-    # Create database
+    # Create database and set watchlist
     db = MockDatabase(logger, config)
     db.create_database()
     db.set_coins(config.WATCHLIST)
 
-    # Initialize manager
+    # Initialize manager and set starting coin
     manager = MockBinanceManager(
         Client(config.BINANCE_API_KEY, config.BINANCE_API_SECRET_KEY),
         sqlite_cache,
