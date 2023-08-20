@@ -21,7 +21,7 @@ git clone https://github.com/jmy12k3/crypto-miner.git
 
 ```shell
 cd ./crypto-miner/config
-mv .env.local.example .env.local
+mv .env.example .env
 ```
 
 3. Configurate your env file and watchlist
