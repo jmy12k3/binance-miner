@@ -2,38 +2,6 @@
 
 Forked from [edeng23/binance-trade-bot](https://github.com/edeng23/binance-trade-bot/tree/master)
 
-## Setup
-
-### Prerequisites
-
-- Git
-- Docker
-
-### Steps
-
-1. Clone this repository to your local
-
-```shell
-git clone https://github.com/jmy12k3/crypto-miner.git
-```
-
-2. Rename the example env file to your env file
-
-```shell
-cd ./crypto-miner/config
-mv .env.example .env
-```
-
-3. Configurate your env file and watchlist
-
-4. Run your bot
-
-```shell
-cd ..
-docker compose up
-```
-
-> Tip: add the flag --detach to run Docker in detached mode
 
 ## Disclaimer
 
