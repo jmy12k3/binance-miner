@@ -121,8 +121,8 @@ class DepthCache:
         elif len(self.asks) >= self.max_size:
             self.asks = SortedDict({k: self.asks[k] for k in self.asks.keys()[: self.keep_limit]})
 
-    def get_bids(self) -> reversed[list[list[float]]]:
-        return reversed(self.bids.items())
+    def get_bids(self) -> list[list[float]]:
+        return reversed(self.bids.items())  # type: ignore
 
     def get_asks(self) -> list[list[float]]:
         return self.asks.items()
