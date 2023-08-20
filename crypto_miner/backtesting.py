@@ -233,19 +233,19 @@ def backtest(
     start_balances: dict[str, float] | None = None,
     starting_coin: str | None = None,
 ):
-    # Initialize modules
+    # Initialize sqlite_cache, logger, config, and backtest parameters
     sqlite_cache = SqliteDict("data/backtesting_cache.db")
     logger = DummyLogger("backtesting")
     config = Config()
     end_date = end_date or datetime.today()
     start_balances = start_balances or {config.BRIDGE.symbol: config.PAPER_WALLET_BALANCE}
 
-    # Initialize database
+    # Create database
     db = MockDatabase(logger, config)
     db.create_database()
     db.set_coins(config.WATCHLIST)
 
-    # Initialize manager and database
+    # Initialize manager
     manager = MockBinanceManager(
         Client(config.BINANCE_API_KEY, config.BINANCE_API_SECRET_KEY),
         sqlite_cache,
@@ -259,9 +259,9 @@ def backtest(
     starting_coin = db.get_coin(starting_coin or config.WATCHLIST[0])
     if manager.get_currency_balance(starting_coin.symbol) == 0:
         manager.buy_alt(starting_coin.symbol, config.BRIDGE.symbol, 0.0)
-    db.set_current_coin(starting_coin)  # type: ignore
+    db.set_current_coin(starting_coin)
 
-    # Initialize autotrader
+    # Get and initialize autotrader strategy
     strategy = get_strategy(config.STRATEGY)
     if strategy is None:
         print_failure(f"Invalid strategy: {config.STRATEGY}")
@@ -288,7 +288,5 @@ def backtest(
             n += 1
     except KeyboardInterrupt:
         pass
-
-    # Initiate clean-up
     sqlite_cache.close()
     return manager

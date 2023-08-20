@@ -39,7 +39,6 @@ class Database:
         session.commit()
         session.close()
 
-    # FIXME: Not to hardcode the URL of API
     def _api_session(self):
         if self.socketio_client.connected and self.socketio_client.namespaces:
             return True

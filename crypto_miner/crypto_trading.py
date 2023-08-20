@@ -13,10 +13,8 @@ from .strategies import get_strategy
 
 
 def main():
-    # Initialize exit_handler flag
+    # Initialize exit_handler flag, logger, config, and database
     exiting = False
-
-    # Initialize logger, config, and database
     logger = Logger("crypto_trading")
     logger.info("Starting")
     config = Config()
@@ -27,10 +25,8 @@ def main():
         manager = BinanceAPIManager.create_manager_paper_trading(
             logger, config, db, {config.BRIDGE.symbol: config.PAPER_WALLET_BALANCE}
         )
-        logger.info("Will be running in paper trading mode")
     else:
         manager = BinanceAPIManager.create_manager(logger, config, db)
-        logger.info("Will be running in live trading mode")
 
     # Initialize exit_handler
     def timeout_exit(timeout: float | None = None):
@@ -70,16 +66,15 @@ def main():
 
     # Warmup database and initialize autotrader
     db.set_coins(config.WATCHLIST)
-    logger.info("Sleeping for 10 seconds to let order book to fill up")
-    time.sleep(10)  # 10 seconds is just a arbitrary number
+    time.sleep(10)
     trader.initialize()
 
     # Initialize scheduler
     schedule = SafeScheduler(logger)
     schedule.every(config.SCOUT_SLEEP_TIME).seconds.do(trader.scout)
-    schedule.every(1).minutes.do(trader.update_values)
-    schedule.every(1).minutes.do(db.prune_scout_history)
-    schedule.every(1).hours.do(db.prune_value_history)
+    schedule.every().minutes.do(trader.update_values)
+    schedule.every().minutes.do(db.prune_scout_history)
+    schedule.every().hours.do(db.prune_value_history)
 
     # Initiate scheduler loop
     while not exiting:

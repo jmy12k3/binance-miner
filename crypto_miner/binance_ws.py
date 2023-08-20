@@ -151,7 +151,7 @@ class DepthCacheManager:
         if data["first_update_id_in_event"] > self.last_update_id + 1:
             self.logger.debug(
                 f"OB: {self.symbol} reinit, update delta: {data['first_update_id_in_event'] - self.last_update_id}"
-            )
+            )  # XXX
             await self.reinit()
             return
         self.apply_orders(data)
@@ -182,7 +182,7 @@ class DepthCacheManager:
             try:
                 res = await self.client.get_order_book(symbol=self.symbol, limit=self.limit)
             except BinanceAPIException as e:
-                self.logger.error(f"Error while fetching snapshot of order book: {e}")
+                self.logger.error(f"Error while fetching snapshot of order book: {e}")  # XXX
                 await asyncio.sleep(0.5)
             else:
                 break
@@ -305,13 +305,13 @@ class AsyncListenerContext:
         asyncio.run_coroutine_threadsafe(self.queues[buffer_name].put(signal_data), self.loop)
 
     async def shutdown(self):
-        self.logger.debug("prepare graceful loop shutdown")
+        self.logger.debug("prepare graceful loop shutdown")  # XXX
         self.stopped = True
         tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
         for t in tasks:
             t.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
-        self.logger.debug("loop shutdown")
+        self.logger.debug("loop shutdown")  # XXX
         self.resolver = None
         self.loop.stop()
 
@@ -377,10 +377,10 @@ class AsyncListener(LoopExecutor):
                         self.async_context.replace_signals[signal_type].remove(stream_id)
                         self.async_context.logger.debug(
                             f"skip {signal_type} signal for {self.buffer_name}"
-                        )
+                        )  # XXX
                         self.async_context.logger.debug(
                             [(sig, len(x)) for sig, x in self.async_context.replace_signals.items()]
-                        )
+                        )  # XXX
                         continue
                 await self.handle_signal(data)
             else:
