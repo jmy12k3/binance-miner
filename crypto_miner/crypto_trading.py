@@ -13,10 +13,12 @@ from .strategies import get_strategy
 
 
 def main():
-    # Initialize exit_handler flag, logger, config, and database
+    # Initialize exit_handler flag and logger
     exiting = False
-    logger = Logger("crypto_trading")
+    logger = Logger()
     logger.info("Starting")
+
+    # Initialize config and database
     config = Config()
     db = Database(logger, config)
 
@@ -56,7 +58,7 @@ def main():
 
     # Get autotrader strategy
     strategy = get_strategy(config.STRATEGY)
-    if not strategy:
+    if strategy is None:
         logger.info(f"Invalid strategy: {config.STRATEGY}")
         return
     trader = strategy(logger, config, db, manager)
@@ -66,7 +68,7 @@ def main():
     logger.info("Creating database schema if it doesn't already exist")
     db.create_database()
 
-    # Warmup database and initialize autotrader
+    # Set watchlist and initialize autotrader
     db.set_coins(config.WATCHLIST)
     time.sleep(10)
     trader.initialize()
