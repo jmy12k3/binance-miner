@@ -4,14 +4,14 @@ Forked from [edeng23/binance-trade-bot](https://github.com/edeng23/binance-trade
 
 ## Setup
 
-1. Rename the dotenv file to your env
+1. Rename the dotenv file
 
 ```shell
 cd ./crypto-miner/config
 mv .env.example .env
 ```
 
-2. Configurate your dotenv and watchlist
+2. Configurate the dotenv file and watchlist
 3. Profit~
 
 ```shell
