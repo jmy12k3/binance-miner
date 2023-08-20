@@ -1,4 +1,3 @@
-# mypy: disable-error-code=misc
 from __future__ import annotations
 
 import json
@@ -246,7 +245,7 @@ class BinanceAPIManager:
             trade_log.set_ordered(origin_balance, target_balance, order_quantity)
             trade_log.set_complete(order.cumulative_quote_qty)
 
-        write_trade_log()
+        write_trade_log()  # type: ignore
         return order
 
     def _sell_alt(self, origin_coin: str, target_coin: str, sell_price: float):
@@ -275,7 +274,7 @@ class BinanceAPIManager:
             trade_log.set_ordered(origin_balance, target_balance, order_quantity)
             trade_log.set_complete(order.cumulative_quote_qty)
 
-        write_trade_log()
+        write_trade_log()  # type: ignore
         return order
 
     def get_currency_balance(self, currency_symbol: str, force: bool = False):
