@@ -13,7 +13,6 @@ from typing import Any, TypedDict, TypeVar
 from binance.client import Client
 from binance.exceptions import BinanceAPIException, BinanceOrderException, BinanceRequestException
 from cachetools import TTLCache, cached
-from requests import Response
 
 from .binance_ws import BinanceCache, BinanceOrder, BinanceStreamManager, StreamManagerWorker
 from .config import Config
@@ -328,7 +327,7 @@ class BinanceAPIManager:
         if self.stream_manager:
             self.stream_manager.close()
 
-    def get_account(self) -> Response:
+    def get_account(self) -> Any:
         return self.binance_client.get_account()
 
     def get_ticker_price(self, ticker_symbol: str):
