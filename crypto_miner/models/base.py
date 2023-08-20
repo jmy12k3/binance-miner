@@ -10,7 +10,7 @@ class DeclarativeBase:
 
 class Model(Protocol):
     __tablename__: str
-    datetime: datetime
+    dt: datetime
 
     def info(self):
         ...
