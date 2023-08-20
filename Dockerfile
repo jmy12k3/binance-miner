@@ -2,6 +2,7 @@ FROM python:3.11 as builder
 
 WORKDIR /install
 
+# https://cryptography.io/en/latest/installation/#debian-ubuntu
 RUN apt-get update \ 
     && apt-get install -y rustc \
     && apt-get install -y build-essential \

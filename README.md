@@ -2,23 +2,6 @@
 
 Forked from [edeng23/binance-trade-bot](https://github.com/edeng23/binance-trade-bot/tree/master)
 
-## Setup
-
-1. Rename the dotenv file
-
-```shell
-cd ./crypto-miner/config
-mv .env.example .env
-```
-
-2. Configurate the dotenv file and watchlist
-3. Profit~
-
-```shell
-cd ..
-docker compose up
-```
-
 
 ## Disclaimer
 
