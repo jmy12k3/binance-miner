@@ -1,4 +1,3 @@
-# mypy: disable-error-code=annotation-unchecked
 import time
 from abc import ABC, abstractmethod
 from collections import defaultdict

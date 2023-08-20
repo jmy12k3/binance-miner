@@ -1,4 +1,4 @@
-# mypy: disable-error-code="annotation-unchecked, index"
+# mypy: disable-error-code=index
 import asyncio
 import uuid
 from abc import ABC, abstractmethod
