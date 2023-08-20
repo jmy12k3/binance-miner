@@ -150,6 +150,7 @@ class Database:
     def batch_log_scout(self, logs: list[LogScout]):
         session: Session
         with self.db_session() as session:
+            dt = datetime.utcnow()
             for ls in logs:
                 sh = models.ScoutHistory(
                     ls.pair_id,
@@ -157,6 +158,7 @@ class Database:
                     ls.target_ratio,
                     ls.coin_price,
                     ls.optional_coin_price,
+                    dt,
                 )
                 session.add(sh)
                 self.send_update(sh)
@@ -262,7 +264,7 @@ class Database:
                         "usd_price": cv.usd_price,
                         "btc_price": cv.btc_price,
                         "interval": cv.interval,
-                        "datetime": cv.datetime,
+                        "dt": cv.dt,
                     }
                     for cv in cv_batch
                 ],
