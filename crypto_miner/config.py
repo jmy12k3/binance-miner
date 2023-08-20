@@ -1,4 +1,3 @@
-# https://github.com/pydantic/pydantic/issues/3072
 # mypy: disable-error-code=call-arg
 import os
 
