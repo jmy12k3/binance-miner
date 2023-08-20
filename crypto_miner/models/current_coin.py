@@ -14,11 +14,11 @@ class CurrentCoin(Base):
     id = Column(Integer, primary_key=True)
     coin_id = Column(String, ForeignKey("coins.symbol"))
     coin = relationship("Coin")
-    datetime = Column(DateTime)
+    dt = Column(DateTime)
 
     def __init__(self, coin: Coin):
         self.coin = coin
-        self.datetime = datetime.utcnow()
+        self.dt = datetime.utcnow()
 
     def info(self):
-        return {"datetime": self.datetime.isoformat(), "coin": self.coin.info()}
+        return {"dt": self.dt.isoformat(), "coin": self.coin.info()}

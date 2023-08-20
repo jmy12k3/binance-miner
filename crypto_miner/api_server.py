@@ -71,7 +71,7 @@ def value_history(period: Period | None = None, coin: str | None = None):
     session: Session
     with db.db_session() as session:
         query = session.query(models.CoinValue).order_by(
-            models.CoinValue.coin_id.asc(), models.CoinValue.datetime.asc()
+            models.CoinValue.coin_id.asc(), models.CoinValue.dt.asc()
         )
         query = filter_period(period, query, models.CoinValue)
         if coin:
@@ -86,10 +86,10 @@ def total_value_history(period: Period | None = None):
     session: Session
     with db.db_session() as session:
         query = session.query(
-            models.CoinValue.datetime,
+            models.CoinValue.dt,
             func.sum(models.CoinValue.btc_value),
             func.sum(models.CoinValue.usd_value),
-        ).group_by(models.CoinValue.datetime)
+        ).group_by(models.CoinValue.dt)
         query = filter_period(period, query, models.CoinValue)
         total_values: list[tuple[datetime, float, float]] = query.all()
         return [{"datetime": tv[0], "btc": tv[1], "usd": tv[2]} for tv in total_values]
@@ -99,7 +99,7 @@ def total_value_history(period: Period | None = None):
 def trade_history(period: Period | None = None):
     session: Session
     with db.db_session() as session:
-        query = session.query(models.Trade).order_by(models.Trade.datetime.asc())
+        query = session.query(models.Trade).order_by(models.Trade.dt.asc())
         query = filter_period(period, query, models.Trade)
         trades: list[models.Trade] = query.all()
         return [trade.info() for trade in trades]
@@ -115,7 +115,7 @@ def scouting_history(period: Period | None = None):
             session.query(models.ScoutHistory)
             .join(models.ScoutHistory.pair)
             .filter(models.Pair.from_coin_id == coin)
-            .order_by(models.ScoutHistory.datetime.asc())
+            .order_by(models.ScoutHistory.dt.asc())
         )
         query = filter_period(period, query, models.ScoutHistory)
         scouts: list[models.ScoutHistory] = query.all()

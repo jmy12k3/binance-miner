@@ -125,9 +125,7 @@ class Database:
         session: Session
         with self.db_session() as session:
             current_coin = (
-                session.query(models.CurrentCoin)
-                .order_by(models.CurrentCoin.datetime.desc())
-                .first()
+                session.query(models.CurrentCoin).order_by(models.CurrentCoin.dt.desc()).first()
             )
             if current_coin is None:
                 return None
@@ -152,36 +150,29 @@ class Database:
     def batch_log_scout(self, logs: list[LogScout]):
         session: Session
         with self.db_session() as session:
-            dt = datetime.now()
-            session.execute(
-                insert(models.ScoutHistory),
-                [
-                    {
-                        "pair_id": ls.pair_id,
-                        "ratio_diff": ls.ratio_diff,
-                        "target_ratio": ls.target_ratio,
-                        "current_coin_price": ls.coin_price,
-                        "other_coin_price": ls.optional_coin_price,
-                        "datetime": dt,
-                    }
-                    for ls in logs
-                ],
-            )
+            for ls in logs:
+                sh = models.ScoutHistory(
+                    ls.pair_id,
+                    ls.ratio_diff,
+                    ls.target_ratio,
+                    ls.coin_price,
+                    ls.optional_coin_price,
+                )
+                session.add(sh)
+                self.send_update(sh)
 
     def prune_scout_history(self):
         time_diff = datetime.now() - relativedelta(hours=self.config.SCOUT_HISTORY_PRUNE_TIME)
         session: Session
         with self.db_session() as session:
-            session.query(models.ScoutHistory).filter(
-                models.ScoutHistory.datetime < time_diff
-            ).delete()
+            session.query(models.ScoutHistory).filter(models.ScoutHistory.dt < time_diff).delete()
 
     def prune_value_history(self):
         def _datetime_id_query(dt_format):
-            dt_column = func.strftime(dt_format, models.CoinValue.datetime)
-            grouped = select(
-                models.CoinValue, func.max(models.CoinValue.datetime), dt_column
-            ).group_by(models.CoinValue.coin_id, models.CoinValue, dt_column)
+            dt_column = func.strftime(dt_format, models.CoinValue.dt)
+            grouped = select(models.CoinValue, func.max(models.CoinValue.dt), dt_column).group_by(
+                models.CoinValue.coin_id, models.CoinValue, dt_column
+            )
             return select(grouped.c.id.label("id")).select_from(grouped)
 
         def _update_query(datetime_query, interval):
@@ -204,17 +195,17 @@ class Database:
             time_diff = datetime.now() - relativedelta(days=1)
             session.query(models.CoinValue).filter(
                 models.CoinValue.interval == models.Interval.MINUTELY,
-                models.CoinValue.datetime < time_diff,
+                models.CoinValue.dt < time_diff,
             ).delete()
             time_diff = datetime.now() - relativedelta(months=1)
             session.query(models.CoinValue).filter(
                 models.CoinValue.interval == models.Interval.HOURLY,
-                models.CoinValue.datetime < time_diff,
+                models.CoinValue.dt < time_diff,
             ).delete()
             time_diff = datetime.now() - relativedelta(years=1)
             session.query(models.CoinValue).filter(
                 models.CoinValue.interval == models.Interval.DAILY,
-                models.CoinValue.datetime < time_diff,
+                models.CoinValue.dt < time_diff,
             ).delete()
 
     def create_database(self):

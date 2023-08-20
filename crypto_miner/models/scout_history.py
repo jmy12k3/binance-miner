@@ -18,7 +18,7 @@ class ScoutHistory(Base):
     target_ratio = Column(Float)
     current_coin_price = Column(Float)
     other_coin_price = Column(Float)
-    datetime = Column(DateTime)
+    dt = Column(DateTime)
 
     def __init__(
         self,
@@ -27,13 +27,14 @@ class ScoutHistory(Base):
         target_ratio: float,
         current_coin_price: float,
         other_coin_price: float,
+        dt: datetime | None = None,
     ):
         self.pair_id = pair_id
         self.ratio_diff = ratio_diff
         self.target_ratio = target_ratio
         self.current_coin_price = current_coin_price
         self.other_coin_price = other_coin_price
-        self.datetime = datetime.utcnow()
+        self.dt = dt or datetime.utcnow()
 
     @hybrid_property
     def current_ratio(self):

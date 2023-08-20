@@ -28,14 +28,14 @@ class Trade(Base):
     alt_trade_amount = Column(Float)
     crypto_starting_balance = Column(Float)
     crypto_trade_amount = Column(Float)
-    datetime = Column(DateTime)
+    dt = Column(DateTime)
 
     def __init__(self, alt_coin: str, crypto_coin: str, selling: bool):
         self.alt_coin_id = alt_coin
         self.crypto_coin_id = crypto_coin
         self.state = TradeState.STARTING
         self.selling = selling
-        self.datetime = datetime.utcnow()
+        self.dt = datetime.utcnow()
 
     def info(self):
         return {
@@ -48,5 +48,5 @@ class Trade(Base):
             "alt_trade_amount": self.alt_trade_amount,
             "crypto_starting_balance": self.crypto_starting_balance,
             "crypto_trade_amount": self.crypto_trade_amount,
-            "datetime": self.datetime.isoformat(),
+            "dt": self.dt.isoformat(),
         }
