@@ -13,7 +13,7 @@ from .strategies import get_strategy
 
 
 def main():
-    # Set exit_handler flag and logger
+    # Set exit_handler flag and initialize logger
     exiting = False
     logger = Logger()
     logger.info("Starting")
