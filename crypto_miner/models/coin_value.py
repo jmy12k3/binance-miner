@@ -70,5 +70,5 @@ class CoinValue(Base):
             "balance": self.balance,
             "usd_value": self.usd_value,
             "btc_value": self.btc_value,
-            "datetime": self.dt.isoformat(),
+            "dt": self.dt.isoformat(),
         }

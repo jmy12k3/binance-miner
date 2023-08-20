@@ -150,7 +150,7 @@ class Database:
     def batch_log_scout(self, logs: list[LogScout]):
         session: Session
         with self.db_session() as session:
-            dt = datetime.utcnow()
+            dt = datetime.now()
             for ls in logs:
                 sh = models.ScoutHistory(
                     ls.pair_id,

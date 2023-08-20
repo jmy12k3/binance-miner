@@ -34,7 +34,7 @@ class ScoutHistory(Base):
         self.target_ratio = target_ratio
         self.current_coin_price = current_coin_price
         self.other_coin_price = other_coin_price
-        self.dt = dt or datetime.utcnow()
+        self.dt = dt or datetime.now()
 
     @hybrid_property
     def current_ratio(self):
@@ -49,5 +49,5 @@ class ScoutHistory(Base):
             "target_ratio": self.target_ratio,
             "current_coin_price": self.current_coin_price,
             "other_coin_price": self.other_coin_price,
-            "datetime": self.dt.isoformat(),
+            "dt": self.dt.isoformat(),
         }
