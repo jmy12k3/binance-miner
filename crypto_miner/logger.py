@@ -1,14 +1,13 @@
 import logging
-from abc import ABC, abstractmethod
+from abc import ABC
 from logging.handlers import RotatingFileHandler
 
 
 class AbstractLogger(ABC):
     Logger: logging.Logger | None = None
 
-    @abstractmethod
     def __getattr__(self, name: str):
-        return lambda *args, **kwargs: None
+        return self.Logger.__getattribute__(name)
 
 
 class DummyLogger(AbstractLogger):
@@ -16,9 +15,6 @@ class DummyLogger(AbstractLogger):
         self.Logger = logging.getLogger(logging_service)
         self.Logger.addHandler(logging.NullHandler())
         self.Logger.propagate = False
-
-    def __getattr__(self, name: str):
-        super().__getattr__(name)
 
 
 class Logger(AbstractLogger):
@@ -37,6 +33,3 @@ class Logger(AbstractLogger):
         ch.setLevel(logging.INFO)
         ch.setFormatter(formatter)
         self.Logger.addHandler(ch)
-
-    def __getattr__(self, name: str):
-        return self.Logger.__getattribute__(name)
