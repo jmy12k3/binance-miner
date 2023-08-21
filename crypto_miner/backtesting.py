@@ -15,7 +15,7 @@ from .database import Database, LogScout
 from .logger import DummyLogger
 from .strategies import get_strategy
 
-sqlite_cache = SqliteDict("data/backtesting_cache.db")
+sqlite_cache = SqliteDict("data/backtest_cache.db")
 
 
 class MockBinanceManager(BinanceAPIManager):
@@ -48,9 +48,6 @@ class MockBinanceManager(BinanceAPIManager):
     def get_fee(self, origin_coin: str, target_coin: str, selling: bool):
         return 0.001
 
-    # TODO
-    # 1. Consider the price to be used (using closing now)
-    # 2. Use pandas (vectorized operation)
     def get_ticker_price(self, ticker_symbol: str) -> float | None:
         target_date = self.datetime.strftime("%d %b %Y %H:%M:%S")
         key = f"{ticker_symbol} - {target_date}"
@@ -79,7 +76,7 @@ class MockBinanceManager(BinanceAPIManager):
                 no_data_cur_date += relativedelta(minutes=1)
             for result in historical_klines:
                 date = datetime.utcfromtimestamp(result[0] / 1000).strftime("%d %b %Y %H:%M:%S")
-                price = float(result[1])
+                price = result[4]
                 sqlite_cache[f"{ticker_symbol} - {date}"] = price
             sqlite_cache.commit()
             val = sqlite_cache.get(key, None)
