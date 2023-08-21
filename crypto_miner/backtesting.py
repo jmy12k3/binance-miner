@@ -1,16 +1,11 @@
 # mypy: ignore-errors
 import traceback
 from collections import defaultdict
-from collections.abc import Callable
 from datetime import datetime
-from typing import TypeVar
 
-import questionary.constants
 from binance import Client
 from binance.exceptions import BinanceAPIException
 from dateutil.relativedelta import relativedelta
-from prompt_toolkit import print_formatted_text
-from prompt_toolkit.formatted_text import to_formatted_text
 from sqlitedict import SqliteDict
 
 from .binance import BinanceAPIManager, BinanceOrderBalanceManager
@@ -20,43 +15,13 @@ from .database import Database, LogScout
 from .logger import DummyLogger
 from .strategies import get_strategy
 
-T = TypeVar("T")
-
-STYLE = questionary.Style(
-    [
-        ("work", "fg:#5f819d"),
-        ("failure", "fg:#ff726f"),
-        ("success", "fg:#4BCA81"),
-        ("question", "bold"),
-        ("text", ""),
-    ]
-)
-questionary.constants.DEFAULT_STYLE = STYLE
-
-
-def fprint(text, **kwargs):
-    if isinstance(text, str):
-        text = [("class:text", text)]
-    print_formatted_text(to_formatted_text(text), style=STYLE, **kwargs)
-
-
-def print_work(text):
-    fprint([("class:work", "*"), ("class:question", " " + text)])
-
-
-def print_failure(text):
-    fprint([("class:failure", "✘ "), ("class:question", text)])
-
-
-def print_success(text):
-    fprint([("class:success", "✔ "), ("class:question", text)])
+sqlite_cache = SqliteDict("data/backtesting_cache.db")
 
 
 class MockBinanceManager(BinanceAPIManager):
     def __init__(
         self,
         client: Client,
-        sqlite_cache: SqliteDict,
         binance_cache: BinanceCache,
         config: Config,
         db: Database,
@@ -72,12 +37,10 @@ class MockBinanceManager(BinanceAPIManager):
             logger,
             BinanceOrderBalanceManager(logger, client, binance_cache),
         )
-        self.sqlite_cache = sqlite_cache
         self.config = config
         self.datetime = start_date
         self.balances = start_balances
         self.non_existing_pairs: set = set()
-        self.reinit_trader_callback: Callable[..., T] | None = None
 
     def _setup_websockets(self):
         pass
@@ -85,20 +48,20 @@ class MockBinanceManager(BinanceAPIManager):
     def get_fee(self, origin_coin: str, target_coin: str, selling: bool):
         return 0.001
 
+    # TODO
+    # 1. Consider the price to be used (using closing now)
+    # 2. Use pandas (vectorized operation)
     def get_ticker_price(self, ticker_symbol: str) -> float | None:
         target_date = self.datetime.strftime("%d %b %Y %H:%M:%S")
         key = f"{ticker_symbol} - {target_date}"
-        val = self.sqlite_cache.get(key, None)
+        val = sqlite_cache.get(key, None)
         if val is None:
             end_date = self.datetime + relativedelta(minutes=1000)
             if end_date > datetime.now():
                 end_date = datetime.now()
             end_date_str = end_date.strftime("%d %b %Y %H:%M:%S")
-            print_work(
-                f"Fetching prices for {ticker_symbol} between {self.datetime} and {end_date}"
-            )
             historical_klines = self.binance_client.get_historical_klines(
-                ticker_symbol, "1m", target_date, end_date_str, limit=1000
+                ticker_symbol, self.binance_client.KLINE_INTERVAL_1MINUTE, target_date, end_date_str
             )
             no_data_cur_date = self.datetime
             no_data_end_date = (
@@ -110,16 +73,16 @@ class MockBinanceManager(BinanceAPIManager):
                 )
             )
             while no_data_cur_date <= no_data_end_date:
-                self.sqlite_cache[
+                sqlite_cache[
                     f"{ticker_symbol} - {no_data_cur_date.strftime('%d %b %Y %H:%M:%S')}"
                 ] = 0.0
                 no_data_cur_date += relativedelta(minutes=1)
             for result in historical_klines:
                 date = datetime.utcfromtimestamp(result[0] / 1000).strftime("%d %b %Y %H:%M:%S")
                 price = float(result[1])
-                self.sqlite_cache[f"{ticker_symbol} - {date}"] = price
-            self.sqlite_cache.commit()
-            val = self.sqlite_cache.get(key, None)
+                sqlite_cache[f"{ticker_symbol} - {date}"] = price
+            sqlite_cache.commit()
+            val = sqlite_cache.get(key, None)
         return val if val != 0.0 else None
 
     def get_currency_balance(self, currency_symbol: str, force: bool = False):
@@ -140,7 +103,6 @@ class MockBinanceManager(BinanceAPIManager):
     def buy_alt(self, origin_coin: str, target_coin: str, buy_price: float):
         target_balance = self.get_currency_balance(target_coin)
         from_coin_price = self.get_ticker_price(origin_coin + target_coin)
-        assert abs(buy_price - from_coin_price) < 1e-15 or buy_price == 0.0
         order_quantity = self.buy_quantity(
             origin_coin, target_coin, target_balance, from_coin_price
         )
@@ -162,7 +124,6 @@ class MockBinanceManager(BinanceAPIManager):
     def sell_alt(self, origin_coin: str, target_coin: str, sell_price: float):
         origin_balance = self.get_currency_balance(origin_coin)
         from_coin_price = self.get_ticker_price(origin_coin + target_coin)
-        assert abs(sell_price - from_coin_price) < 1e-15
         order_quantity = self.sell_quantity(origin_coin, target_coin, origin_balance)
         target_quantity = order_quantity * from_coin_price
         target_filled_quantity = target_quantity * (
@@ -179,18 +140,10 @@ class MockBinanceManager(BinanceAPIManager):
             )
         )
 
-    def set_reinit_trader_callback(self, reinit_trader_callback: Callable[..., T]):
-        self.reinit_trader_callback = reinit_trader_callback
-
-    def set_coins(self, coins_list: list[str]):
-        self.db.set_coins(coins_list)
-        if self.reinit_trader_callback is not None:
-            self.reinit_trader_callback()
-
     def increment(self, interval: int = 1):
         self.datetime += relativedelta(minutes=interval)
 
-    def collate_coins(self, target_symbol: str):
+    def collate_coins(self, target_symbol):
         total = 0.0
         for coin, balance in self.balances.items():
             if coin == target_symbol:
@@ -227,17 +180,17 @@ class MockDatabase(Database):
 
 def backtest(
     start_date: datetime,
-    end_date: datetime | None = None,
+    end_date: datetime,
     interval: int = 1,
     yield_interval: int = 100,
     start_balances: dict[str, float] | None = None,
     starting_coin: str | None = None,
 ):
-    # Initialize sqlite_cache, logger, config, and backtest parameters
-    sqlite_cache = SqliteDict("data/backtesting_cache.db")
+    # Initialize logger and config
     logger = DummyLogger("backtesting")
     config = Config()
-    end_date = end_date or datetime.today()
+
+    # Set starting balances
     start_balances = start_balances or {config.BRIDGE.symbol: config.PAPER_WALLET_BALANCE}
 
     # Create database and set watchlist
@@ -245,10 +198,9 @@ def backtest(
     db.create_database()
     db.set_coins(config.WATCHLIST)
 
-    # Initialize manager and set starting coin
+    # Initialize manager
     manager = MockBinanceManager(
         Client(config.BINANCE_API_KEY, config.BINANCE_API_SECRET_KEY),
-        sqlite_cache,
         BinanceCache(),
         config,
         db,
@@ -256,22 +208,17 @@ def backtest(
         start_date,
         start_balances,
     )
-    starting_coin = db.get_coin(starting_coin or config.WATCHLIST[0])
-    if manager.get_currency_balance(starting_coin.symbol) == 0:
-        manager.buy_alt(starting_coin.symbol, config.BRIDGE.symbol, 0.0)
-    db.set_current_coin(starting_coin)
 
-    # Get and initialize autotrader strategy
+    # Initialize autotrader
     strategy = get_strategy(config.STRATEGY)
     if strategy is None:
-        print_failure(f"Invalid strategy: {config.STRATEGY}")
+        print(f"Invalid strategy: {config.STRATEGY}")
         return manager
     trader = strategy(logger, config, db, manager)
-    print_success(f"Chosen strategy: {config.STRATEGY}")
+    print(f"Chosen strategy: {config.STRATEGY}")
     trader.initialize()
 
     # Yield manager
-    manager.set_reinit_trader_callback(trader.initialize)
     yield manager
 
     # Initiate backtesting
@@ -281,7 +228,8 @@ def backtest(
             try:
                 trader.scout()
             except Exception:
-                print_failure(traceback.format_exc())
+                print(traceback.format_exc())
+                break
             manager.increment(interval)
             if n % yield_interval:
                 yield manager
