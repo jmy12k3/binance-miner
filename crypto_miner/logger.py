@@ -11,8 +11,8 @@ class AbstractLogger(ABC):
 
 
 class DummyLogger(AbstractLogger):
-    def __init__(self, logging_service: str):
-        self.Logger = logging.getLogger(logging_service)
+    def __init__(self):
+        self.Logger = logging.getLogger(__name__)
         self.Logger.addHandler(logging.NullHandler())
         self.Logger.propagate = False
 

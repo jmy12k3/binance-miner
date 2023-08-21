@@ -31,7 +31,7 @@ app.add_middleware(
 sio = SocketManager(app)
 
 # Initialize logger, config, and database
-logger = DummyLogger("api_server")
+logger = DummyLogger()
 config = Config()
 db = Database(logger, config)
 
