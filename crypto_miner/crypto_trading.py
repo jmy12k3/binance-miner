@@ -15,7 +15,7 @@ from .strategies import get_strategy
 def main():
     # Set exit_handler flag and initialize logger
     exiting = False
-    logger = Logger()
+    logger = Logger("crypto_trading")
     logger.info("Starting")
 
     # Initialize config and database
