@@ -5,10 +5,8 @@ gunicorn==21.2.0
 pydantic-settings==2.0.3
 python-binance==1.0.19
 python-socketio[client]==5.8.0
-quantstats==0.0.62
 schedule==1.2.0
 sortedcontainers==2.4.0
 SQLAlchemy==2.0.20
-tqdm==4.66.1
 unicorn-binance-websocket-api==1.46.1
 uvicorn[standard]==0.23.2
