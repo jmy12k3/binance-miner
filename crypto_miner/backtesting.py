@@ -15,7 +15,7 @@ from .database import Database, LogScout
 from .logger import DummyLogger
 from .strategies import get_strategy
 
-sqlite_cache = SqliteDict("data/backtest_cache.db", outer_stack=False)
+cache = SqliteDict("data/cache.sqlite", outer_stack=False)
 
 
 class MockBinanceManager(BinanceAPIManager):
@@ -51,7 +51,7 @@ class MockBinanceManager(BinanceAPIManager):
     def get_ticker_price(self, ticker_symbol: str) -> float | None:
         target_date = self.datetime.strftime("%d %b %Y %H:%M:%S")
         key = f"{ticker_symbol} - {target_date}"
-        val = sqlite_cache.get(key, None)
+        val = cache.get(key, None)
         if val is None:
             end_date = self.datetime + relativedelta(minutes=1000)
             if end_date > datetime.now():
@@ -70,16 +70,14 @@ class MockBinanceManager(BinanceAPIManager):
                 )
             )
             while no_data_cur_date <= no_data_end_date:
-                sqlite_cache[
-                    f"{ticker_symbol} - {no_data_cur_date.strftime('%d %b %Y %H:%M:%S')}"
-                ] = 0.0
+                cache[f"{ticker_symbol} - {no_data_cur_date.strftime('%d %b %Y %H:%M:%S')}"] = 0.0
                 no_data_cur_date += relativedelta(minutes=1)
             for result in historical_klines:
                 date = datetime.utcfromtimestamp(result[0] / 1000).strftime("%d %b %Y %H:%M:%S")
                 price = float(result[4])
-                sqlite_cache[f"{ticker_symbol} - {date}"] = price
-            sqlite_cache.commit()
-            val = sqlite_cache.get(key, None)
+                cache[f"{ticker_symbol} - {date}"] = price
+            cache.commit()
+            val = cache.get(key, None)
         return val if val != 0.0 else None
 
     def get_currency_balance(self, currency_symbol: str, force: bool = False):
@@ -233,5 +231,5 @@ def backtest(
             n += 1
     except KeyboardInterrupt:
         pass
-    sqlite_cache.close()
+    cache.close()
     return manager
