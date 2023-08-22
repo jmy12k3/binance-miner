@@ -225,7 +225,9 @@ class Database:
         if not self._api_session():
             return
         self.socketio_client.emit(
-            "update", {"table": model.__tablename__, "data": model.info()}, "/backend"
+            event="update",
+            data={"table": model.__tablename__, "data": model.info()},
+            namespace="/backend",
         )
 
     @heavy_call
