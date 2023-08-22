@@ -1,9 +1,9 @@
 from datetime import datetime
 
 import pandas as pd
+import pytz
 import quantstats as qs
 from dateutil.relativedelta import relativedelta
-from pytz import utc
 from tqdm import tqdm
 from tzlocal import get_localzone
 
