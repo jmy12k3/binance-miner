@@ -327,7 +327,7 @@ class BinanceAPIManager:
         if self.stream_manager:
             self.stream_manager.close()
 
-    def get_account(self) -> Any:
+    def get_account(self) -> dict[str, Any]:
         return self.binance_client.get_account()
 
     def get_ticker_price(self, ticker_symbol: str):
