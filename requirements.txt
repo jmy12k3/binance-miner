@@ -8,5 +8,6 @@ python-socketio[client]==5.8.0
 schedule==1.2.0
 sortedcontainers==2.4.0
 SQLAlchemy==2.0.20
+sqlitedict==2.1.0
 unicorn-binance-websocket-api==1.46.1
 uvicorn[standard]==0.23.2
