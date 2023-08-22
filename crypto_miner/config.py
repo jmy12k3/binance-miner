@@ -11,7 +11,7 @@ WATCHLIST_PATH_NAME = os.path.join(CONFIG_PATH, "watchlist.txt")
 
 
 class Settings(BaseSettings):
-    BRIDGE_SYMBOL: str
+    BRIDGE_SYMBOL: str = "USDT"
     SCOUT_HISTORY_PRUNE_TIME: float = 1
     SCOUT_MULTIPLIER: float = 5
     SCOUT_SLEEP_TIME: int = 1
@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     WATCHLIST: str = ""
     STRATEGY: str = "default"
     ENABLE_PAPER_TRADING: bool
-    PAPER_WALLET_BALANCE: float
+    PAPER_WALLET_BALANCE: float = 10_000
 
 
 settings = Settings(_env_file=ENV_PATH_NAME, _env_file_encoding="utf-8")

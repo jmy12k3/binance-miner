@@ -65,7 +65,7 @@ def main():
         returns,
         benchmark,
         periods_per_year=365,
-        output="data/backtest_report.html",
+        output="data/tearsheet.html",
     )
 
 
