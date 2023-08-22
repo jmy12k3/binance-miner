@@ -12,17 +12,17 @@ x-build: &build
 services:
   backend:
     <<: *build
-    container_name: crypto_miner
+    container_name: binance_miner
     environment:
       - PYTHONUNBUFFERED=1
-    command: python -m crypto_miner
+    command: python -m binance_miner
 
   api:
     <<: *build
     depends_on:
       - backend
-    container_name: crypto_miner_api
+    container_name: binance_miner_api
     ports:
       - 5000:5000
     command: >
-      gunicorn crypto_miner.api_server:app --worker-class uvicorn.workers.UvicornWorker --workers 1 --threads 1 --bind 0.0.0.0:5000
+      gunicorn binance_miner.api_server:app --worker-class uvicorn.workers.UvicornWorker --workers 1 --threads 1 --bind 0.0.0.0:5000

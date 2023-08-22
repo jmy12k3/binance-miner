@@ -14,4 +14,4 @@ WORKDIR /app
 COPY --from=builder /install /usr/local
 COPY . .
 
-CMD ["python", "-m", "crypto_miner"]
+CMD ["python", "-m", "binance_miner"]

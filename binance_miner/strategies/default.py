@@ -1,5 +1,5 @@
-from crypto_miner.autotrader import AutoTrader
-from crypto_miner.ratios import CoinStub
+from binance_miner.autotrader import AutoTrader
+from binance_miner.ratios import CoinStub
 
 
 class Strategy(AutoTrader):

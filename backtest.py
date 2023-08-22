@@ -7,7 +7,7 @@ from dateutil.relativedelta import relativedelta
 from tqdm import tqdm
 from tzlocal import get_localzone
 
-from crypto_miner import Config, backtest
+from binance_miner import Config, backtest
 
 
 def main():
