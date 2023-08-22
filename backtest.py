@@ -18,13 +18,16 @@ def main():
     config = Config()
 
     # Set start and end date
-    # Adjust start_date to backtest further. Minimum is 1 year.
+    # for further backtesting, users could modify the relativedelta in start_date (minimum 1 year)
+    # e.g., start_date = end_date - relativedelta(years=2)
     end_date = datetime.utcnow() - relativedelta(minutes=1)
     start_date = end_date - relativedelta(years=1)
     start_date = datetime(start_date.year, start_date.month, start_date.day)
     total = ((end_date - start_date).total_seconds()) // 60
 
     # Initiate backtest
+    # tqdm is extended as pbar so that users could modify the progress bar to their likings
+    # e.g., pbar.set_description() or pbar.set_postfix()
     for manager in (
         pbar := tqdm(
             backtest(start_date, end_date),
