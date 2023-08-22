@@ -1,4 +1,3 @@
-# mypy: disable-error-code=index
 import asyncio
 import uuid
 from abc import ABC, abstractmethod
