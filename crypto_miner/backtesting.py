@@ -1,4 +1,3 @@
-# mypy: ignore-errors
 import traceback
 from collections import defaultdict
 from datetime import datetime
@@ -101,7 +100,7 @@ class MockBinanceManager(BinanceAPIManager):
         order_quantity = self.buy_quantity(
             origin_coin, target_coin, target_balance, from_coin_price
         )
-        target_quantity = order_quantity * from_coin_price
+        target_quantity = order_quantity * from_coin_price  # type: ignore
         self.balances[target_coin] -= target_quantity
         order_filled_quantity = order_quantity * (
             1 - self.get_fee(origin_coin, target_coin, selling=False)
@@ -120,7 +119,7 @@ class MockBinanceManager(BinanceAPIManager):
         origin_balance = self.get_currency_balance(origin_coin)
         from_coin_price = self.get_ticker_price(origin_coin + target_coin)
         order_quantity = self.sell_quantity(origin_coin, target_coin, origin_balance)
-        target_quantity = order_quantity * from_coin_price
+        target_quantity = order_quantity * from_coin_price  # type: ignore
         target_filled_quantity = target_quantity * (
             1 - self.get_fee(origin_coin, target_coin, selling=True)
         )
