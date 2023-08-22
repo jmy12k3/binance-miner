@@ -2,9 +2,9 @@
 # mypy: disable-error-code=call-overload
 from __future__ import annotations
 
+import math
 from array import array
 from collections.abc import Iterable, KeysView
-from math import nan
 
 from .models import Pair
 
@@ -54,7 +54,7 @@ class RatiosManager:
     def __init__(self, ratios: Iterable[Pair] | None = None):
         self.n = CoinStub.len_coins()
         self._data = array(
-            "d", (nan if i != j else 1.0 for i in range(self.n) for j in range(self.n))
+            "d", (math.nan if i != j else 1.0 for i in range(self.n) for j in range(self.n))
         )
         self._dirty: dict[tuple[int, int], float] = {}
         self._ids: array | None = None
@@ -63,7 +63,7 @@ class RatiosManager:
             for pair in ratios:
                 i = CoinStub.get_by_symbol(pair.from_coin.symbol).idx
                 j = CoinStub.get_by_symbol(pair.to_coin.symbol).idx
-                val = pair.ratio if pair.ratio is not None else nan
+                val = pair.ratio if pair.ratio is not None else math.nan
                 pair_id = pair.id if pair.id is not None else 0
                 idx = self.n * i + j
                 self._data[idx] = val
