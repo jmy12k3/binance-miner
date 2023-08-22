@@ -326,7 +326,6 @@ class AutoTrader(ABC):
             current_coin_price = self.manager.get_ticker_price(
                 coin.symbol + self.config.BRIDGE.symbol
             )
-
             if current_coin_price is None:
                 continue
             ratio_dict, _ = self._get_ratios(coin, current_coin_price, bridge_balance)
