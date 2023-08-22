@@ -185,6 +185,7 @@ class AutoTrader(ABC):
     def initialize(self):
         self.initialize_trade_thresholds()
 
+    # XXX: Improve logging semantics
     def transaction_through_bridge(
         self, from_coin: CoinStub, to_coin: CoinStub, sell_price: float, buy_price: float
     ):
@@ -192,7 +193,7 @@ class AutoTrader(ABC):
         if self.manager.sell_alt(from_coin.symbol, self.config.BRIDGE.symbol, sell_price) is None:
             self.logger.error(
                 f"Market sell failed, from_coin: {from_coin.symbol}, to_coin: {to_coin.symbol}, sell_price: {sell_price}"
-            )  # XXX
+            )
         result = self.manager.buy_alt(to_coin.symbol, self.config.BRIDGE.symbol, buy_price)
         if result is not None:
             self.db.set_current_coin(to_coin.symbol)
@@ -212,12 +213,13 @@ class AutoTrader(ABC):
                     to_coin, from_coin, price, to_coin_amount, result.cumulative_quote_qty
                 )
                 if not update_successful:
-                    self.logger.info("Update of ratios failed, retry in 1s")  # XXX
+                    self.logger.info("Update of ratios failed, retry in 1s")
                     time.sleep(1)
             return result
         self.logger.info("Couldn't buy, going back to scouting mode...")
         return
 
+    # XXX: Improve logging semantics
     def update_trade_threshold(
         self,
         to_coin: CoinStub,
@@ -240,7 +242,7 @@ class AutoTrader(ABC):
             if coin_price is None:
                 self.logger.info(
                     f"Update for coin {coin.symbol + self.config.BRIDGE.symbol} can't be performed, not enough orders in order book"
-                )  # XXX
+                )
                 return False
             self.db.ratios_manager.set(coin.idx, to_coin.idx, coin_price / to_coin_buy_price)
         if from_coin is not None:
@@ -253,7 +255,7 @@ class AutoTrader(ABC):
             if from_coin_buy_price is None or to_coin_sell_price is None:
                 self.logger.info(
                     f"Can't update reverse pair {to_coin.symbol}->{from_coin.symbol}, not enough orders in order book"
-                )  # XXX
+                )
                 return False
             self.db.ratios_manager.set(
                 to_coin.idx,
