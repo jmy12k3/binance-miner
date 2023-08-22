@@ -76,7 +76,7 @@ class MockBinanceManager(BinanceAPIManager):
                 no_data_cur_date += relativedelta(minutes=1)
             for result in historical_klines:
                 date = datetime.utcfromtimestamp(result[0] / 1000).strftime("%d %b %Y %H:%M:%S")
-                price = result[4]
+                price = float(result[4])
                 sqlite_cache[f"{ticker_symbol} - {date}"] = price
             sqlite_cache.commit()
             val = sqlite_cache.get(key, None)
@@ -184,7 +184,7 @@ def backtest(
     starting_coin: str | None = None,
 ):
     # Initialize logger and config
-    logger = DummyLogger("backtesting")
+    logger = DummyLogger()
     config = Config()
 
     # Set starting balances
