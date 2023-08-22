@@ -1,7 +1,7 @@
 version: "3.9"
 
 x-build: &build
-  build: .
+  image: jmy12k3/binance_miner
   working_dir: /app
   volumes:
     - ./config:/app/config
@@ -24,5 +24,4 @@ services:
     container_name: binance_miner_api
     ports:
       - 5000:5000
-    command: >
-      gunicorn binance_miner.api_server:app --worker-class uvicorn.workers.UvicornWorker --workers 1 --threads 1 --bind 0.0.0.0:5000
+    command: uvicorn binance_miner.api_server:app --workers 1 --host 0.0.0.0 --port 5000
