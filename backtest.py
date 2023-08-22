@@ -18,6 +18,7 @@ def main():
     config = Config()
 
     # Set start and end date
+    # Adjust start_date to backtest further. Minimum is 1 year.
     end_date = datetime.utcnow() - relativedelta(minutes=1)
     start_date = end_date - relativedelta(years=1)
     start_date = datetime(start_date.year, start_date.month, start_date.day)
@@ -31,7 +32,7 @@ def main():
             total=total,
             ascii="░▒█",
             miniters=1,
-            bar_format="{desc:<10}:{percentage:3.0f}%|{bar:20}{r_bar}",
+            bar_format="{desc:10}:{percentage:3.0f}%|{bar:20}{r_bar}",
             delay=1,
         )
     ):
@@ -48,8 +49,7 @@ def main():
 
     # Forward-filling missing values
     missing_rows = df.isnull().any(axis=1)
-    total = missing_rows.sum()
-    if total > 0:
+    if missing_rows.sum() > 0:
         for i, _ in df[missing_rows].iterrows():
             if i == df.index[0]:
                 continue
@@ -59,14 +59,14 @@ def main():
             df.loc[i] = last_row
     df.set_index(index, inplace=True)
 
-    # Aggregate dataframe into daily timeframe and generate report
-    returns = df.returns.pct_change().asfreq("D")
-    benchmark = df.benchmark.pct_change().asfreq("D")
+    # Aggregate dataframe into daily report
+    returns = df.returns.asfreq("D").pct_change()
+    benchmark = df.benchmark.asfreq("D").pct_change()
     qs.reports.html(
         returns,
         benchmark,
         periods_per_year=365,
-        output="data/reports.html",
+        output="data/backtest_report.html",
     )
 
 
