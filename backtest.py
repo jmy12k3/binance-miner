@@ -33,7 +33,7 @@ def main():
 
     # Cast placeholder into dataframe
     df = pd.DataFrame(df, columns=["Date", "returns", "benchmark"]).set_index("Date")
-    df.index = df.index.tz_localize(utc).tz_convert(get_localzone()).tz_localize(None)
+    df.index = df.index.tz_localize(pytz.UTC).tz_convert(get_localzone()).tz_localize(None)
 
     # Forward-filling missing values
     missing_rows = df.isnull().any(axis=1)
