@@ -45,7 +45,7 @@ class Database:
         try:
             if not self.socketio_client.connected:
                 self.socketio_client.connect(
-                    "http://api:5000", socketio_path="/ws/socket.io", namespaces=["/backend"]
+                    "http://localhost:5000", socketio_path="/ws/socket.io", namespaces=["/backend"]
                 )
             while not self.socketio_client.connected or not self.socketio_client.namespaces:
                 time.sleep(0.1)
@@ -151,17 +151,20 @@ class Database:
         session: Session
         with self.db_session() as session:
             dt = datetime.now()
-            for ls in logs:
-                sh = models.ScoutHistory(
-                    ls.pair_id,
-                    ls.ratio_diff,
-                    ls.target_ratio,
-                    ls.coin_price,
-                    ls.optional_coin_price,
-                    dt,
-                )
-                session.add(sh)
-                self.send_update(sh)
+            session.execute(
+                insert(models.ScoutHistory),
+                [
+                    {
+                        "pair_id": ls.pair_id,
+                        "ratio_diff": ls.ratio_diff,
+                        "target_ratio": ls.target_ratio,
+                        "current_coin_price": ls.coin_price,
+                        "other_coin_price": ls.optional_coin_price,
+                        "dt": dt,
+                    }
+                    for ls in logs
+                ],
+            )
 
     def prune_scout_history(self):
         time_diff = datetime.now() - relativedelta(hours=self.config.SCOUT_HISTORY_PRUNE_TIME)

@@ -7,13 +7,14 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
 from .base import Base
+from .pair import Pair
 
 
 class ScoutHistory(Base):
     __tablename__ = "scout_history"
     id = Column(Integer, primary_key=True)
     pair_id = Column(String, ForeignKey("pairs.id"))
-    pair = relationship("Pair", foreign_keys=[pair_id], lazy="joined")
+    pair = relationship("Pair")
     ratio_diff = Column(Float)
     target_ratio = Column(Float)
     current_coin_price = Column(Float)
@@ -22,14 +23,14 @@ class ScoutHistory(Base):
 
     def __init__(
         self,
-        pair_id: str,
+        pair: Pair,
         ratio_diff: float,
         target_ratio: float,
         current_coin_price: float,
         other_coin_price: float,
         dt: datetime | None = None,
     ):
-        self.pair_id = pair_id
+        self.pair = pair
         self.ratio_diff = ratio_diff
         self.target_ratio = target_ratio
         self.current_coin_price = current_coin_price
