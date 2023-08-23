@@ -41,7 +41,9 @@ docker compose up
 
 > Tips: using the flag ```-d``` in docker-compose allows you to deploy in detached mode!
 
-![image](https://na.cx/i/U86GLVE.jpg)
+<p align="center">
+  <img src = "https://na.cx/i/U86GLVE.jpg">
+</p>
 
 ## Disclaimer
 
