@@ -3,13 +3,11 @@
 from datetime import datetime
 from enum import Enum
 from itertools import groupby
-from typing import Any
 
 from dateutil.relativedelta import relativedelta
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-from fastapi_socketio import SocketManager
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.query import Query
@@ -28,7 +26,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-sio = SocketManager(app)
 
 # Initialize logger, config, and database
 logger = DummyLogger()
@@ -153,8 +150,3 @@ def pairs():
     with db.db_session() as session:
         all_pairs: list[models.Pair] = session.query(models.Pair).all()
         return [pair.info() for pair in all_pairs]
-
-
-@sio.on("update", namespace="/backend")
-async def on_update(sid: str, msg: Any):
-    await sio.emit("update", msg, namespace="/frontend")
