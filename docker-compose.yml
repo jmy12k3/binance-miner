@@ -1,7 +1,7 @@
 version: "3.9"
 
 x-app: &app
-  image: jmy12k3/binance_miner
+  image: jmy12k3/binance-miner
   working_dir: /app
   volumes:
     - ./config:/app/config
