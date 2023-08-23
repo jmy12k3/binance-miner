@@ -1,6 +1,6 @@
 # Strategies
 
-Minimal working example:
+Minimal working example
 
 ```python
 from binance_miner.autotrader import AutoTrader
