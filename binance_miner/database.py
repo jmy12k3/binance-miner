@@ -45,7 +45,7 @@ class Database:
         try:
             if not self.socketio_client.connected:
                 self.socketio_client.connect(
-                    "http://localhost:5000", socketio_path="/ws/socket.io", namespaces=["/backend"]
+                    "http://api:5000", socketio_path="/ws/socket.io", namespaces=["/backend"]
                 )
             while not self.socketio_client.connected or not self.socketio_client.namespaces:
                 time.sleep(0.1)
