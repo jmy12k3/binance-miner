@@ -1,6 +1,6 @@
 version: "3.9"
 
-x-build: &build
+x-app: &app
   image: jmy12k3/binance_miner
   working_dir: /app
   volumes:
@@ -11,14 +11,14 @@ x-build: &build
 
 services:
   backend:
-    <<: *build
+    <<: *app
     container_name: binance_miner
     environment:
       - PYTHONUNBUFFERED=1
     command: python -m binance_miner
 
   api:
-    <<: *build
+    <<: *app
     depends_on:
       - backend
     container_name: binance_miner_api

@@ -1,0 +1,6 @@
+**/.git
+**/.mypy_cache
+**/.vscode
+**.DS_Store
+**/config/**.env
+**/data/**.sqlite
