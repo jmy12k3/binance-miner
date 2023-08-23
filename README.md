@@ -28,7 +28,7 @@ cd binance-miner/config
 mv .env.example .env
 ```
 
-3. Edit the dotenv file (and watchlist) to your preference
+3. Edit the dotenv file (and ```config/watchlist.txt```) to your preference
 
    See ```binance-miner/config.py``` for more configurable environment variables.
 
