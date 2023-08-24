@@ -1,18 +1,29 @@
+# https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html#configuration-format
 [tool.black]
 line-length = 100
 
+# https://pycqa.github.io/isort/docs/configuration/config_files.html#pyprojecttoml-preferred-format
 [tool.isort]
 line_length = 100
 
+# https://mypy.readthedocs.io/en/stable/config_file.html#example-pyproject-toml
 [tool.mypy]
 python_version = "3.11"
 disable_error_code = "annotation-unchecked, arg-type, index, union-attr, misc"
 
+# https://beta.ruff.rs/docs/configuration/#using-pyprojecttoml
 [tool.ruff]
+# Enable the pycodestyle (`E`) and Pyflakes (`F`) rules by default.
+# Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
+# McCabe complexity (`C901`) by default.
 select = ["F", "E", "W", "C90", "UP"]
 ignore = ["E501"]
+
+# Allow autofix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
 unfixable = []
+
+# Exclude a variety of commonly ignored directories.
 exclude = [
     ".bzr",
     ".direnv",
@@ -36,6 +47,13 @@ exclude = [
     "node_modules",
     "venv",
 ]
+per-file-ignores = {}
+
+# Same as Black.
 line-length = 100
+
+# Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Assume Python 3.11
 target-version = "py311"
