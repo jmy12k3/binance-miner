@@ -22,7 +22,7 @@ LogScout = namedtuple(
 
 
 class Database:
-    DB = "sqlite:///data/crypto_trading.sqlite"
+    DB = "sqlite:///data/crypto_trading.sqlite3"
 
     def __init__(self, logger: AbstractLogger, config: Config):
         self.logger = logger

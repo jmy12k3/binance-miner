@@ -14,7 +14,7 @@ from .database import Database, LogScout
 from .logger import DummyLogger
 from .strategies import get_strategy
 
-cache = SqliteDict("data/cache.sqlite", outer_stack=False)
+cache = SqliteDict("data/cache.sqlite3", outer_stack=False)
 
 
 class MockBinanceManager(BinanceAPIManager):
