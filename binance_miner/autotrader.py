@@ -89,7 +89,6 @@ class AutoTrader(ABC):
                     coin_opt_coin_ratio
                     - transaction_fee * self.config.SCOUT_MULTIPLIER * coin_opt_coin_ratio
                 ) - target_ratio
-
             if enable_scout_log:
                 scout_logs.append(
                     LogScout(
